@@ -4,17 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Snow and Surf Report</title>
-  <meta name="description" content="A morning snapshot of snow at four ski resorts and surf at four breaks, with a simple should-I-go rating.">
+  <meta name="description" content="A morning snapshot of snow at every US Ikon and Epic Pass mountain and surf at four breaks, with a simple should-I-go rating.">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 22c4-4 8-4 12 0s8 4 12 0 4-2 4-2v10H2z' fill='%232a78d6'/%3E%3Cpath d='M6 16 16 3l10 13z' fill='%2352514e'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
+  <script>
+    // Apply a saved Light/Dark choice before the page draws, so it never
+    // flashes the wrong colors. (No saved choice = "Auto" = follow the system.)
+    try {
+      const theme = localStorage.getItem('ssr-theme');
+      if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+    } catch { /* storage blocked: just use Auto */ }
+  </script>
   <!-- type="module" lets app.js use `import`. Modules only load over http(s),
        which is why you need a local server instead of double-clicking this file. -->
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
   <header class="masthead">
-    <p class="kicker">Morning conditions</p>
+    <div class="masthead-top">
+      <p class="kicker">Morning conditions</p>
+      <div class="switch theme-switch" role="group" aria-label="Color theme">
+        <button type="button" data-theme-choice="auto" aria-pressed="true">Auto</button>
+        <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
+      </div>
+    </div>
     <h1>Snow and Surf Report</h1>
     <p class="updated" id="updated">Loading the latest report…</p>
   </header>

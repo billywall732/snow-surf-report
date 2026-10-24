@@ -61,7 +61,10 @@ async function buildResort(resort, cfg) {
   const item = {
     id: resort.id,
     name: resort.name,
+    city: resort.city ?? null,
     region: resort.region,
+    area: resort.area ?? null,
+    passes: resort.passes ?? [],
     lat: resort.lat,
     lon: resort.lon,
     timezone: resort.timezone,
@@ -78,7 +81,7 @@ async function buildSpot(spot, cfg) {
     wrap('open-meteo-marine', {}, () => waves(spot, cfg.sessionHour)),
     wrap('open-meteo', {}, () => surfWind(spot, cfg.sessionHour)),
     spot.buoy
-      ? wrap('noaa-ndbc', { stationId: spot.buoy.id, stationName: spot.buoy.name }, () => buoy(spot.buoy.id))
+      ? wrap('noaa-ndbc', { stationId: spot.buoy.id, stationName: spot.buoy.name, distanceKm: spot.buoy.distanceKm ?? null }, () => buoy(spot.buoy.id))
       : null,
   ]);
   if (wind.status === 'ok') {
@@ -87,7 +90,9 @@ async function buildSpot(spot, cfg) {
   const item = {
     id: spot.id,
     name: spot.name,
+    city: spot.city ?? null,
     region: spot.region,
+    area: spot.area ?? null,
     lat: spot.lat,
     lon: spot.lon,
     timezone: spot.timezone,
@@ -97,8 +102,31 @@ async function buildSpot(spot, cfg) {
     wind,
     buoy: by,
   };
-  item.rating = rateSpot(item, cfg);
+  item.rating = rateSpot(item, surfProfile(cfg, spot.area));
   return item;
+}
+
+// Surf thresholds for a region: the defaults, with that region's overrides on top
+// (config/ratings.json -> surf.profiles). A good day in Hawaii is much bigger than
+// a good day on the Gulf, so each region can have its own idea of "good".
+function surfProfile(cfg, area) {
+  const { profiles = {}, ...defaults } = cfg;
+  return { ...defaults, ...(profiles[area] ?? {}) };
+}
+
+// Run fn on every item, but at most `limit` at the same time. With 40+ resorts
+// this keeps us polite to the free APIs instead of firing 80 requests at once.
+async function mapLimit(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
 }
 
 // Collect every status in the report, so we can count failures.
@@ -115,12 +143,14 @@ async function main() {
   const ratings = await readJSON('config/ratings.json');
 
   const [resorts, spots, tideList] = await Promise.all([
-    Promise.all(locations.snow.resorts.map((r) => buildResort(r, ratings.snow))),
-    Promise.all(locations.surf.spots.map((s) => buildSpot(s, ratings.surf))),
-    Promise.all(locations.surf.tideStations.map(async (st) => [
-      st.id,
-      await wrap('noaa-coops', { name: st.name, shortName: st.shortName, timezone: st.timezone }, () => tides(st)),
-    ])),
+    mapLimit(locations.snow.resorts, 4, (r) => buildResort(r, ratings.snow)),
+    mapLimit(locations.surf.spots, 4, (s) => buildSpot(s, ratings.surf)),
+    // Only the tide stations that some beach actually uses, 4 at a time
+    mapLimit(
+      locations.surf.tideStations.filter((st) => locations.surf.spots.some((s) => s.tideStation === st.id)),
+      4,
+      async (st) => [st.id, await wrap('noaa-coops', { name: st.name, shortName: st.shortName ?? null, timezone: st.timezone }, () => tides(st))],
+    ),
   ]);
 
   const report = {
@@ -132,12 +162,14 @@ async function main() {
     sections: {
       snow: {
         label: 'Snow',
+        defaultPinned: locations.snow.defaultPinned ?? [],
         verdict: null,
         bestBet: bestBet(resorts, (r) => (r.observed.data?.newSnow.h48 ?? 0) + (r.forecast.data?.next72hIn ?? 0)),
         items: resorts,
       },
       surf: {
         label: 'Surf',
+        defaultPinned: locations.surf.defaultPinned ?? [],
         verdict: null,
         sessionHour: ratings.surf.sessionHour,
         bestBet: bestBet(spots, ratingPeriod),
@@ -157,17 +189,24 @@ async function main() {
   }
 
   await fs.mkdir(new URL('data/', root), { recursive: true });
-  await fs.writeFile(new URL('data/report.json', root), JSON.stringify(report, null, 2) + '\n');
+  // Saved without indentation: with 120+ places the spaces alone would add ~40%
+  // to a file every visitor downloads. (To read it, open it in VS Code and run
+  // "Format Document".)
+  await fs.writeFile(new URL('data/report.json', root), JSON.stringify(report) + '\n');
 
   // A short human-readable summary in the terminal / Action log.
   console.log(`Wrote data/report.json — ${blocks.length - failed.length}/${blocks.length} sources OK\n`);
   for (const b of failed) console.log(`  unavailable: ${b.source} ${b.stationId ?? ''} — ${b.reason}`);
   console.log('\nSNOW');
-  for (const r of resorts) console.log(`  ${r.rating.score ?? '-'}/5  ${r.name.padEnd(24)} ${r.rating.reason}`);
+  for (const r of topFive(resorts)) console.log(`  ${r.rating.score ?? '-'}/5  ${r.name.padEnd(26)} ${r.rating.reason}`);
+  console.log(`  (top 5 of ${resorts.length})`);
   console.log(`  Best bet: ${report.sections.snow.bestBet?.name ?? 'none'}`);
   console.log('\nSURF');
-  for (const s of spots) console.log(`  ${s.rating.score ?? '-'}/5  ${s.name.padEnd(24)} ${s.rating.reason}`);
+  for (const s of topFive(spots)) console.log(`  ${s.rating.score ?? '-'}/5  ${s.name.padEnd(26)} ${s.rating.reason}`);
+  console.log(`  (top 5 of ${spots.length})`);
   console.log(`  Best bet: ${report.sections.surf.bestBet?.name ?? 'none'}`);
 }
+
+const topFive = (items) => [...items].sort((a, b) => (b.rating.score ?? 0) - (a.rating.score ?? 0)).slice(0, 5);
 
 main();

@@ -12,7 +12,6 @@ export async function mountainForecast(resort) {
   const params = new URLSearchParams({
     latitude: resort.lat,
     longitude: resort.lon,
-    elevation: Math.round(resort.baseElevationFt * 0.3048), // metres; corrects temperature for altitude
     daily: 'snowfall_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max',
     hourly: 'snowfall,snow_depth',
     past_days: 10,
@@ -23,6 +22,9 @@ export async function mountainForecast(resort) {
     timezone: resort.timezone,
     timeformat: 'unixtime',
   });
+  // Optional: base elevation corrects temperature for altitude. Without it,
+  // Open-Meteo uses the terrain height at the coordinates.
+  if (resort.baseElevationFt) params.set('elevation', Math.round(resort.baseElevationFt * 0.3048));
   const j = await getJSON(`${BASE}?${params}`);
   const tz = resort.timezone;
   const now = Date.now() / 1000;
@@ -88,6 +90,13 @@ export async function surfWind(spot, sessionHour) {
     speedMph: Math.round(j.hourly.wind_speed_10m[i]),
     gustMph: Math.round(j.hourly.wind_gusts_10m[i]),
     directionDeg: j.hourly.wind_direction_10m[i],
+    // Every hour of today: t = local time, mph = speed, gust, deg = direction wind comes from
+    hourly: j.hourly.time.map((t, k) => ({
+      t: toLocalISO(t * 1000, spot.timezone),
+      mph: Math.round(j.hourly.wind_speed_10m[k]),
+      gust: Math.round(j.hourly.wind_gusts_10m[k]),
+      deg: j.hourly.wind_direction_10m[k],
+    })),
   };
 }
 

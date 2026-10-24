@@ -35,5 +35,13 @@ export async function waves(spot, sessionHour) {
     swellDirectionDeg: h.swell_wave_direction[i],
     seaSurfaceTempF: round1(h.sea_surface_temperature[i]),
     gridPoint: { lat: j.latitude, lon: j.longitude },
+    // Every hour of today, for the detail view's chart. Short keys keep the file small:
+    // t = local time, ft = wave height, s = period, deg = direction waves come from.
+    hourly: h.time.map((t, k) => ({
+      t: toLocalISO(t * 1000, spot.timezone),
+      ft: round1(h.wave_height[k]),
+      s: round1(h.wave_period[k]),
+      deg: h.wave_direction[k],
+    })),
   };
 }

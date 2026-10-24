@@ -27,9 +27,13 @@
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Dark mode follows the phone/computer setting */
+/* Dark mode, two ways in:
+   1. "Auto": follow the phone/computer setting, unless the switch says Light.
+   2. The page's switch says Dark (data-theme="dark" on <html>).
+   CSS can't share one block between a media query and a selector, so the
+   same values appear twice. Change both if you change one. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
     --bg: #0d0d0d;
     --surface: #1a1a19;
@@ -44,6 +48,21 @@
     --focus: #6da7ec;
     --track: #2f2f2d;
   }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #a3a199;
+  --rule: #2c2c2a;
+  --axis: #383835;
+  --accent: #3987e5;
+  --accent-wash: rgba(57, 135, 229, 0.14);
+  --warn: #f0a35e;
+  --focus: #6da7ec;
+  --track: #2f2f2d;
 }
 
 /* ---------- Base ---------- */
@@ -76,6 +95,17 @@ a { color: inherit; text-underline-offset: 2px; }
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 
+/* The animated background (js/background.js). Fixed behind everything,
+   and pointer-events: none so it never blocks a tap or click. */
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+
 /* Every top-level block shares the same width and 16px side padding */
 .masthead, .tabs, main, footer {
   max-width: 980px;
@@ -86,7 +116,13 @@ a { color: inherit; text-underline-offset: 2px; }
 
 /* ---------- Masthead & tabs ---------- */
 
-.masthead { padding-top: 28px; padding-bottom: 12px; }
+.masthead { padding-top: 20px; padding-bottom: 12px; }
+.masthead-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
 .kicker {
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -103,7 +139,10 @@ a { color: inherit; text-underline-offset: 2px; }
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--bg);
+  /* Frosted glass: mostly the page color, with the background blurred through it */
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .tabs button {
   font: 600 16px var(--sans);
@@ -136,7 +175,11 @@ main { padding-top: 20px; padding-bottom: 32px; }
 }
 
 .card, .best-bet {
-  background: var(--surface);
+  /* Frosted glass: the animated background shows through softly, but the
+     blur and 86% surface color keep the text as readable as a solid card. */
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--rule);
   border-radius: 10px;
   padding: 16px;
@@ -263,6 +306,10 @@ main { padding-top: 20px; padding-bottom: 32px; }
 }
 .switch button[aria-pressed='true'] { background: var(--ink); color: var(--bg); }
 
+/* The smaller theme switch in the masthead reuses .switch */
+.theme-switch { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.theme-switch button { font-size: 13px; padding: 4px 10px; min-height: 32px; }
+
 /* ---------- Charts ---------- */
 
 .chart-wrap { position: relative; width: 100%; }
@@ -309,3 +356,254 @@ footer li { margin: 2px 0; }
   .card-head { flex-wrap: wrap; }
   .stat-value { font-size: 17px; }
 }
+
+/* ==========================================================================
+   Snow tab: sections, list, pins, map, detail view
+   ========================================================================== */
+
+#panel-snow > section { margin-top: 28px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 12px; }
+.section-head h2 { font-size: 24px; }
+.section-head .fine { margin-top: 0; }
+.empty { color: var(--ink-2); padding: 16px; border: 1px dashed var(--axis); border-radius: 10px; }
+.pin-msg { min-height: 1.5em; font-size: 14px; color: var(--ink-2); }
+.pin-msg:empty { min-height: 0; }
+
+.text-button {
+  font: 600 14px var(--sans);
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 8px 0;
+  min-height: 40px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ☆ / ★ pin toggle */
+.pin-button {
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  font: 600 20px var(--sans);
+  line-height: 1;
+  color: var(--ink-2);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.pin-button[aria-pressed='true'] { color: #c98500; }
+.pin-button.with-text { font-size: 14px; min-height: 36px; padding: 4px 12px; border-color: var(--rule); border-radius: 999px; }
+.pin-button:hover { border-color: var(--axis); }
+
+/* Search / area / sort */
+.list-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.control { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); min-width: 0; }
+.control.grow { flex: 1 1 100%; }
+@media (min-width: 720px) { .control.grow { flex-basis: 260px; } }
+.control input, .control select {
+  font: 16px var(--sans); /* 16px stops iPhones zooming in on focus */
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 44px;
+  width: 100%;
+}
+.list-count { margin: 0 0 8px; }
+
+/* The list of mountains */
+.resort-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+}
+.resort-row { padding: 4px 8px 4px 4px; border-top: 1px solid var(--rule); }
+.row-line { display: flex; align-items: center; gap: 4px; }
+.resort-row:first-child { border-top: 0; }
+.row-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 8px 4px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.row-main:hover .row-name { text-decoration: underline; text-underline-offset: 3px; }
+.row-title { min-width: 0; }
+.row-name { font-weight: 650; }
+.row-region { margin-left: 8px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.row-rating { display: flex; align-items: center; gap: 8px; }
+.row-stats { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); }
+
+/* ---------- Map ---------- */
+
+.map-wrap {
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 8px;
+}
+.us-map { display: block; width: 100%; height: auto; }
+.map-land { fill: var(--track); }
+.map-borders { fill: none; stroke: var(--surface); stroke-width: 1.2; stroke-linejoin: round; }
+.map-hit { fill: transparent; }
+.map-dot { cursor: pointer; outline: none; }
+/* Peaks: sizes are multiplied by --k (set by map.js) so they look the same at any map width */
+.map-icon .icon-body { fill: #7d8796; stroke: var(--surface); stroke-width: calc(1.2 * var(--k)); stroke-linejoin: round; }
+.map-icon .icon-cap { fill: #ffffff; }
+.map-icon .icon-lip { fill: none; stroke: #ffffff; stroke-width: calc(1.4 * var(--k)); stroke-linecap: round; }
+.map-dot.is-pinned .icon-body { fill: var(--accent); }
+.map-dot.is-selected .icon-body { fill: #e8590c; }
+.map-dot.is-faded { opacity: 0.25; }
+.map-dot:hover .icon-body, .map-dot:focus-visible .icon-body { stroke: var(--focus); stroke-width: calc(2.5 * var(--k)); }
+.map-label {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: calc(12px * var(--k));
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: calc(3 * var(--k));
+  paint-order: stroke; /* a halo so the label reads over borders */
+  pointer-events: none;
+}
+
+/* ---------- Detail view (a <dialog>) ---------- */
+
+dialog.detail {
+  width: min(720px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  padding: 0;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  overscroll-behavior: contain;
+}
+dialog.detail::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.detail-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+}
+.detail-head h2 { font-size: 28px; margin-top: 2px; }
+.close-button {
+  min-width: 44px;
+  min-height: 44px;
+  font: 400 28px/1 var(--sans);
+  color: var(--ink-2);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.detail-body { padding: 16px; }
+.detail-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.factors { margin: 0; padding-left: 20px; font-size: 15px; color: var(--ink-2); }
+.table-scroll { overflow-x: auto; }
+.forecast-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.forecast-table th, .forecast-table td { padding: 6px 8px 6px 0; text-align: left; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.forecast-table thead th { color: var(--muted); font-weight: 600; font-size: 12px; }
+
+/* Map legend: small copies of the real map icons */
+.map-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 0; }
+.legend-icon { --k: 1; margin-left: 6px; vertical-align: -2px; overflow: visible; }
+
+/* 'My mountains is full' replace prompt */
+.pin-replace {
+  margin: 4px 0 8px 48px;
+  padding: 12px;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 14px;
+}
+.detail-body .pin-replace { margin-left: 0; margin-bottom: 14px; }
+.pin-replace p { margin-bottom: 8px; color: var(--ink); }
+.pin-replace-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.pin-replace-options button {
+  font: 600 14px var(--sans);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  padding: 6px 12px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.pin-replace-options button:hover { border-color: var(--ink-2); }
+.pin-replace-options .cancel { color: var(--ink-2); border-style: dashed; }
+
+/* IKON / EPIC labels */
+.pass-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font: 700 10px/1.5 var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  color: var(--ink-2);
+}
+.kicker .pass-tag { letter-spacing: 0.06em; }
+
+/* ---------- Surf: tide card switch, direction compass ---------- */
+
+.tide-head { flex-wrap: wrap; }
+.tide-head .switch { flex-wrap: wrap; border-radius: 14px; }
+
+.compass-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 14px; }
+.direction-compass { flex-shrink: 0; overflow: visible; }
+.compass-ring { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+.compass-label { fill: var(--muted); font: 600 11px var(--sans); }
+.compass-land { fill: var(--track); }
+.compass-shore { stroke: var(--ink-2); stroke-width: 2; }
+.compass-arrow { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.compass-arrow.swell { stroke: var(--accent); }
+.compass-arrow.wind { stroke: #e8590c; }
+.compass-key { list-style: none; margin: 0; padding: 0; font-size: 14px; color: var(--ink-2); }
+.compass-key li { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.compass-key .key { display: inline-block; width: 18px; height: 4px; border-radius: 2px; }
+.compass-key .key.swell { background: var(--accent); }
+.compass-key .key.wind { background: #e8590c; }
+.compass-key .key.land { height: 10px; background: var(--track); border-top: 2px solid var(--ink-2); border-radius: 0; }

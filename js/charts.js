@@ -90,8 +90,13 @@ export function timeChart(container, opts) {
 
   // "Now" marker
   if (opts.nowX != null && opts.nowX >= x0 && opts.nowX <= x1) {
-    root.append(svg('line', { x1: sx(opts.nowX), x2: sx(opts.nowX), y1: m.top - 6, y2: height - m.bottom, class: 'now' }));
-    root.append(svg('text', { x: sx(opts.nowX), y: m.top - 10, 'text-anchor': 'middle', class: 'tick now-label' }, 'Now'));
+    const nx = sx(opts.nowX);
+    // If a label above a marker (e.g. "High 8:26 AM") is close by, put "Now" at the bottom instead.
+    const crowded = (opts.markers ?? []).some((mk) => !mk.below && Math.abs(sx(mk.x) - nx) < 55);
+    root.append(svg('line', { x1: nx, x2: nx, y1: crowded ? m.top : m.top - 6, y2: height - m.bottom, class: 'now' }));
+    root.append(crowded
+      ? svg('text', { x: nx + 4, y: height - m.bottom - 6, 'text-anchor': 'start', class: 'tick now-label' }, 'Now')
+      : svg('text', { x: nx, y: m.top - 10, 'text-anchor': 'middle', class: 'tick now-label' }, 'Now'));
   }
 
   // Labelled markers (e.g. high and low tide)

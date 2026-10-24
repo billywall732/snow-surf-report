@@ -1,18 +1,109 @@
 {
-  "_readme": "Thresholds for the 1-5 'should I go?' ratings. Every rating starts at 2 and gains or loses points. Units: inches, feet, seconds, mph, degrees.",
-
+  "_readme": "Thresholds for the 1-5 'should I go?' ratings. Every rating starts at 2 and gains or loses points. Units: inches, feet, seconds, mph, degrees. surf.profiles overrides the surf defaults per area (matching the 'area' of each beach in locations.json); areas without a profile use the defaults.",
   "snow": {
-    "fresh48hIn": { "good": 4, "great": 10 },
-    "baseDepthIn": { "thin": 18, "solid": 40 },
-    "upcoming72hIn": { "good": 4 },
+    "fresh48hIn": {
+      "good": 4,
+      "great": 10
+    },
+    "baseDepthIn": {
+      "thin": 18,
+      "solid": 40
+    },
+    "upcoming72hIn": {
+      "good": 4
+    },
     "closedScore": 1
   },
-
   "surf": {
     "sessionHour": 7,
-    "waveHeightFt": { "min": 1.5, "idealMin": 2.5, "idealMax": 6, "max": 10 },
-    "periodS": { "short": 8, "good": 12 },
-    "wind": { "lightMph": 6, "onshoreBadMph": 10 },
-    "offshoreToleranceDeg": 60
+    "waveHeightFt": {
+      "min": 1.5,
+      "idealMin": 2.5,
+      "idealMax": 6,
+      "max": 10
+    },
+    "periodS": {
+      "short": 8,
+      "good": 12
+    },
+    "wind": {
+      "lightMph": 6,
+      "onshoreBadMph": 10
+    },
+    "offshoreToleranceDeg": 60,
+    "profiles": {
+      "Pacific Northwest": {
+        "waveHeightFt": {
+          "min": 2,
+          "idealMin": 3,
+          "idealMax": 8,
+          "max": 14
+        },
+        "periodS": {
+          "short": 9,
+          "good": 13
+        }
+      },
+      "Hawaii": {
+        "waveHeightFt": {
+          "min": 2,
+          "idealMin": 3,
+          "idealMax": 10,
+          "max": 20
+        },
+        "periodS": {
+          "short": 9,
+          "good": 13
+        }
+      },
+      "Gulf Coast": {
+        "waveHeightFt": {
+          "min": 1,
+          "idealMin": 2,
+          "idealMax": 5,
+          "max": 8
+        },
+        "periodS": {
+          "short": 5,
+          "good": 8
+        }
+      },
+      "Southeast": {
+        "waveHeightFt": {
+          "min": 1.5,
+          "idealMin": 2.5,
+          "idealMax": 6,
+          "max": 10
+        },
+        "periodS": {
+          "short": 6,
+          "good": 10
+        }
+      },
+      "Mid-Atlantic": {
+        "waveHeightFt": {
+          "min": 1.5,
+          "idealMin": 2.5,
+          "idealMax": 6,
+          "max": 10
+        },
+        "periodS": {
+          "short": 6,
+          "good": 10
+        }
+      },
+      "Northeast": {
+        "waveHeightFt": {
+          "min": 1.5,
+          "idealMin": 2.5,
+          "idealMax": 6,
+          "max": 10
+        },
+        "periodS": {
+          "short": 6,
+          "good": 10
+        }
+      }
+    }
   }
 }

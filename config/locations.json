@@ -1,120 +1,3132 @@
 {
-  "_readme": "Places the report covers. Add or remove entries here; no code changes needed. JSON can't have comments, so notes live in 'note' / 'todo' fields. Coordinates are decimal degrees (west = negative). Each place has its own IANA timezone.",
-
+  "_readme": "Places the report covers. Add or remove entries here; no code changes needed. For a new resort, leave out \"snotel\" and run: node scripts/find-snotel.mjs JSON can't have comments, so notes live in 'note' / 'todo' fields. Coordinates are decimal degrees (west = negative). Each place has its own IANA timezone.",
   "snow": {
     "resorts": [
       {
+        "id": "afton-alps",
+        "name": "Afton Alps",
+        "city": "Hastings",
+        "region": "MN",
+        "area": "Midwest",
+        "lat": 44.8556,
+        "lon": -92.7892,
+        "timezone": "America/Chicago",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q4690826",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 874 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "alpine-valley-oh",
+        "name": "Alpine Valley",
+        "city": "Chesterland",
+        "region": "OH",
+        "area": "Midwest",
+        "lat": 41.5303,
+        "lon": -81.2662,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q4735528",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1853 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "alta",
+        "name": "Alta",
+        "city": "Alta",
+        "region": "UT",
+        "area": "Rockies",
+        "lat": 40.5808,
+        "lon": -111.637,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q2840279",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "1308:UT:SNTL",
+          "name": "Atwater",
+          "distanceKm": 1.2,
+          "note": "Auto-picked: nearest active SNOTEL, 8,750 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days (shared with Snowbird)"
+          }
+        ]
+      },
+      {
+        "id": "alyeska",
+        "name": "Alyeska Resort",
+        "city": "Girdwood",
+        "region": "AK",
+        "area": "Pacific NW",
+        "lat": 60.9705,
+        "lon": -149.098,
+        "timezone": "America/Anchorage",
+        "coordSource": "Wikidata Q9147336",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "1103:AK:SNTL",
+          "name": "Mt. Alyeska",
+          "distanceKm": 1.4,
+          "note": "Auto-picked: nearest active SNOTEL, 1,500 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "arapahoe-basin",
+        "name": "Arapahoe Basin",
+        "city": "Keystone",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.62539,
+        "lon": -105.86078,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q4784196",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "505:CO:SNTL",
+          "name": "Grizzly Peak",
+          "distanceKm": 2.5,
+          "note": "Auto-picked: nearest active SNOTEL, 11,110 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "aspen-snowmass",
+        "name": "Aspen Snowmass",
+        "city": "Snowmass Village",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.1956,
+        "lon": -106.951,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q7548669 (Snowmass)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "669:CO:SNTL",
+          "name": "North Lost Trail",
+          "distanceKm": 21.1,
+          "note": "Auto-picked: nearest active SNOTEL, 9,190 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "attitash",
+        "name": "Attitash",
+        "city": "Bartlett",
+        "region": "NH",
+        "area": "East",
+        "lat": 44.0822,
+        "lon": -71.2297,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q4818527",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2581 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "beaver-creek",
+        "name": "Beaver Creek",
+        "city": "Avon",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.6314,
+        "lon": -106.522,
+        "timezone": "America/Denver",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q813483",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "1040:CO:SNTL",
+          "name": "Mccoy Park",
+          "distanceKm": 3.7,
+          "note": "Auto-picked: nearest active SNOTEL, 9,500 ft."
+        }
+      },
+      {
+        "id": "big-bear",
+        "name": "Big Bear Mountain Resort",
+        "city": "Big Bear Lake",
+        "region": "CA",
+        "area": "West",
+        "lat": 34.2286,
+        "lon": -116.8911,
+        "timezone": "America/Los_Angeles",
+        "baseElevationFt": 6965,
+        "coordSource": "Wikipedia (Snow Summit)",
+        "snotel": null,
+        "snotelTodo": "No NRCS SNOTEL station within 250 km. Snow depth falls back to Open-Meteo's modelled value.",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not announced yet"
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "big-sky",
+        "name": "Big Sky Resort",
+        "city": "Big Sky",
+        "region": "MT",
+        "area": "Rockies",
+        "lat": 45.275,
+        "lon": -111.43194,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q4906372",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "590:MT:SNTL",
+          "name": "Lone Mountain",
+          "distanceKm": 0.4,
+          "note": "Auto-picked: nearest active SNOTEL, 8,820 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days (tram not included)"
+          }
+        ]
+      },
+      {
+        "id": "blue-mountain-pa",
+        "name": "Blue Mountain Resort",
+        "city": "Palmerton",
+        "region": "PA",
+        "area": "East",
+        "lat": 40.8222,
+        "lon": -75.5133,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q4929534",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2336 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "boston-mills-brandywine",
+        "name": "Boston Mills / Brandywine",
+        "city": "Peninsula",
+        "region": "OH",
+        "area": "Midwest",
+        "lat": 41.28,
+        "lon": -81.56,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q4947991 (one article for both)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1838 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "boyne-mountain",
+        "name": "Boyne Mountain",
+        "city": "Boyne Falls",
+        "region": "MI",
+        "area": "Midwest",
+        "lat": 45.16389,
+        "lon": -84.93278,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q4952560",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1491 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "breckenridge",
+        "name": "Breckenridge",
+        "city": "Breckenridge",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.475,
+        "lon": -106.06,
+        "timezone": "America/Denver",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q12053500",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "415:CO:SNTL",
+          "name": "Copper Mountain",
+          "distanceKm": 9.7,
+          "note": "Auto-picked: nearest active SNOTEL, 10,500 ft."
+        }
+      },
+      {
+        "id": "brighton",
+        "name": "Brighton",
+        "city": "Brighton",
+        "region": "UT",
+        "area": "Rockies",
+        "lat": 40.6,
+        "lon": -111.583,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q4967720",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "366:UT:SNTL",
+          "name": "Brighton",
+          "distanceKm": 0.1,
+          "note": "Auto-picked: nearest active SNOTEL, 8,790 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "camelback",
+        "name": "Camelback Resort",
+        "city": "Tannersville",
+        "region": "PA",
+        "area": "East",
+        "lat": 41.05139,
+        "lon": -75.35528,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q5025879",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2340 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "copper-mountain",
+        "name": "Copper Mountain",
+        "city": "Copper Mountain",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.5017,
+        "lon": -106.156,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q2362338",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "415:CO:SNTL",
+          "name": "Copper Mountain",
+          "distanceKm": 1.9,
+          "note": "Auto-picked: nearest active SNOTEL, 10,500 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "crested-butte",
+        "name": "Crested Butte",
+        "city": "Mount Crested Butte",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 38.8997,
+        "lon": -106.965,
+        "timezone": "America/Denver",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q5184571",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "380:CO:SNTL",
+          "name": "Butte",
+          "distanceKm": 1.2,
+          "note": "Auto-picked: nearest active SNOTEL, 10,190 ft."
+        }
+      },
+      {
+        "id": "crotched-mountain",
+        "name": "Crotched Mountain",
+        "city": "Bennington",
+        "region": "NH",
+        "area": "East",
+        "lat": 43.00808,
+        "lon": -71.87881,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "OpenStreetMap (winter sports area)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2556 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "crystal-mountain",
+        "name": "Crystal Mountain",
+        "city": "Enumclaw",
+        "region": "WA",
+        "area": "Pacific NW",
+        "lat": 46.9278,
+        "lon": -121.482,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikidata Q1624333",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "642:WA:SNTL",
+          "name": "Morse Lake",
+          "distanceKm": 2.4,
+          "note": "Auto-picked: nearest active SNOTEL, 5,400 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "deer-valley",
+        "name": "Deer Valley",
+        "city": "Park City",
+        "region": "UT",
+        "area": "Rockies",
+        "lat": 40.62278,
+        "lon": -111.48944,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q3021172",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "814:UT:SNTL",
+          "name": "Thaynes Canyon",
+          "distanceKm": 3.7,
+          "note": "Auto-picked: nearest active SNOTEL, 9,260 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days (reservations required)"
+          }
+        ]
+      },
+      {
+        "id": "eldora",
+        "name": "Eldora",
+        "city": "Nederland",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.9375,
+        "lon": -105.584,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q5354079",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "564:CO:SNTL",
+          "name": "Lake Eldora",
+          "distanceKm": 0.5,
+          "note": "Auto-picked: nearest active SNOTEL, 9,700 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "granite-peak",
+        "name": "Granite Peak",
+        "city": "Wausau",
+        "region": "WI",
+        "area": "Midwest",
+        "lat": 44.9286,
+        "lon": -89.6825,
+        "timezone": "America/Chicago",
+        "coordSource": "Wikidata Q5595907",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1119 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "heavenly",
+        "name": "Heavenly",
+        "city": "South Lake Tahoe",
+        "region": "CA",
+        "area": "West",
+        "lat": 38.9353,
+        "lon": -119.94,
+        "timezone": "America/Los_Angeles",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q1548153",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "518:CA:SNTL",
+          "name": "Heavenly Valley",
+          "distanceKm": 2.4,
+          "note": "Auto-picked: nearest active SNOTEL, 8,540 ft."
+        }
+      },
+      {
+        "id": "hidden-valley-mo",
+        "name": "Hidden Valley",
+        "city": "Wildwood",
+        "region": "MO",
+        "area": "Midwest",
+        "lat": 38.5356,
+        "lon": -90.6529,
+        "timezone": "America/Chicago",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q5752020",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1251 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "hidden-valley-pa",
+        "name": "Hidden Valley",
+        "city": "Hidden Valley",
+        "region": "PA",
+        "area": "East",
+        "lat": 40.05007,
+        "lon": -79.25778,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q19868228",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2067 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "hunter-mountain",
+        "name": "Hunter Mountain",
+        "city": "Hunter",
+        "region": "NY",
+        "area": "East",
+        "lat": 42.2003,
+        "lon": -74.2303,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q5944484",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2393 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "jack-frost-big-boulder",
+        "name": "Jack Frost / Big Boulder",
+        "city": "Blakeslee",
+        "region": "PA",
+        "area": "East",
+        "lat": 41.111,
+        "lon": -75.652,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q15229111 (one article for both)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2315 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "jackson-hole",
+        "name": "Jackson Hole",
+        "city": "Teton Village",
+        "region": "WY",
+        "area": "Rockies",
+        "lat": 43.5872,
+        "lon": -110.825,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q10538901",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "689:WY:SNTL",
+          "name": "Phillips Bench",
+          "distanceKm": 10.5,
+          "note": "Auto-picked: nearest active SNOTEL, 8,170 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "june-mountain",
+        "name": "June Mountain",
+        "city": "June Lake",
+        "region": "CA",
+        "area": "West",
+        "lat": 37.7683,
+        "lon": -119.0906,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikipedia infobox",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 36 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "keystone",
+        "name": "Keystone",
+        "city": "Keystone",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.605,
+        "lon": -105.954,
+        "timezone": "America/Denver",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q6398500",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "505:CO:SNTL",
+          "name": "Grizzly Peak",
+          "distanceKm": 8.6,
+          "note": "Auto-picked: nearest active SNOTEL, 11,110 ft."
+        }
+      },
+      {
+        "id": "killington",
+        "name": "Killington-Pico",
+        "city": "Killington",
+        "region": "VT",
+        "area": "East",
+        "lat": 43.6258,
+        "lon": -72.7978,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q14711916 (Killington)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2468 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "kirkwood",
+        "name": "Kirkwood",
+        "city": "Kirkwood",
+        "region": "CA",
+        "area": "West",
+        "lat": 38.684,
+        "lon": -120.068,
+        "timezone": "America/Los_Angeles",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q6415898",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "1067:CA:SNTL",
+          "name": "Carson Pass",
+          "distanceKm": 5.8,
+          "note": "Auto-picked: nearest active SNOTEL, 8,360 ft."
+        }
+      },
+      {
+        "id": "laurel-mountain",
+        "name": "Laurel Mountain",
+        "city": "Ligonier",
+        "region": "PA",
+        "area": "East",
+        "lat": 40.1647,
+        "lon": -79.165,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q6499924",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2070 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "liberty-mountain",
+        "name": "Liberty Mountain",
+        "city": "Carroll Valley",
+        "region": "PA",
+        "area": "East",
+        "lat": 39.7635,
+        "lon": -77.375,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q6541882",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2228 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "loon",
+        "name": "Loon Mountain",
+        "city": "Lincoln",
+        "region": "NH",
+        "area": "East",
+        "lat": 44.03611,
+        "lon": -71.62167,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q8520810",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2551 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "lutsen",
+        "name": "Lutsen Mountains",
+        "city": "Lutsen",
+        "region": "MN",
+        "area": "Midwest",
+        "lat": 47.664,
+        "lon": -90.714,
+        "timezone": "America/Chicago",
+        "coordSource": "Wikidata Q6705940",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1080 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "mad-river-mountain",
+        "name": "Mad River Mountain",
+        "city": "Zanesfield",
+        "region": "OH",
+        "area": "Midwest",
+        "lat": 40.3163,
+        "lon": -83.6806,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q14716653",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1705 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
         "id": "mammoth",
         "name": "Mammoth Mountain",
+        "city": "Mammoth Lakes",
         "region": "CA",
+        "area": "West",
         "lat": 37.63056,
         "lon": -119.0325,
-        "baseElevationFt": 7953,
         "timezone": "America/Los_Angeles",
+        "baseElevationFt": 7953,
+        "coordSource": "Wikipedia infobox",
         "snotel": {
           "triplet": "846:CA:SNTL",
           "name": "Virginia Lakes Ridge",
           "distanceKm": 52,
           "note": "Closest NRCS SNOTEL, 52 km north near Conway Summit. Not on the mountain, so treat it as a regional signal."
         },
-        "season": { "opensOn": "2026-11-13", "closesOn": null, "note": "Announced opening day" }
+        "season": {
+          "opensOn": "2026-11-13",
+          "closesOn": null,
+          "note": "Announced opening day"
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
       },
       {
-        "id": "big-bear",
-        "name": "Big Bear / Snow Summit",
-        "region": "CA",
-        "lat": 34.2286,
-        "lon": -116.8911,
-        "baseElevationFt": 6965,
-        "timezone": "America/Los_Angeles",
+        "id": "mount-snow",
+        "name": "Mount Snow",
+        "city": "West Dover",
+        "region": "VT",
+        "area": "East",
+        "lat": 42.95897,
+        "lon": -72.92371,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q617699 (summit)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
         "snotel": null,
-        "snotelTodo": "No NRCS SNOTEL station within 250 km. Snow depth falls back to Open-Meteo's modelled value.",
-        "season": { "opensOn": null, "closesOn": null, "todo": "Opening date not announced yet" }
+        "snotelTodo": "Nearest SNOTEL is 2475 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "mount-sunapee",
+        "name": "Mount Sunapee",
+        "city": "Newbury",
+        "region": "NH",
+        "area": "East",
+        "lat": 43.3306,
+        "lon": -72.08,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q6923944",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2532 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "mt-bachelor",
+        "name": "Mt. Bachelor",
+        "city": "Bend",
+        "region": "OR",
+        "area": "Pacific NW",
+        "lat": 44.0031,
+        "lon": -121.678,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikidata Q3326011",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "815:OR:SNTL",
+          "name": "Three Creeks Meadow",
+          "distanceKm": 16,
+          "note": "Auto-picked: nearest active SNOTEL, 5,680 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "mt-brighton",
+        "name": "Mt. Brighton",
+        "city": "Brighton",
+        "region": "MI",
+        "area": "Midwest",
+        "lat": 42.5381,
+        "lon": -83.8069,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q14716235",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1622 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "northstar",
+        "name": "Northstar",
+        "city": "Truckee",
+        "region": "CA",
+        "area": "West",
+        "lat": 39.2733,
+        "lon": -120.103,
+        "timezone": "America/Los_Angeles",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q7059771",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "834:CA:SNTL",
+          "name": "Truckee #2",
+          "distanceKm": 7.6,
+          "note": "Auto-picked: nearest active SNOTEL, 6,500 ft."
+        }
+      },
+      {
+        "id": "okemo",
+        "name": "Okemo",
+        "city": "Ludlow",
+        "region": "VT",
+        "area": "East",
+        "lat": 43.4014,
+        "lon": -72.7167,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q7081931",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2480 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "palisades-tahoe",
+        "name": "Palisades Tahoe",
+        "city": "Olympic Valley",
+        "region": "CA",
+        "area": "West",
+        "lat": 39.1882,
+        "lon": -120.2639,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikidata Q2182804",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "784:CA:SNTL",
+          "name": "Palisades Tahoe",
+          "distanceKm": 0.2,
+          "note": "Auto-picked: nearest active SNOTEL, 8,010 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "paoli-peaks",
+        "name": "Paoli Peaks",
+        "city": "Paoli",
+        "region": "IN",
+        "area": "Midwest",
+        "lat": 38.5578,
+        "lon": -86.5103,
+        "timezone": "America/Indiana/Indianapolis",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q7132127",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1568 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "park-city",
+        "name": "Park City",
+        "city": "Park City",
+        "region": "UT",
+        "area": "Rockies",
+        "lat": 40.6508,
+        "lon": -111.507,
+        "timezone": "America/Denver",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q3821979",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "814:UT:SNTL",
+          "name": "Thaynes Canyon",
+          "distanceKm": 3.8,
+          "note": "Auto-picked: nearest active SNOTEL, 9,260 ft."
+        }
+      },
+      {
+        "id": "roundtop",
+        "name": "Roundtop",
+        "city": "Lewisberry",
+        "region": "PA",
+        "area": "East",
+        "lat": 40.108,
+        "lon": -76.926,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q22096738",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2250 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "schweitzer",
+        "name": "Schweitzer",
+        "city": "Sandpoint",
+        "region": "ID",
+        "area": "Pacific NW",
+        "lat": 48.367,
+        "lon": -116.623,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikidata Q2255843",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "738:ID:SNTL",
+          "name": "Schweitzer Basin",
+          "distanceKm": 1.4,
+          "note": "Auto-picked: nearest active SNOTEL, 6,090 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "seven-springs",
+        "name": "Seven Springs",
+        "city": "Seven Springs",
+        "region": "PA",
+        "area": "East",
+        "lat": 40.0231,
+        "lon": -79.2928,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q7457464",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2065 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "sierra-at-tahoe",
+        "name": "Sierra-at-Tahoe",
+        "city": "Twin Bridges",
+        "region": "CA",
+        "area": "West",
+        "lat": 38.8002,
+        "lon": -120.081,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikidata Q7511301",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "463:CA:SNTL",
+          "name": "Echo Peak",
+          "distanceKm": 5.4,
+          "note": "Auto-picked: nearest active SNOTEL, 7,650 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "snow-creek",
+        "name": "Snow Creek",
+        "city": "Weston",
+        "region": "MO",
+        "area": "Midwest",
+        "lat": 39.46563,
+        "lon": -94.96882,
+        "timezone": "America/Chicago",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "OpenStreetMap (winter sports area)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 873 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "snow-valley",
+        "name": "Snow Valley",
+        "city": "Running Springs",
+        "region": "CA",
+        "area": "West",
+        "lat": 34.2234,
+        "lon": -117.037,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikidata Q7548326",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 259 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "snowbasin",
+        "name": "Snowbasin",
+        "city": "Huntsville",
+        "region": "UT",
+        "area": "Rockies",
+        "lat": 41.2119,
+        "lon": -111.852,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q2665933",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "1300:UT:SNTL",
+          "name": "Powder Mountain",
+          "distanceKm": 19.4,
+          "note": "Auto-picked: nearest active SNOTEL, 8,490 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
       },
       {
         "id": "snowbird",
         "name": "Snowbird",
+        "city": "Snowbird",
         "region": "UT",
+        "area": "Rockies",
         "lat": 40.58111,
         "lon": -111.65639,
-        "baseElevationFt": 8100,
         "timezone": "America/Denver",
+        "baseElevationFt": 8100,
+        "coordSource": "Wikipedia infobox",
         "snotel": {
           "triplet": "766:UT:SNTL",
           "name": "Snowbird",
           "distanceKm": 1.3,
           "note": "On the mountain, 9,170 ft."
         },
-        "season": { "opensOn": null, "closesOn": null, "todo": "Sources disagree (Nov 25 vs Nov 27). Fill in once Snowbird confirms." }
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Sources disagree (Nov 25 vs Nov 27). Fill in once Snowbird confirms."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days (shared with Alta)"
+          }
+        ]
+      },
+      {
+        "id": "snowriver",
+        "name": "Snowriver Mountain Resort",
+        "city": "Wakefield",
+        "region": "MI",
+        "area": "Midwest",
+        "lat": 46.5,
+        "lon": -89.97083,
+        "timezone": "America/Menominee",
+        "coordSource": "Wikidata Q6023980",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1108 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "snowshoe",
+        "name": "Snowshoe",
+        "city": "Snowshoe",
+        "region": "WV",
+        "area": "East",
+        "lat": 38.4089,
+        "lon": -79.9947,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q7548711",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2081 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "solitude",
+        "name": "Solitude",
+        "city": "Brighton",
+        "region": "UT",
+        "area": "Rockies",
+        "lat": 40.6151,
+        "lon": -111.589,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q7558292",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "366:UT:SNTL",
+          "name": "Brighton",
+          "distanceKm": 1.9,
+          "note": "Auto-picked: nearest active SNOTEL, 8,790 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "steamboat",
+        "name": "Steamboat",
+        "city": "Steamboat Springs",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 40.4528,
+        "lon": -106.773,
+        "timezone": "America/Denver",
+        "coordSource": "Wikidata Q7605410",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "457:CO:SNTL",
+          "name": "Dry Lake",
+          "distanceKm": 9,
+          "note": "Auto-picked: nearest active SNOTEL, 8,240 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "stevens-pass",
+        "name": "Stevens Pass",
+        "city": "Skykomish",
+        "region": "WA",
+        "area": "Pacific NW",
+        "lat": 47.7447,
+        "lon": -121.089,
+        "timezone": "America/Los_Angeles",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q7615484",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "791:WA:SNTL",
+          "name": "Stevens Pass",
+          "distanceKm": 0.3,
+          "note": "Auto-picked: nearest active SNOTEL, 3,940 ft."
+        }
+      },
+      {
+        "id": "stowe",
+        "name": "Stowe",
+        "city": "Stowe",
+        "region": "VT",
+        "area": "East",
+        "lat": 44.531,
+        "lon": -72.787,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q7620695",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2450 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "stratton",
+        "name": "Stratton",
+        "city": "Stratton",
+        "region": "VT",
+        "area": "East",
+        "lat": 43.1142,
+        "lon": -72.9067,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q7622271",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2472 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "sugarbush",
+        "name": "Sugarbush",
+        "city": "Warren",
+        "region": "VT",
+        "area": "East",
+        "lat": 44.1372,
+        "lon": -72.9067,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q7634969",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2448 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
+      },
+      {
+        "id": "sugarloaf",
+        "name": "Sugarloaf",
+        "city": "Carrabassett Valley",
+        "region": "ME",
+        "area": "East",
+        "lat": 45.0314,
+        "lon": -70.3131,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q1547750",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2632 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "sun-valley",
+        "name": "Sun Valley",
+        "city": "Ketchum",
+        "region": "ID",
+        "area": "Rockies",
+        "lat": 43.655,
+        "lon": -114.409,
+        "timezone": "America/Boise",
+        "coordSource": "Wikidata Q748604 (Bald Mountain)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "895:ID:SNTL",
+          "name": "Chocolate Gulch",
+          "distanceKm": 12.6,
+          "note": "Auto-picked: nearest active SNOTEL, 6,310 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "sunday-river",
+        "name": "Sunday River",
+        "city": "Newry",
+        "region": "ME",
+        "area": "East",
+        "lat": 44.4694,
+        "lon": -70.8611,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q7639538",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2601 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "taos",
+        "name": "Taos Ski Valley",
+        "city": "Taos Ski Valley",
+        "region": "NM",
+        "area": "Rockies",
+        "lat": 36.59,
+        "lon": -105.43694,
+        "timezone": "America/Denver",
+        "coordSource": "Wikipedia (Taos Ski Valley village)",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "1168:NM:SNTL",
+          "name": "Taos Powderhorn",
+          "distanceKm": 1.9,
+          "note": "Auto-picked: nearest active SNOTEL, 11,020 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "telluride",
+        "name": "Telluride",
+        "city": "Telluride",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 37.9364,
+        "lon": -107.82,
+        "timezone": "America/Denver",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Partner resort; days limited (confirm with Epic)"
+          }
+        ],
+        "coordSource": "Wikidata Q7697675",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "1344:CO:SNTL",
+          "name": "Alta Lakes",
+          "distanceKm": 5.7,
+          "note": "Auto-picked: nearest active SNOTEL, 11,290 ft."
+        }
+      },
+      {
+        "id": "the-highlands",
+        "name": "The Highlands",
+        "city": "Harbor Springs",
+        "region": "MI",
+        "area": "Midwest",
+        "lat": 45.47083,
+        "lon": -84.93472,
+        "timezone": "America/New_York",
+        "coordSource": "Wikidata Q4952557",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1490 km away; using Open-Meteo's modelled snow depth.",
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "summit-at-snoqualmie",
+        "name": "The Summit at Snoqualmie",
+        "city": "Snoqualmie Pass",
+        "region": "WA",
+        "area": "Pacific NW",
+        "lat": 47.424,
+        "lon": -121.416,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikidata Q7767293",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "672:WA:SNTL",
+          "name": "Olallie Meadows",
+          "distanceKm": 5.9,
+          "note": "Auto-picked: nearest active SNOTEL, 4,010 ft."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "7 days"
+          }
+        ]
+      },
+      {
+        "id": "vail",
+        "name": "Vail",
+        "city": "Vail",
+        "region": "CO",
+        "area": "Rockies",
+        "lat": 39.6391,
+        "lon": -106.374,
+        "timezone": "America/Denver",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q14685139",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": {
+          "triplet": "842:CO:SNTL",
+          "name": "Vail Mountain",
+          "distanceKm": 2.4,
+          "note": "Auto-picked: nearest active SNOTEL, 10,290 ft."
+        }
+      },
+      {
+        "id": "whitetail",
+        "name": "Whitetail",
+        "city": "Mercersburg",
+        "region": "PA",
+        "area": "East",
+        "lat": 39.7417,
+        "lon": -77.9328,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q7996297",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2184 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "wildcat",
+        "name": "Wildcat",
+        "city": "Jackson",
+        "region": "NH",
+        "area": "East",
+        "lat": 44.2631,
+        "lon": -71.2383,
+        "timezone": "America/New_York",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q8001022",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 2576 km away; using Open-Meteo's modelled snow depth."
+      },
+      {
+        "id": "wilmot",
+        "name": "Wilmot",
+        "city": "Wilmot",
+        "region": "WI",
+        "area": "Midwest",
+        "lat": 42.5,
+        "lon": -88.1889,
+        "timezone": "America/Chicago",
+        "passes": [
+          {
+            "pass": "Epic",
+            "access": "Unlimited"
+          }
+        ],
+        "coordSource": "Wikidata Q8022836",
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Opening date not set"
+        },
+        "snotel": null,
+        "snotelTodo": "Nearest SNOTEL is 1273 km away; using Open-Meteo's modelled snow depth."
       },
       {
         "id": "winter-park",
         "name": "Winter Park",
+        "city": "Winter Park",
         "region": "CO",
+        "area": "Rockies",
         "lat": 39.88694,
         "lon": -105.7625,
-        "baseElevationFt": 9000,
         "timezone": "America/Denver",
+        "baseElevationFt": 9000,
+        "coordSource": "Wikidata Q3569405",
         "snotel": {
           "triplet": "335:CO:SNTL",
           "name": "Berthoud Summit",
           "distanceKm": 9.3,
           "note": "11,300 ft near Berthoud Pass; long record."
         },
-        "season": { "opensOn": null, "closesOn": null, "todo": "Not announced; projected late Oct / early Nov." }
+        "season": {
+          "opensOn": null,
+          "closesOn": null,
+          "todo": "Not announced; projected late Oct / early Nov."
+        },
+        "passes": [
+          {
+            "pass": "Ikon",
+            "access": "Unlimited"
+          }
+        ]
       }
+    ],
+    "defaultPinned": [
+      "mammoth",
+      "big-bear",
+      "snowbird",
+      "winter-park"
     ]
   },
-
   "surf": {
+    "defaultPinned": [
+      "el-porto",
+      "malibu",
+      "manasquan",
+      "jacksonville-beach"
+    ],
     "tideStations": [
-      { "id": "9410840", "name": "Santa Monica, CA", "shortName": "LA", "timezone": "America/Los_Angeles" },
-      { "id": "8532591", "name": "Manasquan Inlet, NJ", "shortName": "NJ", "timezone": "America/New_York" }
+      {
+        "id": "9410840",
+        "name": "Santa Monica, CA",
+        "shortName": "LA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "8532591",
+        "name": "Manasquan Inlet, NJ",
+        "shortName": "NJ",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "TWC0419",
+        "name": "San Clemente",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9410230",
+        "name": "La Jolla (Scripps Institution Wharf), CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9410196",
+        "name": "Mission Bay, Campland, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9410583",
+        "name": "Balboa Pier, Newport Beach, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "TWC0445",
+        "name": "Mugu Lagoon (ocean pier)",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9411189",
+        "name": "Ventura, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9411270",
+        "name": "Rincon Island, Mussel Shoals, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9412110",
+        "name": "PORT SAN LUIS, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9413745",
+        "name": "Santa Cruz, Monterey Bay, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9414131",
+        "name": "Pillar Point Harbor, Half Moon Bay, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9414275",
+        "name": "Ocean Beach, outer coast, CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9437954",
+        "name": "North Fork, Nehalem River, OR",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9435827",
+        "name": "Depoe Bay, OR",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9441102",
+        "name": "Westport, Point Chehalis, WA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "1612668",
+        "name": "Haleiwa, Waialua Bay, HI",
+        "timezone": "Pacific/Honolulu"
+      },
+      {
+        "id": "1612340",
+        "name": "HONOLULU, HI",
+        "timezone": "Pacific/Honolulu"
+      },
+      {
+        "id": "1615680",
+        "name": "KAHULUI, HI",
+        "timezone": "Pacific/Honolulu"
+      },
+      {
+        "id": "1611683",
+        "name": "Hanalei Bay, HI",
+        "timezone": "Pacific/Honolulu"
+      },
+      {
+        "id": "8779750",
+        "name": "PADRE ISLAND (south end), TX",
+        "timezone": "America/Chicago"
+      },
+      {
+        "id": "8771510",
+        "name": "Galveston Pleasure Pier, TX",
+        "timezone": "America/Chicago"
+      },
+      {
+        "id": "8729807",
+        "name": "Pensacola Beach Pier, FL",
+        "timezone": "America/Chicago"
+      },
+      {
+        "id": "8722004",
+        "name": "Sebastian Inlet bridge, FL",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8721649",
+        "name": "Cocoa Beach, FL",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8721147",
+        "name": "Ponce de Leon Inlet, FL",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8720291",
+        "name": "Jacksonville Beach, FL",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "TEC3127",
+        "name": "Folly Island (outer coast)",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8658163",
+        "name": "Wrightsville Beach, NC",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "TEC2789",
+        "name": "Cape Hatteras",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8639168",
+        "name": "Virginia Beach, VA",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8570280",
+        "name": "OCEAN CITY (FISHING PIER), MD",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8532337",
+        "name": "Belmar, Atlantic Ocean, NJ",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8510560",
+        "name": "Montauk, Fort Pond Bay, NY",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8454658",
+        "name": "Narragansett Pier, RI",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8429489",
+        "name": "Hampton Harbor, NH",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8418445",
+        "name": "Pine Point, Scarborough River, ME",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "9410660",
+        "name": "LOS ANGELES (Outer Harbor), CA",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "9439011",
+        "name": "Hammond, Oregon, OR",
+        "timezone": "America/Los_Angeles"
+      },
+      {
+        "id": "8533615",
+        "name": "Barnegat Inlet, USCG Station, NJ",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8516881",
+        "name": "East Rockaway Inlet, Atlantic Beach, NY",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8517394",
+        "name": "Barren Island, Rockaway Inlet, NY",
+        "timezone": "America/New_York"
+      },
+      {
+        "id": "8447435",
+        "name": "Chatham Harbor, Aunt Lydias Cove, MA",
+        "timezone": "America/New_York"
+      }
     ],
     "spots": [
       {
         "id": "el-porto",
         "name": "El Porto",
-        "region": "Los Angeles",
+        "city": "Manhattan Beach",
+        "region": "CA",
+        "area": "Southern California",
         "lat": 33.903274,
         "lon": -118.419039,
         "timezone": "America/Los_Angeles",
         "beachFacingDeg": 250,
         "tideStation": "9410840",
-        "buoy": { "id": "46221", "name": "Santa Monica Bay" }
+        "buoy": {
+          "id": "46221",
+          "name": "Santa Monica Bay"
+        },
+        "coordSource": "Wikipedia"
       },
       {
         "id": "redondo",
         "name": "Redondo Beach",
-        "region": "Los Angeles",
+        "city": "Redondo Beach",
+        "region": "CA",
+        "area": "Southern California",
         "lat": 33.839688,
         "lon": -118.392654,
         "timezone": "America/Los_Angeles",
         "beachFacingDeg": 245,
         "tideStation": "9410840",
-        "buoy": { "id": "46221", "name": "Santa Monica Bay" }
+        "buoy": {
+          "id": "46221",
+          "name": "Santa Monica Bay"
+        },
+        "coordSource": "Wikipedia"
       },
       {
         "id": "malibu",
         "name": "Malibu (Surfrider)",
-        "region": "Los Angeles",
+        "city": "Malibu",
+        "region": "CA",
+        "area": "Southern California",
         "lat": 34.03333,
         "lon": -118.67917,
         "timezone": "America/Los_Angeles",
         "beachFacingDeg": 180,
         "tideStation": "9410840",
-        "buoy": { "id": "46268", "name": "Topanga Nearshore" }
+        "buoy": {
+          "id": "46268",
+          "name": "Topanga Nearshore"
+        },
+        "coordSource": "Wikipedia"
       },
       {
         "id": "manasquan",
         "name": "Manasquan Inlet",
-        "region": "New Jersey",
+        "city": "Manasquan",
+        "region": "NJ",
+        "area": "Mid-Atlantic",
         "lat": 40.10278,
         "lon": -74.035,
         "timezone": "America/New_York",
         "beachFacingDeg": 100,
         "tideStation": "8532591",
-        "buoy": { "id": "44091", "name": "Barnegat" }
+        "buoy": {
+          "id": "44091",
+          "name": "Barnegat"
+        },
+        "coordSource": "Wikipedia"
+      },
+      {
+        "id": "trestles",
+        "name": "Trestles",
+        "city": "San Clemente",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 33.3897,
+        "lon": -117.59308,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Trestles Beach Trail at the beach)",
+        "beachFacingDeg": 232,
+        "tideStation": "TWC0419",
+        "buoy": {
+          "id": "46277",
+          "name": "Green Beach Offshore, CA",
+          "distanceKm": 9
+        }
+      },
+      {
+        "id": "oceanside",
+        "name": "Oceanside Pier",
+        "city": "Oceanside",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 33.19417,
+        "lon": -117.38463,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Oceanside Pier)",
+        "beachFacingDeg": 234,
+        "tideStation": "TWC0419",
+        "buoy": {
+          "id": "46224",
+          "name": "Oceanside Offshore, CA",
+          "distanceKm": 8
+        }
+      },
+      {
+        "id": "swamis",
+        "name": "Swami's",
+        "city": "Encinitas",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 33.03463,
+        "lon": -117.292173,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "Wikipedia (Swami's)",
+        "beachFacingDeg": 237,
+        "tideStation": "9410230",
+        "buoy": {
+          "id": "46274",
+          "name": "Leucadia Nearshore, CA",
+          "distanceKm": 4
+        }
+      },
+      {
+        "id": "blacks",
+        "name": "Black's Beach",
+        "city": "San Diego",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 32.89973,
+        "lon": -117.25378,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Black's Beach)",
+        "beachFacingDeg": 263,
+        "tideStation": "9410230",
+        "buoy": {
+          "id": "46254",
+          "name": "SCRIPPS Nearshore, CA",
+          "distanceKm": 4
+        }
+      },
+      {
+        "id": "pacific-beach",
+        "name": "Pacific Beach",
+        "city": "San Diego",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 32.79614,
+        "lon": -117.2575,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Crystal Pier)",
+        "beachFacingDeg": 246,
+        "tideStation": "9410196",
+        "buoy": {
+          "id": "46254",
+          "name": "SCRIPPS Nearshore, CA",
+          "distanceKm": 8
+        }
+      },
+      {
+        "id": "huntington-beach",
+        "name": "Huntington Beach Pier",
+        "city": "Huntington Beach",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 33.6546,
+        "lon": -118.00466,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Huntington Beach Pier)",
+        "beachFacingDeg": 220,
+        "tideStation": "9410583",
+        "buoy": {
+          "id": "46253",
+          "name": "San Pedro South, CA",
+          "distanceKm": 19
+        }
+      },
+      {
+        "id": "newport-beach",
+        "name": "Newport Beach",
+        "city": "Newport Beach",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 33.60675,
+        "lon": -117.93009,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Newport Pier)",
+        "beachFacingDeg": 220,
+        "tideStation": "9410583",
+        "buoy": {
+          "id": "46253",
+          "name": "San Pedro South, CA",
+          "distanceKm": 24
+        }
+      },
+      {
+        "id": "seal-beach",
+        "name": "Seal Beach",
+        "city": "Seal Beach",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 33.73754,
+        "lon": -118.10762,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Seal Beach Municipal Pier)",
+        "beachFacingDeg": 205,
+        "tideStation": "9410660",
+        "buoy": {
+          "id": "46256",
+          "name": "Long Beach Channel, CA",
+          "distanceKm": 10
+        }
+      },
+      {
+        "id": "zuma",
+        "name": "Zuma Beach",
+        "city": "Malibu",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 34.02144,
+        "lon": -118.83103,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Zuma Beach)",
+        "beachFacingDeg": 221,
+        "tideStation": "TWC0445",
+        "buoy": {
+          "id": "46268",
+          "name": "Topanga Nearshore, CA",
+          "distanceKm": 23
+        }
+      },
+      {
+        "id": "c-street",
+        "name": "C Street",
+        "city": "Ventura",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 34.27421,
+        "lon": -119.30626,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Surfers Point Dunes)",
+        "beachFacingDeg": 194,
+        "tideStation": "9411189",
+        "buoy": {
+          "id": "46053",
+          "name": "EAST SANTA BARBARA  - 12NM Southwest of Santa Barbara, CA",
+          "distanceKm": 49
+        }
+      },
+      {
+        "id": "rincon",
+        "name": "Rincon",
+        "city": "Carpinteria",
+        "region": "CA",
+        "area": "Southern California",
+        "lat": 34.37419,
+        "lon": -119.47664,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Rincon Point)",
+        "beachFacingDeg": 190,
+        "tideStation": "9411270",
+        "buoy": {
+          "id": "46053",
+          "name": "EAST SANTA BARBARA  - 12NM Southwest of Santa Barbara, CA",
+          "distanceKm": 36
+        }
+      },
+      {
+        "id": "pismo-beach",
+        "name": "Pismo Beach",
+        "city": "Pismo Beach",
+        "region": "CA",
+        "area": "Central & NorCal",
+        "lat": 35.13831,
+        "lon": -120.6446,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Pismo Beach Pier)",
+        "beachFacingDeg": 243,
+        "tideStation": "9412110",
+        "buoy": {
+          "id": "46286",
+          "name": "Avila Beach Nearshore, CA",
+          "distanceKm": 9
+        }
+      },
+      {
+        "id": "morro-bay",
+        "name": "Morro Bay",
+        "city": "Morro Bay",
+        "region": "CA",
+        "area": "Central & NorCal",
+        "lat": 35.37449,
+        "lon": -120.86302,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Morro Rock Beach)",
+        "beachFacingDeg": 257,
+        "tideStation": "9412110",
+        "buoy": {
+          "id": "46215",
+          "name": "Diablo Canyon, CA",
+          "distanceKm": 19
+        }
+      },
+      {
+        "id": "steamer-lane",
+        "name": "Steamer Lane",
+        "city": "Santa Cruz",
+        "region": "CA",
+        "area": "Central & NorCal",
+        "lat": 36.95149,
+        "lon": -122.02674,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Santa Cruz Lighthouse)",
+        "beachFacingDeg": 148,
+        "tideStation": "9413745",
+        "buoy": {
+          "id": "46236",
+          "name": "Monterey Canyon Outer, CA",
+          "distanceKm": 22
+        }
+      },
+      {
+        "id": "pleasure-point",
+        "name": "Pleasure Point",
+        "city": "Santa Cruz",
+        "region": "CA",
+        "area": "Central & NorCal",
+        "lat": 36.96569,
+        "lon": -121.96498,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Pleasure Point)",
+        "beachFacingDeg": 132,
+        "tideStation": "9413745",
+        "buoy": {
+          "id": "46236",
+          "name": "Monterey Canyon Outer, CA",
+          "distanceKm": 23
+        }
+      },
+      {
+        "id": "linda-mar",
+        "name": "Linda Mar",
+        "city": "Pacifica",
+        "region": "CA",
+        "area": "Central & NorCal",
+        "lat": 37.60056,
+        "lon": -122.50013,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Pacifica State Beach)",
+        "beachFacingDeg": 298,
+        "tideStation": "9414131",
+        "buoy": {
+          "id": "46237",
+          "name": "San Francisco Bar, CA",
+          "distanceKm": 24
+        }
+      },
+      {
+        "id": "ocean-beach-sf",
+        "name": "Ocean Beach",
+        "city": "San Francisco",
+        "region": "CA",
+        "area": "Central & NorCal",
+        "lat": 37.75615,
+        "lon": -122.51019,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Ocean Beach)",
+        "beachFacingDeg": 264,
+        "tideStation": "9414275",
+        "buoy": {
+          "id": "46237",
+          "name": "San Francisco Bar, CA",
+          "distanceKm": 11
+        }
+      },
+      {
+        "id": "short-sands",
+        "name": "Short Sands",
+        "city": "Arch Cape",
+        "region": "OR",
+        "area": "Pacific Northwest",
+        "lat": 45.76073,
+        "lon": -123.96709,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Short Sand Beach)",
+        "beachFacingDeg": 241,
+        "tideStation": "9437954",
+        "buoy": {
+          "id": "46278",
+          "name": "Tillamook Bay South Jetty, OR",
+          "distanceKm": 23
+        }
+      },
+      {
+        "id": "seaside",
+        "name": "Seaside",
+        "city": "Seaside",
+        "region": "OR",
+        "area": "Pacific Northwest",
+        "lat": 45.97506,
+        "lon": -123.94243,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Lanai at the Cove)",
+        "beachFacingDeg": 275,
+        "tideStation": "9439011",
+        "buoy": {
+          "id": "46243",
+          "name": "Clatsop Spit, OR",
+          "distanceKm": 30
+        },
+        "facingNote": "Hand-set: Seaside faces west (coastline method gave 338°, misled by the estuary)"
+      },
+      {
+        "id": "otter-rock",
+        "name": "Otter Rock",
+        "city": "Otter Rock",
+        "region": "OR",
+        "area": "Pacific Northwest",
+        "lat": 44.74691,
+        "lon": -124.0625,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Otter Rock beach access)",
+        "beachFacingDeg": 247,
+        "tideStation": "9435827",
+        "buoy": {
+          "id": "46097",
+          "name": "OOI Newport Shelf",
+          "distanceKm": 23
+        }
+      },
+      {
+        "id": "westport",
+        "name": "Westport",
+        "city": "Westport",
+        "region": "WA",
+        "area": "Pacific Northwest",
+        "lat": 46.90352,
+        "lon": -124.12209,
+        "timezone": "America/Los_Angeles",
+        "coordSource": "OpenStreetMap (Westhaven Beach)",
+        "beachFacingDeg": 318,
+        "tideStation": "9441102",
+        "buoy": {
+          "id": "46211",
+          "name": "Grays Harbor, WA",
+          "distanceKm": 11
+        }
+      },
+      {
+        "id": "pipeline",
+        "name": "Pipeline",
+        "city": "Haleiwa",
+        "region": "HI",
+        "area": "Hawaii",
+        "lat": 21.66484,
+        "lon": -158.05091,
+        "timezone": "Pacific/Honolulu",
+        "coordSource": "OpenStreetMap ('Ehukai Beach Park)",
+        "beachFacingDeg": 314,
+        "tideStation": "1612668",
+        "buoy": {
+          "id": "51201",
+          "name": "Waimea Bay, HI",
+          "distanceKm": 7
+        }
+      },
+      {
+        "id": "sunset-beach-hi",
+        "name": "Sunset Beach",
+        "city": "Haleiwa",
+        "region": "HI",
+        "area": "Hawaii",
+        "lat": 21.67085,
+        "lon": -158.04567,
+        "timezone": "Pacific/Honolulu",
+        "coordSource": "OpenStreetMap (Sunset Beach)",
+        "beachFacingDeg": 316,
+        "tideStation": "1612668",
+        "buoy": {
+          "id": "51201",
+          "name": "Waimea Bay, HI",
+          "distanceKm": 7
+        }
+      },
+      {
+        "id": "waikiki",
+        "name": "Waikiki",
+        "city": "Honolulu",
+        "region": "HI",
+        "area": "Hawaii",
+        "lat": 21.2741,
+        "lon": -157.82431,
+        "timezone": "Pacific/Honolulu",
+        "coordSource": "OpenStreetMap (Waikīkī Beach)",
+        "beachFacingDeg": 233,
+        "tideStation": "1612340",
+        "buoy": {
+          "id": "51211",
+          "name": "Pearl Harbor Entrance, HI",
+          "distanceKm": 14
+        }
+      },
+      {
+        "id": "hookipa",
+        "name": "Ho'okipa",
+        "city": "Paia",
+        "region": "HI",
+        "area": "Hawaii",
+        "lat": 20.93442,
+        "lon": -156.35585,
+        "timezone": "Pacific/Honolulu",
+        "coordSource": "OpenStreetMap (Hookipa Beach Park)",
+        "beachFacingDeg": 333,
+        "tideStation": "1615680",
+        "buoy": null
+      },
+      {
+        "id": "hanalei",
+        "name": "Hanalei Bay",
+        "city": "Hanalei",
+        "region": "HI",
+        "area": "Hawaii",
+        "lat": 22.21267,
+        "lon": -159.49757,
+        "timezone": "Pacific/Honolulu",
+        "coordSource": "OpenStreetMap (Hanalei Pier)",
+        "beachFacingDeg": 0,
+        "tideStation": "1611683",
+        "buoy": null,
+        "facingNote": "Hand-set: Hanalei Bay opens to the north (coastline method gave 277°)"
+      },
+      {
+        "id": "south-padre",
+        "name": "South Padre Island",
+        "city": "South Padre Island",
+        "region": "TX",
+        "area": "Gulf Coast",
+        "lat": 26.07139,
+        "lon": -97.15869,
+        "timezone": "America/Chicago",
+        "coordSource": "OpenStreetMap (Isla Blanca Park)",
+        "beachFacingDeg": 71,
+        "tideStation": "8779750",
+        "buoy": null
+      },
+      {
+        "id": "galveston",
+        "name": "Galveston",
+        "city": "Galveston",
+        "region": "TX",
+        "area": "Gulf Coast",
+        "lat": 29.28663,
+        "lon": -94.78994,
+        "timezone": "America/Chicago",
+        "coordSource": "OpenStreetMap (Galveston Island Historic Pleasure Pier)",
+        "beachFacingDeg": 142,
+        "tideStation": "8771510",
+        "buoy": {
+          "id": "42035",
+          "name": "GALVESTON,TX -  22 NM East of Galveston, TX",
+          "distanceKm": 37
+        }
+      },
+      {
+        "id": "pensacola-beach",
+        "name": "Pensacola Beach",
+        "city": "Pensacola Beach",
+        "region": "FL",
+        "area": "Gulf Coast",
+        "lat": 30.32968,
+        "lon": -87.14246,
+        "timezone": "America/Chicago",
+        "coordSource": "OpenStreetMap (Pensacola Beach Pier)",
+        "beachFacingDeg": 174,
+        "tideStation": "8729807",
+        "buoy": {
+          "id": "42012",
+          "name": "ORANGE BEACH - 44 NM SE of Mobile, AL",
+          "distanceKm": 49
+        }
+      },
+      {
+        "id": "sebastian-inlet",
+        "name": "Sebastian Inlet",
+        "city": "Melbourne Beach",
+        "region": "FL",
+        "area": "Southeast",
+        "lat": 27.85576,
+        "lon": -80.4535,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Sebastian Inlet)",
+        "beachFacingDeg": 68,
+        "tideStation": "8722004",
+        "buoy": {
+          "id": "41114",
+          "name": "Fort Pierce, FL",
+          "distanceKm": 40
+        }
+      },
+      {
+        "id": "cocoa-beach",
+        "name": "Cocoa Beach",
+        "city": "Cocoa Beach",
+        "region": "FL",
+        "area": "Southeast",
+        "lat": 28.36775,
+        "lon": -80.6018,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Cocoa Beach Pier)",
+        "beachFacingDeg": 100,
+        "tideStation": "8721649",
+        "buoy": {
+          "id": "41113",
+          "name": "Cape Canaveral Nearshore, FL",
+          "distanceKm": 8
+        }
+      },
+      {
+        "id": "new-smyrna",
+        "name": "New Smyrna Beach",
+        "city": "New Smyrna Beach",
+        "region": "FL",
+        "area": "Southeast",
+        "lat": 29.0683,
+        "lon": -80.9137,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Smyrna Dunes Park)",
+        "beachFacingDeg": 61,
+        "tideStation": "8721147",
+        "buoy": {
+          "id": "41070",
+          "name": "Ponce de Leon Inlet Waves (PNCWAVE)",
+          "distanceKm": 27
+        }
+      },
+      {
+        "id": "jacksonville-beach",
+        "name": "Jacksonville Beach",
+        "city": "Jacksonville Beach",
+        "region": "FL",
+        "area": "Southeast",
+        "lat": 30.29357,
+        "lon": -81.38771,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Jacksonville Beach Fishing Pier)",
+        "beachFacingDeg": 79,
+        "tideStation": "8720291",
+        "buoy": {
+          "id": "41117",
+          "name": "St. Augustine, FL",
+          "distanceKm": 44
+        }
+      },
+      {
+        "id": "folly-beach",
+        "name": "Folly Beach",
+        "city": "Folly Beach",
+        "region": "SC",
+        "area": "Southeast",
+        "lat": 32.65497,
+        "lon": -79.93964,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Folly Beach Pier)",
+        "beachFacingDeg": 153,
+        "tideStation": "TEC3127",
+        "buoy": {
+          "id": "41076",
+          "name": "CHR60WAVE",
+          "distanceKm": 29
+        }
+      },
+      {
+        "id": "wrightsville-beach",
+        "name": "Wrightsville Beach",
+        "city": "Wrightsville Beach",
+        "region": "NC",
+        "area": "Southeast",
+        "lat": 34.21432,
+        "lon": -77.78857,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Johnnie Mercer's Fishing Pier)",
+        "beachFacingDeg": 124,
+        "tideStation": "8658163",
+        "buoy": {
+          "id": "41110",
+          "name": "Masonboro Inlet, ILM2, NC",
+          "distanceKm": 10
+        }
+      },
+      {
+        "id": "cape-hatteras",
+        "name": "Cape Hatteras",
+        "city": "Buxton",
+        "region": "NC",
+        "area": "Southeast",
+        "lat": 35.25054,
+        "lon": -75.52882,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Cape Hatteras Light Station)",
+        "beachFacingDeg": 105,
+        "tideStation": "TEC2789",
+        "buoy": {
+          "id": "41120",
+          "name": "Cape Hatteras East, NC",
+          "distanceKm": 22
+        }
+      },
+      {
+        "id": "virginia-beach",
+        "name": "Virginia Beach",
+        "city": "Virginia Beach",
+        "region": "VA",
+        "area": "Mid-Atlantic",
+        "lat": 36.84356,
+        "lon": -75.97131,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Virginia Beach Fishing Pier)",
+        "beachFacingDeg": 78,
+        "tideStation": "8639168",
+        "buoy": {
+          "id": "44099",
+          "name": "Cape Henry, VA",
+          "distanceKm": 24
+        }
+      },
+      {
+        "id": "ocean-city-md",
+        "name": "Ocean City",
+        "city": "Ocean City",
+        "region": "MD",
+        "area": "Mid-Atlantic",
+        "lat": 38.32704,
+        "lon": -75.08712,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Ocean City Boardwalk)",
+        "beachFacingDeg": 100,
+        "tideStation": "8570280",
+        "buoy": {
+          "id": "44084",
+          "name": "Bethany Beach, DE",
+          "distanceKm": 24
+        },
+        "facingNote": "Hand-set: Ocean City faces east (coastline method gave 146°, misled by the inlet)"
+      },
+      {
+        "id": "belmar",
+        "name": "Belmar",
+        "city": "Belmar",
+        "region": "NJ",
+        "area": "Mid-Atlantic",
+        "lat": 40.17651,
+        "lon": -74.01368,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Belmar Boardwalk)",
+        "beachFacingDeg": 105,
+        "tideStation": "8532337",
+        "buoy": {
+          "id": "44065",
+          "name": "New York Harbor Entrance - 15 NM SE of Breezy Point , NY",
+          "distanceKm": 34
+        }
+      },
+      {
+        "id": "asbury-park",
+        "name": "Asbury Park",
+        "city": "Asbury Park",
+        "region": "NJ",
+        "area": "Mid-Atlantic",
+        "lat": 40.22374,
+        "lon": -73.99806,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Asbury Park Convention Hall)",
+        "beachFacingDeg": 104,
+        "tideStation": "8532337",
+        "buoy": {
+          "id": "44065",
+          "name": "New York Harbor Entrance - 15 NM SE of Breezy Point , NY",
+          "distanceKm": 30
+        }
+      },
+      {
+        "id": "long-beach-island",
+        "name": "Long Beach Island",
+        "city": "Ship Bottom",
+        "region": "NJ",
+        "area": "Mid-Atlantic",
+        "lat": 39.6496,
+        "lon": -74.17572,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Ship Bottom)",
+        "beachFacingDeg": 124,
+        "tideStation": "8533615",
+        "buoy": {
+          "id": "44091",
+          "name": "Barnegat, NJ",
+          "distanceKm": 37
+        }
+      },
+      {
+        "id": "long-beach-ny",
+        "name": "Long Beach",
+        "city": "Long Beach",
+        "region": "NY",
+        "area": "Northeast",
+        "lat": 40.58394,
+        "lon": -73.66492,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Sobi Long Beach)",
+        "beachFacingDeg": 184,
+        "tideStation": "8516881",
+        "buoy": {
+          "id": "44065",
+          "name": "New York Harbor Entrance - 15 NM SE of Breezy Point , NY",
+          "distanceKm": 24
+        }
+      },
+      {
+        "id": "rockaway",
+        "name": "Rockaway Beach",
+        "city": "Queens",
+        "region": "NY",
+        "area": "Northeast",
+        "lat": 40.57969,
+        "lon": -73.82969,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Rockaway Beach Boardwalk Roller Hockey Rink)",
+        "beachFacingDeg": 156,
+        "tideStation": "8517394",
+        "buoy": {
+          "id": "44065",
+          "name": "New York Harbor Entrance - 15 NM SE of Breezy Point , NY",
+          "distanceKm": 26
+        }
+      },
+      {
+        "id": "montauk",
+        "name": "Ditch Plains",
+        "city": "Montauk",
+        "region": "NY",
+        "area": "Northeast",
+        "lat": 41.04034,
+        "lon": -71.91744,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Ditch Plains beach parking)",
+        "beachFacingDeg": 167,
+        "tideStation": "8510560",
+        "buoy": {
+          "id": "44097",
+          "name": "Block Island, RI",
+          "distanceKm": 67
+        }
+      },
+      {
+        "id": "narragansett",
+        "name": "Narragansett",
+        "city": "Narragansett",
+        "region": "RI",
+        "area": "Northeast",
+        "lat": 41.4364,
+        "lon": -71.45337,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Narragansett Town Beach)",
+        "beachFacingDeg": 124,
+        "tideStation": "8454658",
+        "buoy": {
+          "id": "44085",
+          "name": "Buzzards Bay, MA",
+          "distanceKm": 36
+        }
+      },
+      {
+        "id": "nauset",
+        "name": "Nauset",
+        "city": "Eastham",
+        "region": "MA",
+        "area": "Northeast",
+        "lat": 41.85905,
+        "lon": -69.95117,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Nauset Light Beach)",
+        "beachFacingDeg": 76,
+        "tideStation": "8447435",
+        "buoy": {
+          "id": "44090",
+          "name": "Cape Cod Bay, MA",
+          "distanceKm": 31
+        }
+      },
+      {
+        "id": "hampton-beach",
+        "name": "Hampton Beach",
+        "city": "Hampton",
+        "region": "NH",
+        "area": "Northeast",
+        "lat": 42.90739,
+        "lon": -70.81049,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Hampton Beach State Park)",
+        "beachFacingDeg": 100,
+        "tideStation": "8429489",
+        "buoy": {
+          "id": "44030",
+          "name": "Buoy B01 - Western Maine Shelf",
+          "distanceKm": 43
+        }
+      },
+      {
+        "id": "higgins-beach",
+        "name": "Higgins Beach",
+        "city": "Scarborough",
+        "region": "ME",
+        "area": "Northeast",
+        "lat": 43.56129,
+        "lon": -70.27288,
+        "timezone": "America/New_York",
+        "coordSource": "OpenStreetMap (Higgins Beach)",
+        "beachFacingDeg": 184,
+        "tideStation": "8418445",
+        "buoy": {
+          "id": "44007",
+          "name": "PORTLAND - 12 NM Southeast of Portland,ME",
+          "distanceKm": 11
+        }
       }
     ]
   }
