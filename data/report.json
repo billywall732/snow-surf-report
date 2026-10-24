@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-24T14:07:30.200Z",
+  "generatedAt": "2026-10-24T14:12:27.493Z",
   "units": {
     "snow": "in",
     "temp": "°F",
@@ -64,7 +64,7 @@
           "observed": {
             "status": "ok",
             "source": "nrcs-snotel",
-            "fetchedAt": "2026-10-24T14:07:28.835Z",
+            "fetchedAt": "2026-10-24T14:12:25.969Z",
             "stationId": "846:CA:SNTL",
             "stationName": "Virginia Lakes Ridge",
             "distanceKm": 52,
@@ -123,7 +123,7 @@
           "forecast": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.758Z",
+            "fetchedAt": "2026-10-24T14:12:25.804Z",
             "data": {
               "days": [
                 {
@@ -212,7 +212,7 @@
           "observed": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.921Z",
+            "fetchedAt": "2026-10-24T14:12:26.403Z",
             "modelled": true,
             "note": "No NRCS SNOTEL station within 250 km. Snow depth falls back to Open-Meteo's modelled value.",
             "data": {
@@ -269,7 +269,7 @@
           "forecast": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.921Z",
+            "fetchedAt": "2026-10-24T14:12:26.403Z",
             "data": {
               "days": [
                 {
@@ -357,7 +357,7 @@
           "observed": {
             "status": "ok",
             "source": "nrcs-snotel",
-            "fetchedAt": "2026-10-24T14:07:28.923Z",
+            "fetchedAt": "2026-10-24T14:12:26.406Z",
             "stationId": "766:UT:SNTL",
             "stationName": "Snowbird",
             "distanceKm": 1.3,
@@ -416,7 +416,7 @@
           "forecast": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.922Z",
+            "fetchedAt": "2026-10-24T14:12:26.405Z",
             "data": {
               "days": [
                 {
@@ -504,7 +504,7 @@
           "observed": {
             "status": "ok",
             "source": "nrcs-snotel",
-            "fetchedAt": "2026-10-24T14:07:28.925Z",
+            "fetchedAt": "2026-10-24T14:12:26.408Z",
             "stationId": "335:CO:SNTL",
             "stationName": "Berthoud Summit",
             "distanceKm": 9.3,
@@ -563,7 +563,7 @@
           "forecast": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.924Z",
+            "fetchedAt": "2026-10-24T14:12:26.407Z",
             "data": {
               "days": [
                 {
@@ -650,7 +650,7 @@
         "8532591": {
           "status": "ok",
           "source": "noaa-coops",
-          "fetchedAt": "2026-10-24T14:07:28.937Z",
+          "fetchedAt": "2026-10-24T14:12:26.420Z",
           "name": "Manasquan Inlet, NJ",
           "shortName": "NJ",
           "timezone": "America/New_York",
@@ -903,7 +903,7 @@
         "9410840": {
           "status": "ok",
           "source": "noaa-coops",
-          "fetchedAt": "2026-10-24T14:07:28.935Z",
+          "fetchedAt": "2026-10-24T14:12:26.418Z",
           "name": "Santa Monica, CA",
           "shortName": "LA",
           "timezone": "America/Los_Angeles",
@@ -1167,7 +1167,7 @@
           "waves": {
             "status": "ok",
             "source": "open-meteo-marine",
-            "fetchedAt": "2026-10-24T14:07:28.926Z",
+            "fetchedAt": "2026-10-24T14:12:26.409Z",
             "data": {
               "forTime": "2026-10-24T07:00-07:00",
               "heightFt": 3.2,
@@ -1186,7 +1186,7 @@
           "wind": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.927Z",
+            "fetchedAt": "2026-10-24T14:12:26.410Z",
             "data": {
               "forTime": "2026-10-24T07:00-07:00",
               "speedMph": 5,
@@ -1198,7 +1198,7 @@
           "buoy": {
             "status": "ok",
             "source": "noaa-ndbc",
-            "fetchedAt": "2026-10-24T14:07:28.928Z",
+            "fetchedAt": "2026-10-24T14:12:26.411Z",
             "stationId": "46221",
             "stationName": "Santa Monica Bay",
             "data": {
@@ -1231,7 +1231,7 @@
           "waves": {
             "status": "ok",
             "source": "open-meteo-marine",
-            "fetchedAt": "2026-10-24T14:07:28.929Z",
+            "fetchedAt": "2026-10-24T14:12:26.412Z",
             "data": {
               "forTime": "2026-10-24T07:00-07:00",
               "heightFt": 3.1,
@@ -1250,7 +1250,7 @@
           "wind": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.930Z",
+            "fetchedAt": "2026-10-24T14:12:26.413Z",
             "data": {
               "forTime": "2026-10-24T07:00-07:00",
               "speedMph": 6,
@@ -1262,7 +1262,7 @@
           "buoy": {
             "status": "ok",
             "source": "noaa-ndbc",
-            "fetchedAt": "2026-10-24T14:07:28.932Z",
+            "fetchedAt": "2026-10-24T14:12:26.414Z",
             "stationId": "46221",
             "stationName": "Santa Monica Bay",
             "data": {
@@ -1295,7 +1295,7 @@
           "waves": {
             "status": "ok",
             "source": "open-meteo-marine",
-            "fetchedAt": "2026-10-24T14:07:28.932Z",
+            "fetchedAt": "2026-10-24T14:12:26.414Z",
             "data": {
               "forTime": "2026-10-24T07:00-07:00",
               "heightFt": 3.2,
@@ -1314,7 +1314,7 @@
           "wind": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.932Z",
+            "fetchedAt": "2026-10-24T14:12:26.416Z",
             "data": {
               "forTime": "2026-10-24T07:00-07:00",
               "speedMph": 8,
@@ -1326,7 +1326,7 @@
           "buoy": {
             "status": "ok",
             "source": "noaa-ndbc",
-            "fetchedAt": "2026-10-24T14:07:28.933Z",
+            "fetchedAt": "2026-10-24T14:12:26.416Z",
             "stationId": "46268",
             "stationName": "Topanga Nearshore",
             "data": {
@@ -1359,7 +1359,7 @@
           "waves": {
             "status": "ok",
             "source": "open-meteo-marine",
-            "fetchedAt": "2026-10-24T14:07:28.933Z",
+            "fetchedAt": "2026-10-24T14:12:26.417Z",
             "data": {
               "forTime": "2026-10-24T07:00-04:00",
               "heightFt": 3.5,
@@ -1378,7 +1378,7 @@
           "wind": {
             "status": "ok",
             "source": "open-meteo",
-            "fetchedAt": "2026-10-24T14:07:28.934Z",
+            "fetchedAt": "2026-10-24T14:12:26.417Z",
             "data": {
               "forTime": "2026-10-24T07:00-04:00",
               "speedMph": 5,
@@ -1390,7 +1390,7 @@
           "buoy": {
             "status": "ok",
             "source": "noaa-ndbc",
-            "fetchedAt": "2026-10-24T14:07:28.934Z",
+            "fetchedAt": "2026-10-24T14:12:26.418Z",
             "stationId": "44091",
             "stationName": "Barnegat",
             "data": {
