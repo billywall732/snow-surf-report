@@ -1,0 +1,1416 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-24T14:07:30.200Z",
+  "units": {
+    "snow": "in",
+    "temp": "°F",
+    "wind": "mph",
+    "wave": "ft",
+    "period": "s",
+    "tide": "ft"
+  },
+  "sources": {
+    "open-meteo": {
+      "name": "Open-Meteo Forecast API",
+      "url": "https://open-meteo.com/"
+    },
+    "open-meteo-marine": {
+      "name": "Open-Meteo Marine API",
+      "url": "https://open-meteo.com/en/docs/marine-weather-api"
+    },
+    "noaa-coops": {
+      "name": "NOAA CO-OPS Tides & Currents",
+      "url": "https://tidesandcurrents.noaa.gov/"
+    },
+    "noaa-ndbc": {
+      "name": "NOAA National Data Buoy Center",
+      "url": "https://www.ndbc.noaa.gov/"
+    },
+    "nrcs-snotel": {
+      "name": "USDA NRCS SNOTEL (AWDB)",
+      "url": "https://www.nrcs.usda.gov/resources/data-and-reports/snow-and-water-interactive-map"
+    },
+    "config": {
+      "name": "Season dates from config/locations.json",
+      "url": null
+    }
+  },
+  "verdict": null,
+  "sections": {
+    "snow": {
+      "label": "Snow",
+      "verdict": null,
+      "bestBet": {
+        "id": "snowbird",
+        "name": "Snowbird",
+        "score": 1,
+        "reason": "0\" base, 1.5\" forecast next 3 days"
+      },
+      "items": [
+        {
+          "id": "mammoth",
+          "name": "Mammoth Mountain",
+          "region": "CA",
+          "lat": 37.63056,
+          "lon": -119.0325,
+          "timezone": "America/Los_Angeles",
+          "season": {
+            "status": "closed",
+            "opensOn": "2026-11-13",
+            "closesOn": null,
+            "note": "Announced opening day",
+            "source": "config"
+          },
+          "observed": {
+            "status": "ok",
+            "source": "nrcs-snotel",
+            "fetchedAt": "2026-10-24T14:07:28.835Z",
+            "stationId": "846:CA:SNTL",
+            "stationName": "Virginia Lakes Ridge",
+            "distanceKm": 52,
+            "data": {
+              "depthNow": 0,
+              "asOf": "2026-10-23",
+              "newSnow": {
+                "h24": 0,
+                "h48": 0,
+                "d7": 0
+              },
+              "depthHistory": [
+                {
+                  "date": "2026-10-14",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-15",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-16",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-17",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-18",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-19",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-20",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-21",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-22",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-23",
+                  "depth": 0
+                }
+              ]
+            }
+          },
+          "forecast": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.758Z",
+            "data": {
+              "days": [
+                {
+                  "date": "2026-10-24",
+                  "snowfall": 0,
+                  "tempHigh": 50,
+                  "tempLow": 30,
+                  "windMax": 6,
+                  "gustMax": 17
+                },
+                {
+                  "date": "2026-10-25",
+                  "snowfall": 0,
+                  "tempHigh": 54,
+                  "tempLow": 38,
+                  "windMax": 20,
+                  "gustMax": 31
+                },
+                {
+                  "date": "2026-10-26",
+                  "snowfall": 0,
+                  "tempHigh": 50,
+                  "tempLow": 29,
+                  "windMax": 18,
+                  "gustMax": 38
+                },
+                {
+                  "date": "2026-10-27",
+                  "snowfall": 0,
+                  "tempHigh": 54,
+                  "tempLow": 28,
+                  "windMax": 11,
+                  "gustMax": 15
+                },
+                {
+                  "date": "2026-10-28",
+                  "snowfall": 0,
+                  "tempHigh": 51,
+                  "tempLow": 29,
+                  "windMax": 11,
+                  "gustMax": 16
+                },
+                {
+                  "date": "2026-10-29",
+                  "snowfall": 0,
+                  "tempHigh": 45,
+                  "tempLow": 32,
+                  "windMax": 13,
+                  "gustMax": 26
+                },
+                {
+                  "date": "2026-10-30",
+                  "snowfall": 0,
+                  "tempHigh": 42,
+                  "tempLow": 24,
+                  "windMax": 7,
+                  "gustMax": 8
+                }
+              ],
+              "next72hIn": 0
+            }
+          },
+          "rating": {
+            "score": 1,
+            "reason": "Opens Nov 13 · 0\" base",
+            "factors": [
+              "-1 thin base (0\")",
+              "capped at 1: closed"
+            ]
+          }
+        },
+        {
+          "id": "big-bear",
+          "name": "Big Bear / Snow Summit",
+          "region": "CA",
+          "lat": 34.2286,
+          "lon": -116.8911,
+          "timezone": "America/Los_Angeles",
+          "season": {
+            "status": "unknown",
+            "opensOn": null,
+            "closesOn": null,
+            "note": "Opening date not announced yet",
+            "source": "config"
+          },
+          "observed": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.921Z",
+            "modelled": true,
+            "note": "No NRCS SNOTEL station within 250 km. Snow depth falls back to Open-Meteo's modelled value.",
+            "data": {
+              "depthNow": 0,
+              "newSnow": {
+                "h24": 0,
+                "h48": 0,
+                "d7": 0
+              },
+              "depthHistory": [
+                {
+                  "date": "2026-10-15",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-16",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-17",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-18",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-19",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-20",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-21",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-22",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-23",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-24",
+                  "depth": 0
+                }
+              ]
+            }
+          },
+          "forecast": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.921Z",
+            "data": {
+              "days": [
+                {
+                  "date": "2026-10-24",
+                  "snowfall": 0,
+                  "tempHigh": 52,
+                  "tempLow": 36,
+                  "windMax": 12,
+                  "gustMax": 25
+                },
+                {
+                  "date": "2026-10-25",
+                  "snowfall": 0,
+                  "tempHigh": 57,
+                  "tempLow": 37,
+                  "windMax": 8,
+                  "gustMax": 9
+                },
+                {
+                  "date": "2026-10-26",
+                  "snowfall": 0,
+                  "tempHigh": 59,
+                  "tempLow": 41,
+                  "windMax": 7,
+                  "gustMax": 8
+                },
+                {
+                  "date": "2026-10-27",
+                  "snowfall": 0,
+                  "tempHigh": 60,
+                  "tempLow": 43,
+                  "windMax": 7,
+                  "gustMax": 8
+                },
+                {
+                  "date": "2026-10-28",
+                  "snowfall": 0,
+                  "tempHigh": 58,
+                  "tempLow": 44,
+                  "windMax": 7,
+                  "gustMax": 8
+                },
+                {
+                  "date": "2026-10-29",
+                  "snowfall": 0,
+                  "tempHigh": 54,
+                  "tempLow": 44,
+                  "windMax": 5,
+                  "gustMax": 7
+                },
+                {
+                  "date": "2026-10-30",
+                  "snowfall": 0,
+                  "tempHigh": 48,
+                  "tempLow": 36,
+                  "windMax": 8,
+                  "gustMax": 10
+                }
+              ],
+              "next72hIn": 0
+            }
+          },
+          "rating": {
+            "score": 1,
+            "reason": "0\" base",
+            "factors": [
+              "-1 thin base (0\")"
+            ]
+          }
+        },
+        {
+          "id": "snowbird",
+          "name": "Snowbird",
+          "region": "UT",
+          "lat": 40.58111,
+          "lon": -111.65639,
+          "timezone": "America/Denver",
+          "season": {
+            "status": "unknown",
+            "opensOn": null,
+            "closesOn": null,
+            "note": "Sources disagree (Nov 25 vs Nov 27). Fill in once Snowbird confirms.",
+            "source": "config"
+          },
+          "observed": {
+            "status": "ok",
+            "source": "nrcs-snotel",
+            "fetchedAt": "2026-10-24T14:07:28.923Z",
+            "stationId": "766:UT:SNTL",
+            "stationName": "Snowbird",
+            "distanceKm": 1.3,
+            "data": {
+              "depthNow": 0,
+              "asOf": "2026-10-23",
+              "newSnow": {
+                "h24": 0,
+                "h48": 0,
+                "d7": 0
+              },
+              "depthHistory": [
+                {
+                  "date": "2026-10-14",
+                  "depth": 9
+                },
+                {
+                  "date": "2026-10-15",
+                  "depth": 5
+                },
+                {
+                  "date": "2026-10-16",
+                  "depth": 3
+                },
+                {
+                  "date": "2026-10-17",
+                  "depth": 2
+                },
+                {
+                  "date": "2026-10-18",
+                  "depth": 1
+                },
+                {
+                  "date": "2026-10-19",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-20",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-21",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-22",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-23",
+                  "depth": 0
+                }
+              ]
+            }
+          },
+          "forecast": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.922Z",
+            "data": {
+              "days": [
+                {
+                  "date": "2026-10-24",
+                  "snowfall": 0,
+                  "tempHigh": 45,
+                  "tempLow": 34,
+                  "windMax": 10,
+                  "gustMax": 16
+                },
+                {
+                  "date": "2026-10-25",
+                  "snowfall": 0,
+                  "tempHigh": 41,
+                  "tempLow": 36,
+                  "windMax": 9,
+                  "gustMax": 10
+                },
+                {
+                  "date": "2026-10-26",
+                  "snowfall": 0,
+                  "tempHigh": 49,
+                  "tempLow": 35,
+                  "windMax": 7,
+                  "gustMax": 13
+                },
+                {
+                  "date": "2026-10-27",
+                  "snowfall": 1.5,
+                  "tempHigh": 39,
+                  "tempLow": 31,
+                  "windMax": 16,
+                  "gustMax": 18
+                },
+                {
+                  "date": "2026-10-28",
+                  "snowfall": 0,
+                  "tempHigh": 43,
+                  "tempLow": 34,
+                  "windMax": 11,
+                  "gustMax": 20
+                },
+                {
+                  "date": "2026-10-29",
+                  "snowfall": 0,
+                  "tempHigh": 50,
+                  "tempLow": 37,
+                  "windMax": 5,
+                  "gustMax": 10
+                },
+                {
+                  "date": "2026-10-30",
+                  "snowfall": 1.8,
+                  "tempHigh": 48,
+                  "tempLow": 35,
+                  "windMax": 12,
+                  "gustMax": 22
+                }
+              ],
+              "next72hIn": 1.5
+            }
+          },
+          "rating": {
+            "score": 1,
+            "reason": "0\" base, 1.5\" forecast next 3 days",
+            "factors": [
+              "-1 thin base (0\")"
+            ]
+          }
+        },
+        {
+          "id": "winter-park",
+          "name": "Winter Park",
+          "region": "CO",
+          "lat": 39.88694,
+          "lon": -105.7625,
+          "timezone": "America/Denver",
+          "season": {
+            "status": "unknown",
+            "opensOn": null,
+            "closesOn": null,
+            "note": "Not announced; projected late Oct / early Nov.",
+            "source": "config"
+          },
+          "observed": {
+            "status": "ok",
+            "source": "nrcs-snotel",
+            "fetchedAt": "2026-10-24T14:07:28.925Z",
+            "stationId": "335:CO:SNTL",
+            "stationName": "Berthoud Summit",
+            "distanceKm": 9.3,
+            "data": {
+              "depthNow": 0,
+              "asOf": "2026-10-23",
+              "newSnow": {
+                "h24": 0,
+                "h48": 0,
+                "d7": 0
+              },
+              "depthHistory": [
+                {
+                  "date": "2026-10-14",
+                  "depth": 1
+                },
+                {
+                  "date": "2026-10-15",
+                  "depth": 1
+                },
+                {
+                  "date": "2026-10-16",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-17",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-18",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-19",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-20",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-21",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-22",
+                  "depth": 0
+                },
+                {
+                  "date": "2026-10-23",
+                  "depth": 0
+                }
+              ]
+            }
+          },
+          "forecast": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.924Z",
+            "data": {
+              "days": [
+                {
+                  "date": "2026-10-24",
+                  "snowfall": 0,
+                  "tempHigh": 48,
+                  "tempLow": 33,
+                  "windMax": 19,
+                  "gustMax": 39
+                },
+                {
+                  "date": "2026-10-25",
+                  "snowfall": 0.7,
+                  "tempHigh": 53,
+                  "tempLow": 33,
+                  "windMax": 12,
+                  "gustMax": 19
+                },
+                {
+                  "date": "2026-10-26",
+                  "snowfall": 0.4,
+                  "tempHigh": 49,
+                  "tempLow": 32,
+                  "windMax": 8,
+                  "gustMax": 19
+                },
+                {
+                  "date": "2026-10-27",
+                  "snowfall": 0,
+                  "tempHigh": 50,
+                  "tempLow": 33,
+                  "windMax": 21,
+                  "gustMax": 42
+                },
+                {
+                  "date": "2026-10-28",
+                  "snowfall": 0,
+                  "tempHigh": 56,
+                  "tempLow": 34,
+                  "windMax": 13,
+                  "gustMax": 24
+                },
+                {
+                  "date": "2026-10-29",
+                  "snowfall": 0,
+                  "tempHigh": 56,
+                  "tempLow": 36,
+                  "windMax": 7,
+                  "gustMax": 12
+                },
+                {
+                  "date": "2026-10-30",
+                  "snowfall": 0,
+                  "tempHigh": 52,
+                  "tempLow": 38,
+                  "windMax": 6,
+                  "gustMax": 10
+                }
+              ],
+              "next72hIn": 1.1
+            }
+          },
+          "rating": {
+            "score": 1,
+            "reason": "0\" base, 1.1\" forecast next 3 days",
+            "factors": [
+              "-1 thin base (0\")"
+            ]
+          }
+        }
+      ]
+    },
+    "surf": {
+      "label": "Surf",
+      "verdict": null,
+      "sessionHour": 7,
+      "bestBet": {
+        "id": "el-porto",
+        "name": "El Porto",
+        "score": 5,
+        "reason": "3.2 ft @ 15 s, 5 mph offshore"
+      },
+      "tideStations": {
+        "8532591": {
+          "status": "ok",
+          "source": "noaa-coops",
+          "fetchedAt": "2026-10-24T14:07:28.937Z",
+          "name": "Manasquan Inlet, NJ",
+          "shortName": "NJ",
+          "timezone": "America/New_York",
+          "data": {
+            "date": "2026-10-24",
+            "datum": "MLLW",
+            "curveMethod": "Cosine interpolation between NOAA high/low predictions",
+            "events": [
+              {
+                "t": "2026-10-23T12:02-04:00",
+                "type": "L",
+                "ft": 0.553
+              },
+              {
+                "t": "2026-10-23T18:13-04:00",
+                "type": "H",
+                "ft": 4.326
+              },
+              {
+                "t": "2026-10-24T00:15-04:00",
+                "type": "L",
+                "ft": 0.175
+              },
+              {
+                "t": "2026-10-24T06:37-04:00",
+                "type": "H",
+                "ft": 4.693
+              },
+              {
+                "t": "2026-10-24T12:49-04:00",
+                "type": "L",
+                "ft": 0.253
+              },
+              {
+                "t": "2026-10-24T18:57-04:00",
+                "type": "H",
+                "ft": 4.449
+              },
+              {
+                "t": "2026-10-25T00:57-04:00",
+                "type": "L",
+                "ft": 0.005
+              },
+              {
+                "t": "2026-10-25T07:17-04:00",
+                "type": "H",
+                "ft": 5.013
+              }
+            ],
+            "curve": [
+              {
+                "t": "2026-10-24T00:00-04:00",
+                "ft": 0.19
+              },
+              {
+                "t": "2026-10-24T00:30-04:00",
+                "ft": 0.19
+              },
+              {
+                "t": "2026-10-24T01:00-04:00",
+                "ft": 0.33
+              },
+              {
+                "t": "2026-10-24T01:30-04:00",
+                "ft": 0.59
+              },
+              {
+                "t": "2026-10-24T02:00-04:00",
+                "ft": 0.97
+              },
+              {
+                "t": "2026-10-24T02:30-04:00",
+                "ft": 1.43
+              },
+              {
+                "t": "2026-10-24T03:00-04:00",
+                "ft": 1.95
+              },
+              {
+                "t": "2026-10-24T03:30-04:00",
+                "ft": 2.51
+              },
+              {
+                "t": "2026-10-24T04:00-04:00",
+                "ft": 3.06
+              },
+              {
+                "t": "2026-10-24T04:30-04:00",
+                "ft": 3.57
+              },
+              {
+                "t": "2026-10-24T05:00-04:00",
+                "ft": 4.01
+              },
+              {
+                "t": "2026-10-24T05:30-04:00",
+                "ft": 4.36
+              },
+              {
+                "t": "2026-10-24T06:00-04:00",
+                "ft": 4.59
+              },
+              {
+                "t": "2026-10-24T06:30-04:00",
+                "ft": 4.69
+              },
+              {
+                "t": "2026-10-24T07:00-04:00",
+                "ft": 4.65
+              },
+              {
+                "t": "2026-10-24T07:30-04:00",
+                "ft": 4.47
+              },
+              {
+                "t": "2026-10-24T08:00-04:00",
+                "ft": 4.17
+              },
+              {
+                "t": "2026-10-24T08:30-04:00",
+                "ft": 3.76
+              },
+              {
+                "t": "2026-10-24T09:00-04:00",
+                "ft": 3.26
+              },
+              {
+                "t": "2026-10-24T09:30-04:00",
+                "ft": 2.72
+              },
+              {
+                "t": "2026-10-24T10:00-04:00",
+                "ft": 2.16
+              },
+              {
+                "t": "2026-10-24T10:30-04:00",
+                "ft": 1.61
+              },
+              {
+                "t": "2026-10-24T11:00-04:00",
+                "ft": 1.13
+              },
+              {
+                "t": "2026-10-24T11:30-04:00",
+                "ft": 0.73
+              },
+              {
+                "t": "2026-10-24T12:00-04:00",
+                "ft": 0.44
+              },
+              {
+                "t": "2026-10-24T12:30-04:00",
+                "ft": 0.28
+              },
+              {
+                "t": "2026-10-24T13:00-04:00",
+                "ft": 0.26
+              },
+              {
+                "t": "2026-10-24T13:30-04:00",
+                "ft": 0.38
+              },
+              {
+                "t": "2026-10-24T14:00-04:00",
+                "ft": 0.63
+              },
+              {
+                "t": "2026-10-24T14:30-04:00",
+                "ft": 0.99
+              },
+              {
+                "t": "2026-10-24T15:00-04:00",
+                "ft": 1.43
+              },
+              {
+                "t": "2026-10-24T15:30-04:00",
+                "ft": 1.94
+              },
+              {
+                "t": "2026-10-24T16:00-04:00",
+                "ft": 2.48
+              },
+              {
+                "t": "2026-10-24T16:30-04:00",
+                "ft": 3
+              },
+              {
+                "t": "2026-10-24T17:00-04:00",
+                "ft": 3.49
+              },
+              {
+                "t": "2026-10-24T17:30-04:00",
+                "ft": 3.9
+              },
+              {
+                "t": "2026-10-24T18:00-04:00",
+                "ft": 4.21
+              },
+              {
+                "t": "2026-10-24T18:30-04:00",
+                "ft": 4.39
+              },
+              {
+                "t": "2026-10-24T19:00-04:00",
+                "ft": 4.45
+              },
+              {
+                "t": "2026-10-24T19:30-04:00",
+                "ft": 4.36
+              },
+              {
+                "t": "2026-10-24T20:00-04:00",
+                "ft": 4.12
+              },
+              {
+                "t": "2026-10-24T20:30-04:00",
+                "ft": 3.76
+              },
+              {
+                "t": "2026-10-24T21:00-04:00",
+                "ft": 3.29
+              },
+              {
+                "t": "2026-10-24T21:30-04:00",
+                "ft": 2.75
+              },
+              {
+                "t": "2026-10-24T22:00-04:00",
+                "ft": 2.17
+              },
+              {
+                "t": "2026-10-24T22:30-04:00",
+                "ft": 1.6
+              },
+              {
+                "t": "2026-10-24T23:00-04:00",
+                "ft": 1.07
+              },
+              {
+                "t": "2026-10-24T23:30-04:00",
+                "ft": 0.62
+              },
+              {
+                "t": "2026-10-25T00:00-04:00",
+                "ft": 0.27
+              }
+            ]
+          }
+        },
+        "9410840": {
+          "status": "ok",
+          "source": "noaa-coops",
+          "fetchedAt": "2026-10-24T14:07:28.935Z",
+          "name": "Santa Monica, CA",
+          "shortName": "LA",
+          "timezone": "America/Los_Angeles",
+          "data": {
+            "date": "2026-10-24",
+            "datum": "MLLW",
+            "curveMethod": "Cosine interpolation between NOAA high/low predictions",
+            "events": [
+              {
+                "t": "2026-10-23T14:19-07:00",
+                "type": "L",
+                "ft": 0.753
+              },
+              {
+                "t": "2026-10-23T20:19-07:00",
+                "type": "H",
+                "ft": 4.757
+              },
+              {
+                "t": "2026-10-24T02:10-07:00",
+                "type": "L",
+                "ft": 0.883
+              },
+              {
+                "t": "2026-10-24T08:26-07:00",
+                "type": "H",
+                "ft": 5.858
+              },
+              {
+                "t": "2026-10-24T14:56-07:00",
+                "type": "L",
+                "ft": 0.138
+              },
+              {
+                "t": "2026-10-24T21:02-07:00",
+                "type": "H",
+                "ft": 4.68
+              },
+              {
+                "t": "2026-10-25T02:37-07:00",
+                "type": "L",
+                "ft": 1.129
+              },
+              {
+                "t": "2026-10-25T08:52-07:00",
+                "type": "H",
+                "ft": 6.266
+              }
+            ],
+            "curve": [
+              {
+                "t": "2026-10-24T00:00-07:00",
+                "ft": 2.05
+              },
+              {
+                "t": "2026-10-24T00:30-07:00",
+                "ft": 1.61
+              },
+              {
+                "t": "2026-10-24T01:00-07:00",
+                "ft": 1.25
+              },
+              {
+                "t": "2026-10-24T01:30-07:00",
+                "ft": 1.01
+              },
+              {
+                "t": "2026-10-24T02:00-07:00",
+                "ft": 0.89
+              },
+              {
+                "t": "2026-10-24T02:30-07:00",
+                "ft": 0.92
+              },
+              {
+                "t": "2026-10-24T03:00-07:00",
+                "ft": 1.1
+              },
+              {
+                "t": "2026-10-24T03:30-07:00",
+                "ft": 1.42
+              },
+              {
+                "t": "2026-10-24T04:00-07:00",
+                "ft": 1.86
+              },
+              {
+                "t": "2026-10-24T04:30-07:00",
+                "ft": 2.4
+              },
+              {
+                "t": "2026-10-24T05:00-07:00",
+                "ft": 3
+              },
+              {
+                "t": "2026-10-24T05:30-07:00",
+                "ft": 3.62
+              },
+              {
+                "t": "2026-10-24T06:00-07:00",
+                "ft": 4.23
+              },
+              {
+                "t": "2026-10-24T06:30-07:00",
+                "ft": 4.78
+              },
+              {
+                "t": "2026-10-24T07:00-07:00",
+                "ft": 5.24
+              },
+              {
+                "t": "2026-10-24T07:30-07:00",
+                "ft": 5.59
+              },
+              {
+                "t": "2026-10-24T08:00-07:00",
+                "ft": 5.8
+              },
+              {
+                "t": "2026-10-24T08:30-07:00",
+                "ft": 5.86
+              },
+              {
+                "t": "2026-10-24T09:00-07:00",
+                "ft": 5.75
+              },
+              {
+                "t": "2026-10-24T09:30-07:00",
+                "ft": 5.49
+              },
+              {
+                "t": "2026-10-24T10:00-07:00",
+                "ft": 5.08
+              },
+              {
+                "t": "2026-10-24T10:30-07:00",
+                "ft": 4.55
+              },
+              {
+                "t": "2026-10-24T11:00-07:00",
+                "ft": 3.93
+              },
+              {
+                "t": "2026-10-24T11:30-07:00",
+                "ft": 3.25
+              },
+              {
+                "t": "2026-10-24T12:00-07:00",
+                "ft": 2.56
+              },
+              {
+                "t": "2026-10-24T12:30-07:00",
+                "ft": 1.9
+              },
+              {
+                "t": "2026-10-24T13:00-07:00",
+                "ft": 1.3
+              },
+              {
+                "t": "2026-10-24T13:30-07:00",
+                "ft": 0.8
+              },
+              {
+                "t": "2026-10-24T14:00-07:00",
+                "ft": 0.42
+              },
+              {
+                "t": "2026-10-24T14:30-07:00",
+                "ft": 0.2
+              },
+              {
+                "t": "2026-10-24T15:00-07:00",
+                "ft": 0.14
+              },
+              {
+                "t": "2026-10-24T15:30-07:00",
+                "ft": 0.23
+              },
+              {
+                "t": "2026-10-24T16:00-07:00",
+                "ft": 0.47
+              },
+              {
+                "t": "2026-10-24T16:30-07:00",
+                "ft": 0.84
+              },
+              {
+                "t": "2026-10-24T17:00-07:00",
+                "ft": 1.31
+              },
+              {
+                "t": "2026-10-24T17:30-07:00",
+                "ft": 1.85
+              },
+              {
+                "t": "2026-10-24T18:00-07:00",
+                "ft": 2.43
+              },
+              {
+                "t": "2026-10-24T18:30-07:00",
+                "ft": 3.01
+              },
+              {
+                "t": "2026-10-24T19:00-07:00",
+                "ft": 3.54
+              },
+              {
+                "t": "2026-10-24T19:30-07:00",
+                "ft": 4.01
+              },
+              {
+                "t": "2026-10-24T20:00-07:00",
+                "ft": 4.37
+              },
+              {
+                "t": "2026-10-24T20:30-07:00",
+                "ft": 4.59
+              },
+              {
+                "t": "2026-10-24T21:00-07:00",
+                "ft": 4.68
+              },
+              {
+                "t": "2026-10-24T21:30-07:00",
+                "ft": 4.62
+              },
+              {
+                "t": "2026-10-24T22:00-07:00",
+                "ft": 4.42
+              },
+              {
+                "t": "2026-10-24T22:30-07:00",
+                "ft": 4.11
+              },
+              {
+                "t": "2026-10-24T23:00-07:00",
+                "ft": 3.7
+              },
+              {
+                "t": "2026-10-24T23:30-07:00",
+                "ft": 3.23
+              },
+              {
+                "t": "2026-10-25T00:00-07:00",
+                "ft": 2.73
+              }
+            ]
+          }
+        }
+      },
+      "items": [
+        {
+          "id": "el-porto",
+          "name": "El Porto",
+          "region": "Los Angeles",
+          "lat": 33.903274,
+          "lon": -118.419039,
+          "timezone": "America/Los_Angeles",
+          "beachFacingDeg": 250,
+          "tideStation": "9410840",
+          "waves": {
+            "status": "ok",
+            "source": "open-meteo-marine",
+            "fetchedAt": "2026-10-24T14:07:28.926Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-07:00",
+              "heightFt": 3.2,
+              "periodS": 9,
+              "directionDeg": 250,
+              "swellHeightFt": 2.8,
+              "swellPeriodS": 5.7,
+              "swellDirectionDeg": 267,
+              "seaSurfaceTempF": 72.5,
+              "gridPoint": {
+                "lat": 33.875,
+                "lon": -118.45833
+              }
+            }
+          },
+          "wind": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.927Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-07:00",
+              "speedMph": 5,
+              "gustMph": 6,
+              "directionDeg": 67,
+              "relative": "offshore"
+            }
+          },
+          "buoy": {
+            "status": "ok",
+            "source": "noaa-ndbc",
+            "fetchedAt": "2026-10-24T14:07:28.928Z",
+            "stationId": "46221",
+            "stationName": "Santa Monica Bay",
+            "data": {
+              "observedAt": "2026-10-24T13:26:00.000Z",
+              "waveHeightFt": 3.3,
+              "dominantPeriodS": 15,
+              "meanDirectionDeg": 202,
+              "waterTempF": 72.1
+            }
+          },
+          "rating": {
+            "score": 5,
+            "reason": "3.2 ft @ 15 s, 5 mph offshore",
+            "factors": [
+              "+1 good size (3.2 ft)",
+              "+1 long period (15 s)",
+              "+1 clean wind (5 mph offshore)"
+            ]
+          }
+        },
+        {
+          "id": "redondo",
+          "name": "Redondo Beach",
+          "region": "Los Angeles",
+          "lat": 33.839688,
+          "lon": -118.392654,
+          "timezone": "America/Los_Angeles",
+          "beachFacingDeg": 245,
+          "tideStation": "9410840",
+          "waves": {
+            "status": "ok",
+            "source": "open-meteo-marine",
+            "fetchedAt": "2026-10-24T14:07:28.929Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-07:00",
+              "heightFt": 3.1,
+              "periodS": 8.6,
+              "directionDeg": 253,
+              "swellHeightFt": 2.7,
+              "swellPeriodS": 5.7,
+              "swellDirectionDeg": 267,
+              "seaSurfaceTempF": 72.4,
+              "gridPoint": {
+                "lat": 33.875,
+                "lon": -118.37499
+              }
+            }
+          },
+          "wind": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.930Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-07:00",
+              "speedMph": 6,
+              "gustMph": 8,
+              "directionDeg": 81,
+              "relative": "offshore"
+            }
+          },
+          "buoy": {
+            "status": "ok",
+            "source": "noaa-ndbc",
+            "fetchedAt": "2026-10-24T14:07:28.932Z",
+            "stationId": "46221",
+            "stationName": "Santa Monica Bay",
+            "data": {
+              "observedAt": "2026-10-24T13:26:00.000Z",
+              "waveHeightFt": 3.3,
+              "dominantPeriodS": 15,
+              "meanDirectionDeg": 202,
+              "waterTempF": 72.1
+            }
+          },
+          "rating": {
+            "score": 5,
+            "reason": "3.1 ft @ 15 s, 6 mph offshore",
+            "factors": [
+              "+1 good size (3.1 ft)",
+              "+1 long period (15 s)",
+              "+1 clean wind (6 mph offshore)"
+            ]
+          }
+        },
+        {
+          "id": "malibu",
+          "name": "Malibu (Surfrider)",
+          "region": "Los Angeles",
+          "lat": 34.03333,
+          "lon": -118.67917,
+          "timezone": "America/Los_Angeles",
+          "beachFacingDeg": 180,
+          "tideStation": "9410840",
+          "waves": {
+            "status": "ok",
+            "source": "open-meteo-marine",
+            "fetchedAt": "2026-10-24T14:07:28.932Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-07:00",
+              "heightFt": 3.2,
+              "periodS": 10.1,
+              "directionDeg": 234,
+              "swellHeightFt": 2.5,
+              "swellPeriodS": 6.6,
+              "swellDirectionDeg": 262,
+              "seaSurfaceTempF": 72.4,
+              "gridPoint": {
+                "lat": 33.958336,
+                "lon": -118.70833
+              }
+            }
+          },
+          "wind": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.932Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-07:00",
+              "speedMph": 8,
+              "gustMph": 18,
+              "directionDeg": 9,
+              "relative": "offshore"
+            }
+          },
+          "buoy": {
+            "status": "ok",
+            "source": "noaa-ndbc",
+            "fetchedAt": "2026-10-24T14:07:28.933Z",
+            "stationId": "46268",
+            "stationName": "Topanga Nearshore",
+            "data": {
+              "observedAt": "2026-10-24T13:00:00.000Z",
+              "waveHeightFt": 3.3,
+              "dominantPeriodS": 6,
+              "meanDirectionDeg": 249,
+              "waterTempF": 71.6
+            }
+          },
+          "rating": {
+            "score": 3,
+            "reason": "3.2 ft @ 6 s, 8 mph offshore",
+            "factors": [
+              "+1 good size (3.2 ft)",
+              "-1 short, choppy period (6 s)",
+              "+1 clean wind (8 mph offshore)"
+            ]
+          }
+        },
+        {
+          "id": "manasquan",
+          "name": "Manasquan Inlet",
+          "region": "New Jersey",
+          "lat": 40.10278,
+          "lon": -74.035,
+          "timezone": "America/New_York",
+          "beachFacingDeg": 100,
+          "tideStation": "8532591",
+          "waves": {
+            "status": "ok",
+            "source": "open-meteo-marine",
+            "fetchedAt": "2026-10-24T14:07:28.933Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-04:00",
+              "heightFt": 3.5,
+              "periodS": 8.7,
+              "directionDeg": 87,
+              "swellHeightFt": 3.3,
+              "swellPeriodS": 7.6,
+              "swellDirectionDeg": 89,
+              "seaSurfaceTempF": 61.6,
+              "gridPoint": {
+                "lat": 40.125,
+                "lon": -73.87499
+              }
+            }
+          },
+          "wind": {
+            "status": "ok",
+            "source": "open-meteo",
+            "fetchedAt": "2026-10-24T14:07:28.934Z",
+            "data": {
+              "forTime": "2026-10-24T07:00-04:00",
+              "speedMph": 5,
+              "gustMph": 10,
+              "directionDeg": 293,
+              "relative": "offshore"
+            }
+          },
+          "buoy": {
+            "status": "ok",
+            "source": "noaa-ndbc",
+            "fetchedAt": "2026-10-24T14:07:28.934Z",
+            "stationId": "44091",
+            "stationName": "Barnegat",
+            "data": {
+              "observedAt": "2026-10-24T13:30:00.000Z",
+              "waveHeightFt": 4.3,
+              "dominantPeriodS": 9,
+              "meanDirectionDeg": 81,
+              "waterTempF": 61.9
+            }
+          },
+          "rating": {
+            "score": 4,
+            "reason": "3.5 ft @ 9 s, 5 mph offshore",
+            "factors": [
+              "+1 good size (3.5 ft)",
+              "+1 clean wind (5 mph offshore)"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

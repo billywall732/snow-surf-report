@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snow and Surf Report</title>
+  <meta name="description" content="A morning snapshot of snow at four ski resorts and surf at four breaks, with a simple should-I-go rating.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 22c4-4 8-4 12 0s8 4 12 0 4-2 4-2v10H2z' fill='%232a78d6'/%3E%3Cpath d='M6 16 16 3l10 13z' fill='%2352514e'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- type="module" lets app.js use `import`. Modules only load over http(s),
+       which is why you need a local server instead of double-clicking this file. -->
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <p class="kicker">Morning conditions</p>
+    <h1>Snow and Surf Report</h1>
+    <p class="updated" id="updated">Loading the latest report…</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Report sections">
+    <button type="button" role="tab" id="tab-snow" aria-controls="panel-snow" aria-selected="true">Snow</button>
+    <button type="button" role="tab" id="tab-surf" aria-controls="panel-surf" aria-selected="false" tabindex="-1">Surf</button>
+  </div>
+
+  <main>
+    <p class="stale" id="stale" role="status" hidden></p>
+    <section id="panel-snow" role="tabpanel" aria-labelledby="tab-snow" tabindex="0"></section>
+    <section id="panel-surf" role="tabpanel" aria-labelledby="tab-surf" tabindex="0" hidden></section>
+  </main>
+
+  <footer id="sources"></footer>
+</body>
+</html>

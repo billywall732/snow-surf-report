@@ -1,0 +1,121 @@
+{
+  "_readme": "Places the report covers. Add or remove entries here; no code changes needed. JSON can't have comments, so notes live in 'note' / 'todo' fields. Coordinates are decimal degrees (west = negative). Each place has its own IANA timezone.",
+
+  "snow": {
+    "resorts": [
+      {
+        "id": "mammoth",
+        "name": "Mammoth Mountain",
+        "region": "CA",
+        "lat": 37.63056,
+        "lon": -119.0325,
+        "baseElevationFt": 7953,
+        "timezone": "America/Los_Angeles",
+        "snotel": {
+          "triplet": "846:CA:SNTL",
+          "name": "Virginia Lakes Ridge",
+          "distanceKm": 52,
+          "note": "Closest NRCS SNOTEL, 52 km north near Conway Summit. Not on the mountain, so treat it as a regional signal."
+        },
+        "season": { "opensOn": "2026-11-13", "closesOn": null, "note": "Announced opening day" }
+      },
+      {
+        "id": "big-bear",
+        "name": "Big Bear / Snow Summit",
+        "region": "CA",
+        "lat": 34.2286,
+        "lon": -116.8911,
+        "baseElevationFt": 6965,
+        "timezone": "America/Los_Angeles",
+        "snotel": null,
+        "snotelTodo": "No NRCS SNOTEL station within 250 km. Snow depth falls back to Open-Meteo's modelled value.",
+        "season": { "opensOn": null, "closesOn": null, "todo": "Opening date not announced yet" }
+      },
+      {
+        "id": "snowbird",
+        "name": "Snowbird",
+        "region": "UT",
+        "lat": 40.58111,
+        "lon": -111.65639,
+        "baseElevationFt": 8100,
+        "timezone": "America/Denver",
+        "snotel": {
+          "triplet": "766:UT:SNTL",
+          "name": "Snowbird",
+          "distanceKm": 1.3,
+          "note": "On the mountain, 9,170 ft."
+        },
+        "season": { "opensOn": null, "closesOn": null, "todo": "Sources disagree (Nov 25 vs Nov 27). Fill in once Snowbird confirms." }
+      },
+      {
+        "id": "winter-park",
+        "name": "Winter Park",
+        "region": "CO",
+        "lat": 39.88694,
+        "lon": -105.7625,
+        "baseElevationFt": 9000,
+        "timezone": "America/Denver",
+        "snotel": {
+          "triplet": "335:CO:SNTL",
+          "name": "Berthoud Summit",
+          "distanceKm": 9.3,
+          "note": "11,300 ft near Berthoud Pass; long record."
+        },
+        "season": { "opensOn": null, "closesOn": null, "todo": "Not announced; projected late Oct / early Nov." }
+      }
+    ]
+  },
+
+  "surf": {
+    "tideStations": [
+      { "id": "9410840", "name": "Santa Monica, CA", "shortName": "LA", "timezone": "America/Los_Angeles" },
+      { "id": "8532591", "name": "Manasquan Inlet, NJ", "shortName": "NJ", "timezone": "America/New_York" }
+    ],
+    "spots": [
+      {
+        "id": "el-porto",
+        "name": "El Porto",
+        "region": "Los Angeles",
+        "lat": 33.903274,
+        "lon": -118.419039,
+        "timezone": "America/Los_Angeles",
+        "beachFacingDeg": 250,
+        "tideStation": "9410840",
+        "buoy": { "id": "46221", "name": "Santa Monica Bay" }
+      },
+      {
+        "id": "redondo",
+        "name": "Redondo Beach",
+        "region": "Los Angeles",
+        "lat": 33.839688,
+        "lon": -118.392654,
+        "timezone": "America/Los_Angeles",
+        "beachFacingDeg": 245,
+        "tideStation": "9410840",
+        "buoy": { "id": "46221", "name": "Santa Monica Bay" }
+      },
+      {
+        "id": "malibu",
+        "name": "Malibu (Surfrider)",
+        "region": "Los Angeles",
+        "lat": 34.03333,
+        "lon": -118.67917,
+        "timezone": "America/Los_Angeles",
+        "beachFacingDeg": 180,
+        "tideStation": "9410840",
+        "buoy": { "id": "46268", "name": "Topanga Nearshore" }
+      },
+      {
+        "id": "manasquan",
+        "name": "Manasquan Inlet",
+        "region": "New Jersey",
+        "lat": 40.10278,
+        "lon": -74.035,
+        "timezone": "America/New_York",
+        "beachFacingDeg": 100,
+        "tideStation": "8532591",
+        "buoy": { "id": "44091", "name": "Barnegat" }
+      }
+    ]
+  }
+}

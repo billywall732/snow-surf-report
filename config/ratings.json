@@ -1,0 +1,18 @@
+{
+  "_readme": "Thresholds for the 1-5 'should I go?' ratings. Every rating starts at 2 and gains or loses points. Units: inches, feet, seconds, mph, degrees.",
+
+  "snow": {
+    "fresh48hIn": { "good": 4, "great": 10 },
+    "baseDepthIn": { "thin": 18, "solid": 40 },
+    "upcoming72hIn": { "good": 4 },
+    "closedScore": 1
+  },
+
+  "surf": {
+    "sessionHour": 7,
+    "waveHeightFt": { "min": 1.5, "idealMin": 2.5, "idealMax": 6, "max": 10 },
+    "periodS": { "short": 8, "good": 12 },
+    "wind": { "lightMph": 6, "onshoreBadMph": 10 },
+    "offshoreToleranceDeg": 60
+  }
+}

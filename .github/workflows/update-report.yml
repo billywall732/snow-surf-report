@@ -1,0 +1,79 @@
+# Fetches fresh conditions every morning, saves them to data/report.json,
+# and publishes the site to GitHub Pages.
+#
+# Why this workflow also deploys the site: commits pushed by a workflow (using the
+# built-in GITHUB_TOKEN) do NOT trigger GitHub's normal "deploy from branch" Pages
+# build. So instead of relying on that, this workflow publishes the site itself.
+# In repo Settings -> Pages, set Source to "GitHub Actions".
+
+name: Update report
+
+on:
+  schedule:
+    # GitHub cron uses UTC and ignores daylight saving time.
+    # 12:00 UTC = 5:00 AM Pacific in summer (PDT), 4:00 AM in winter (PST).
+    # Scheduled runs often start 10-30 minutes late; the early time absorbs that.
+    - cron: '0 12 * * *'
+  workflow_dispatch: # adds a "Run workflow" button on the Actions tab
+  push:
+    branches: [main] # redeploy when you push code changes (no data fetch)
+
+permissions:
+  contents: write # commit data/report.json
+  pages: write # publish to GitHub Pages
+  id-token: write # required by actions/deploy-pages
+
+# Never run two updates at once; a second run waits for the first.
+concurrency:
+  group: update-report
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Fetch conditions
+        if: github.event_name != 'push'
+        run: node scripts/fetch-report.mjs
+
+      - name: Commit report if it changed
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/report.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update report $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      # Copy only the files the website needs into _site/ and publish that folder.
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp -r index.html css js data _site/
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
