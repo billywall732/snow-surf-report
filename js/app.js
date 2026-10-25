@@ -106,52 +106,70 @@ function setupTabs() {
   });
 }
 
-// Auto / Light / Dark switch. The choice is stored as data-theme on <html>,
-// which the CSS reads; "Auto" removes it so the system setting decides.
+// Light/dark toggle: one button that flips between the two. Until you press it,
+// the page follows your phone/computer setting; after that, your choice is saved.
+// The choice is stored as data-theme on <html>, which the CSS reads.
 const THEME_KEY = 'ssr-theme';
-function setupThemeSwitch() {
-  const buttons = [...document.querySelectorAll('[data-theme-choice]')];
-  const apply = (choice) => {
-    if (choice === 'auto') delete document.documentElement.dataset.theme;
-    else document.documentElement.dataset.theme = choice;
-    for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.themeChoice === choice));
-    refreshBackground();
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+const currentTheme = () => document.documentElement.dataset.theme ?? (systemDark.matches ? 'dark' : 'light');
+
+function setupThemeToggle() {
+  const button = document.getElementById('theme-toggle');
+  const label = () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    button.querySelector('.theme-icon').textContent = next === 'dark' ? '☾' : '☀';
+    button.querySelector('.theme-text').textContent = next === 'dark' ? 'Dark' : 'Light';
+    button.setAttribute('aria-label', `Switch to ${next} mode`);
   };
-  for (const b of buttons) {
-    b.addEventListener('click', () => {
-      const choice = b.dataset.themeChoice;
-      try {
-        if (choice === 'auto') localStorage.removeItem(THEME_KEY);
-        else localStorage.setItem(THEME_KEY, choice);
-      } catch { /* private mode: the choice just won't be remembered */ }
-      apply(choice);
-    });
-  }
-  apply(document.documentElement.dataset.theme ?? 'auto'); // set by the script in index.html
+  button.addEventListener('click', () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem(THEME_KEY, next); } catch { /* private mode: not remembered */ }
+    label();
+    refreshBackground();
+  });
+  systemDark.addEventListener('change', label); // (matters until you've pressed the button)
+  label();
 }
 
 // ---------- Start ----------
 
+function loadReport() {
+  return fetch('data/report.json', { cache: 'no-cache' }).then((res) => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  });
+}
+
 async function main() {
-  setupThemeSwitch();
+  setupThemeToggle();
   startBackground(); // starts with snow; switches once the tabs are set up
   try {
-    const res = await fetch('data/report.json', { cache: 'no-cache' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    report = await res.json();
+    // index.html already started downloading the report while this code loaded.
+    report = await (window.reportDownload ?? loadReport());
     state.report = report;
   } catch (err) {
     document.getElementById('updated').textContent = `Could not load the report (${err.message}).`;
     return;
   }
   renderHeader();
+  // Choose the tab first: then the tab you're not looking at skips drawing its
+  // charts and map until you switch to it.
+  setupTabs();
   renderSnow(report.sections.snow);
   renderSurf(report.sections.surf);
   renderSources();
-  setupTabs();
+  drawCharts();
+  redrawMaps();
 
+  // Redraw charts and maps when the WIDTH changes. On phones, scrolling shows and
+  // hides the address bar, which fires "resize" with only the height changed;
+  // redrawing for that made scrolling lag.
   let timer;
+  let lastWidth = window.innerWidth;
   window.addEventListener('resize', () => {
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
     clearTimeout(timer);
     timer = setTimeout(() => { drawCharts(); redrawMaps(); }, 150);
   });

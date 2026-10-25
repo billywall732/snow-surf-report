@@ -139,10 +139,7 @@ a { color: inherit; text-underline-offset: 2px; }
   position: sticky;
   top: 0;
   z-index: 2;
-  /* Frosted glass: mostly the page color, with the background blurred through it */
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
 }
 .tabs button {
   font: 600 16px var(--sans);
@@ -175,11 +172,7 @@ main { padding-top: 20px; padding-bottom: 32px; }
 }
 
 .card, .best-bet {
-  /* Frosted glass: the animated background shows through softly, but the
-     blur and 86% surface color keep the text as readable as a solid card. */
-  background: color-mix(in srgb, var(--surface) 86%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid var(--rule);
   border-radius: 10px;
   padding: 16px;
@@ -286,7 +279,7 @@ main { padding-top: 20px; padding-bottom: 32px; }
 
 /* ---------- Tide card & switch ---------- */
 
-.tide { margin-bottom: 16px; }
+.tide { margin: 16px 0; } /* same 16px gap as between the cards above it */
 .switch {
   display: inline-flex;
   border: 1px solid var(--rule);
@@ -306,9 +299,22 @@ main { padding-top: 20px; padding-bottom: 32px; }
 }
 .switch button[aria-pressed='true'] { background: var(--ink); color: var(--bg); }
 
-/* The smaller theme switch in the masthead reuses .switch */
-.theme-switch { background: color-mix(in srgb, var(--surface) 70%, transparent); }
-.theme-switch button { font-size: 13px; padding: 4px 10px; min-height: 32px; }
+/* Light/dark toggle in the masthead */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 14px var(--sans);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 6px 14px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--axis); }
+.theme-icon { font-size: 16px; line-height: 1; }
 
 /* ---------- Charts ---------- */
 
@@ -361,7 +367,7 @@ footer li { margin: 2px 0; }
    Snow tab: sections, list, pins, map, detail view
    ========================================================================== */
 
-#panel-snow > section { margin-top: 28px; }
+#panel-snow > section, #panel-surf > section { margin-top: 28px; }
 .section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 12px; }
 .section-head h2 { font-size: 24px; }
 .section-head .fine { margin-top: 0; }
@@ -429,9 +435,7 @@ footer li { margin: 2px 0; }
   list-style: none;
   margin: 0;
   padding: 0;
-  background: color-mix(in srgb, var(--surface) 86%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid var(--rule);
   border-radius: 10px;
 }
@@ -464,9 +468,7 @@ footer li { margin: 2px 0; }
 /* ---------- Map ---------- */
 
 .map-wrap {
-  background: color-mix(in srgb, var(--surface) 86%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid var(--rule);
   border-radius: 10px;
   padding: 8px;
@@ -509,8 +511,6 @@ dialog.detail {
 }
 dialog.detail::backdrop {
   background: rgba(0, 0, 0, 0.45);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
 }
 .detail-head {
   position: sticky;
@@ -607,3 +607,58 @@ dialog.detail::backdrop {
 .compass-key .key.swell { background: var(--accent); }
 .compass-key .key.wind { background: #e8590c; }
 .compass-key .key.land { height: 10px; background: var(--track); border-top: 2px solid var(--ink-2); border-radius: 0; }
+
+/* ==========================================================================
+   Phones
+   ========================================================================== */
+
+/* Safety net: nothing may make the page wider than the screen. On iPhones an
+   element sticking out even a little lets the whole page slide side to side.
+   ("clip" rather than "hidden" so the sticky tab bar keeps working.) */
+html, body { overflow-x: clip; }
+
+/* Tide card: the beach buttons become wrapping pills under the title, instead
+   of one long row that was wider than a phone screen. */
+.tide-head .switch { min-width: 0; }
+.tide-head .switch button { white-space: normal; text-align: center; }
+@media (max-width: 600px) {
+  .tide-head { flex-direction: column; align-items: stretch; }
+  .tide-head .switch { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; border: 0; border-radius: 0; }
+  .tide-head .switch button { flex: 1 1 auto; border: 1px solid var(--rule); }
+}
+
+.legend-item { white-space: nowrap; }
+
+@media (max-width: 600px) {
+  /* List rows: name on top, town under it, then the numbers. */
+  .row-main { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .row-name { display: block; }
+  .row-region { display: block; margin-left: 0; white-space: normal; }
+  .row-region + .pass-tag { margin-left: 0; }
+  .row-rating { gap: 6px; padding-top: 3px; }
+  .row-rating .rating-bar { width: 56px; height: 7px; }
+
+  /* Pinned cards stay short on phones: the snow-depth chart lives in Details. */
+  .cards .card-extra { display: none; }
+
+  /* 4-day forecast: just "12 mph" (the word "Wind" is still read by screen readers) */
+  .fc-wind-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  /* Detail view fills the screen, like an app page */
+  dialog.detail {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .detail-head h2 { font-size: 24px; }
+
+  /* A little less space around section headings */
+  #panel-snow > section, #panel-surf > section { margin-top: 22px; }
+  .section-head h2 { font-size: 22px; }
+}

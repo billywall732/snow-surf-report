@@ -2,12 +2,19 @@
 //   Snow tab: snowflakes falling past a faint mountain skyline, plus a
 //             snowboarder who rides by and does a backflip every 30 seconds.
 //   Surf tab: layers of rolling water whose level follows today's tide,
-//             plus a big wave that rolls across the screen every 30 seconds.
+//             plus a big wave every 30 seconds with a surfer riding it.
 //
-// How canvas animation works: about 60 times a second the browser calls our
-// loop() (via requestAnimationFrame). Each time, we move everything a little
-// (update) and repaint the whole picture (draw). Browsers pause this
-// automatically when the tab is in the background, so it costs nothing then.
+// How canvas animation works: the browser calls our loop() before each screen
+// refresh (via requestAnimationFrame). We move everything a little (update) and
+// repaint the whole picture (draw). Browsers pause this automatically when the
+// tab is in the background, so it costs nothing then.
+//
+// Keeping it cheap (it runs the whole time the page is open):
+//   - we repaint at most 30 times a second; slow-moving snow and water look the same
+//   - we draw at normal resolution, not the phone's 2-3x "retina" resolution,
+//     which would mean 4-9x as many pixels to fill every frame
+//   - snowflakes and bubbles are drawn in a few batches, not one by one
+//   - the sky gradient is built once, not every frame
 //
 // People who turn on "reduce motion" in their system settings get a still
 // picture instead: same scene, no movement.
@@ -42,6 +49,9 @@ let clock = 0; // seconds since the page opened (from the animation loop)
 let setStart = null; // when the current big wave started, or null
 let nextSet = 2; // when the next one is due
 
+const FPS = 30; // repaints per second
+const MAX_PIXEL_RATIO = 1; // raise to 2 for a sharper (but slower) background on phones
+
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const darkMode = matchMedia('(prefers-color-scheme: dark)');
 
@@ -59,6 +69,7 @@ const PALETTE = {
     surfSky: ['#e3eff6', '#f1f6f8', '#f9f9f7'],
     water: ['rgba(42, 120, 214, 0.10)', 'rgba(42, 120, 214, 0.16)', 'rgba(30, 100, 190, 0.22)'],
     foam: 'rgba(255, 255, 255, 0.9)',
+    board: '#fbf7ec',
   },
   dark: {
     snowSky: ['#0b1420', '#0d121a', '#0d0d0d'],
@@ -72,6 +83,7 @@ const PALETTE = {
     surfSky: ['#08131d', '#0b1016', '#0d0d0d'],
     water: ['rgba(57, 135, 229, 0.10)', 'rgba(57, 135, 229, 0.15)', 'rgba(57, 135, 229, 0.22)'],
     foam: 'rgba(220, 235, 250, 0.55)',
+    board: '#e9e2d0',
   },
 };
 // The page's theme switch (data-theme on <html>) wins; "Auto" follows the system.
@@ -129,14 +141,17 @@ export function setTideLevel(fraction) {
 // ---------- Setup ----------
 
 function resize() {
-  // Draw at the screen's real pixel density so it stays crisp on phones.
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
+  const widthChanged = window.innerWidth !== width;
   width = window.innerWidth;
   height = window.innerHeight;
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  makeFlakes();
+  skyCache = null;
+  // On phones, scrolling shows/hides the address bar, which changes only the
+  // height. Keep the same flakes then; only start fresh when the width changes.
+  if (widthChanged || !flakes.length) makeFlakes();
   makeRidges();
   drawStill();
 }
@@ -156,17 +171,27 @@ function newFlake(y) {
     speed: 18 + depth * 55, // pixels per second
     sway: 10 + Math.random() * 25,
     phase: Math.random() * Math.PI * 2,
-    alpha: 0.35 + depth * 0.65,
+    bucket: depth < 0.33 ? 0 : depth < 0.66 ? 1 : 2, // near / mid / far, drawn as 3 batches
+  };
+}
+
+// A "seeded" random number generator: the same seed always gives the same
+// sequence, so the skyline keeps its shape when the window is resized.
+function seededRandom(seed) {
+  return () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
   };
 }
 
 // A jagged skyline: points along the width with random peak heights.
 function makeRidges() {
+  const random = seededRandom(7);
   const layer = (baseFrac, rough, step) => {
     const pts = [];
     let y = height * baseFrac;
     for (let x = -step; x <= width + step; x += step) {
-      y += (Math.random() - 0.5) * rough;
+      y += (random() - 0.5) * rough;
       y = Math.max(height * (baseFrac - 0.12), Math.min(height * (baseFrac + 0.06), y));
       pts.push([x, y]);
     }
@@ -179,14 +204,16 @@ function makeRidges() {
 
 let last = 0;
 function loop(time) {
-  const dt = Math.min(0.05, (time - last) / 1000 || 0); // seconds since last frame (capped)
+  requestAnimationFrame(loop);
+  // Skip this screen refresh if it's too soon for the next of our 30 frames.
+  if (time - last < 1000 / FPS - 2) return;
+  const dt = Math.min(0.1, (time - last) / 1000 || 0); // seconds since our last frame (capped)
   last = time;
   clock = time / 1000;
   if (!reduceMotion.matches) {
-    update(dt, time / 1000);
-    draw(time / 1000);
+    update(dt, clock);
+    draw(clock);
   }
-  requestAnimationFrame(loop);
 }
 
 function drawStill() {
@@ -261,6 +288,14 @@ function update(dt, t) {
       }
     }
 
+    // Spray thrown off the surfer's board as it carves
+    const surfer = surferState();
+    if (surfer && surfer.alpha > 0.5) {
+      for (let n = 0; n < 30 * dt; n++) {
+        foam.push({ x: surfer.x - 14, y: surfer.y, life: 0.7, r: 1 + Math.random() * 1.5, vx: -40 - Math.random() * 40, vy: -30 - Math.random() * 50, g: 120 });
+      }
+    }
+
     for (const b of foam) {
       b.life -= dt * 0.6;
       b.vy += b.g * dt;
@@ -273,10 +308,14 @@ function update(dt, t) {
 
 // ---------- Drawing ----------
 
+let skyCache = null; // { stops, gradient }: rebuilt only when the colors or size change
 function sky(stops) {
-  const g = ctx.createLinearGradient(0, 0, 0, height);
-  stops.forEach((c, i) => g.addColorStop(i / (stops.length - 1), c));
-  ctx.fillStyle = g;
+  if (skyCache?.stops !== stops) {
+    const g = ctx.createLinearGradient(0, 0, 0, height);
+    stops.forEach((c, i) => g.addColorStop(i / (stops.length - 1), c));
+    skyCache = { stops, gradient: g };
+  }
+  ctx.fillStyle = skyCache.gradient;
   ctx.fillRect(0, 0, width, height);
 }
 
@@ -294,17 +333,22 @@ function draw(t) {
       ctx.fillStyle = fill;
       ctx.fill();
     });
-    // Flakes
-    for (const f of flakes) {
-      ctx.globalAlpha = f.alpha;
+    // Flakes, in 3 batches (far, mid, near): one shape per batch is much cheaper
+    // than filling and outlining 250 separate circles.
+    ctx.fillStyle = c.flake;
+    ctx.strokeStyle = c.flakeEdge;
+    ctx.lineWidth = 0.6;
+    [0.45, 0.7, 0.95].forEach((alpha, bucket) => {
+      ctx.globalAlpha = alpha;
       ctx.beginPath();
-      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-      ctx.fillStyle = c.flake;
+      for (const f of flakes) {
+        if (f.bucket !== bucket) continue;
+        ctx.moveTo(f.x + f.r, f.y);
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      }
       ctx.fill();
-      ctx.strokeStyle = c.flakeEdge;
-      ctx.lineWidth = 0.6;
       ctx.stroke();
-    }
+    });
     ctx.globalAlpha = 1;
 
     // Foreground snowfield and the kicker (jump)
@@ -352,12 +396,23 @@ function draw(t) {
     ctx.strokeStyle = c.foam;
     ctx.lineWidth = 2;
     ctx.stroke();
-    // Foam bubbles
+    // The surfer, riding the big wave
+    const s = surferState();
+    if (s) {
+      ctx.globalAlpha = s.alpha;
+      drawSurfer(s.x, s.y, s.angle, riderScale(), c);
+      ctx.globalAlpha = 1;
+    }
+    // Foam bubbles, in 4 batches by how faded they are
     ctx.fillStyle = c.foam;
-    for (const b of foam) {
-      ctx.globalAlpha = Math.max(0, b.life) * 0.8;
+    for (let level = 1; level <= 4; level++) {
+      ctx.globalAlpha = (level / 4) * 0.8;
       ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      for (const b of foam) {
+        if (Math.ceil(Math.max(0, b.life) * 4) !== level) continue;
+        ctx.moveTo(b.x + b.r, b.y);
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      }
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -504,6 +559,79 @@ function drawRider(x, y, angle, scale, c) {
   ctx.fillStyle = c.rider;
   ctx.beginPath();
   ctx.arc(3, -32, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ---------- Surfer ----------
+
+// Where the surfer is: on the steep front face of the big wave, just ahead of
+// the crest, trimming up and down the face. Null when no big wave is passing.
+function surferState() {
+  const crest = bigWave();
+  if (!crest || crest.strength < 0.15) return null;
+  const x = crest.x + crest.width * (0.2 + 0.08 * Math.sin(clock * 1.6)); // trim along the face
+  const y = waveY(2, x, clock);
+  // The board follows the slope of the water under it, but never tilts past
+  // 35° (0.6 radians); any steeper looks like a wipeout instead of a ride.
+  const slope = Math.atan2(waveY(2, x + 6, clock) - waveY(2, x - 6, clock), 12);
+  const angle = Math.max(-0.6, Math.min(0.6, slope));
+  return { x, y, angle, alpha: Math.min(1, (crest.strength - 0.15) * 3) };
+}
+
+// A surfer in a low crouch on a longboard, drawn like the snowboarder: shapes
+// around (0, 0) = middle of the board, then moved and tilted into place.
+function drawSurfer(x, y, angle, scale, c) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.scale(scale, scale);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Board: a long, thin rounded shape with a darker outline
+  ctx.fillStyle = c.board;
+  ctx.strokeStyle = c.rider;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(0, -1, 21, 2.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Legs: wide stance, knees bent
+  ctx.strokeStyle = c.rider;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-9, -3);
+  ctx.lineTo(-5, -10);
+  ctx.lineTo(-1, -14);
+  ctx.moveTo(8, -3);
+  ctx.lineTo(7, -10);
+  ctx.lineTo(2, -14);
+  ctx.stroke();
+
+  // Body leaning forward, in a colored rash guard
+  ctx.strokeStyle = c.jacket;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(0, -14);
+  ctx.lineTo(4, -24);
+  ctx.stroke();
+
+  // Arms: front arm reaching down the line, back arm up for balance
+  ctx.strokeStyle = c.rider;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(14, -16);
+  ctx.lineTo(4, -21);
+  ctx.lineTo(-7, -28);
+  ctx.stroke();
+
+  // Head
+  ctx.fillStyle = c.rider;
+  ctx.beginPath();
+  ctx.arc(7, -28, 4.2, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();

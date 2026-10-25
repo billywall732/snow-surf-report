@@ -47,10 +47,14 @@ function niceTicks(min, max, count = 4) {
  */
 export function timeChart(container, opts) {
   container.replaceChildren();
-  const width = Math.max(260, container.clientWidth);
+  // (drawCharts() measures widths up front and passes them in data-width)
+  const width = Math.max(260, Number(container.dataset.width) || container.clientWidth);
   const height = opts.height ?? 150;
   const hasMarkers = Boolean(opts.markers?.length);
-  const m = { top: hasMarkers ? 32 : 22, right: opts.endLabel ? 40 : 14, bottom: 24, left: 34 };
+  const labelsBelow = (opts.markers ?? []).some((mk) => mk.below);
+  // Extra room at the bottom when labels sit under points (e.g. low tides), so they
+  // don't collide with the time labels along the bottom.
+  const m = { top: hasMarkers ? 32 : 22, right: opts.endLabel ? 40 : 14, bottom: labelsBelow ? 36 : 24, left: 34 };
 
   const ys = opts.points.map((p) => p.y);
   const yLo = Math.min(opts.yMin ?? Infinity, ...ys);
@@ -125,7 +129,7 @@ export function timeChart(container, opts) {
   tip.className = 'tooltip';
   tip.hidden = true;
 
-  hit.addEventListener('pointermove', (e) => {
+  const show = (e) => {
     const box = root.getBoundingClientRect();
     const px = e.clientX - box.left;
     let best = opts.points[0];
@@ -141,8 +145,15 @@ export function timeChart(container, opts) {
     tip.hidden = false;
     // Keep the tooltip inside the chart's box
     tip.style.left = `${Math.min(Math.max(cx - tip.offsetWidth / 2, 0), width - tip.offsetWidth)}px`;
-  });
-  hit.addEventListener('pointerleave', () => {
+  };
+  // Mouse: follow the pointer. Phone: a tap (pointerdown) or a sideways drag shows
+  // the value too, since there's no hover on a touch screen.
+  hit.addEventListener('pointermove', show);
+  hit.addEventListener('pointerdown', show);
+  hit.addEventListener('pointerleave', (e) => {
+    // On a touch screen the finger "leaves" as soon as it lifts; keep the value
+    // showing until the next tap instead of making it vanish instantly.
+    if (e.pointerType === 'touch') return;
     cross.setAttribute('visibility', 'hidden');
     hoverDot.setAttribute('visibility', 'hidden');
     tip.hidden = true;

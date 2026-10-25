@@ -108,10 +108,19 @@ export function chartSlot(draw) {
   return el;
 }
 
+// Draw every visible chart at its current width. All widths are measured FIRST and
+// all charts drawn AFTER: alternating "measure, draw, measure, draw" makes the browser
+// recalculate the whole page layout once per chart, which was slow.
 export function drawCharts() {
   for (let i = chartDrawers.length - 1; i >= 0; i--) {
-    const { el, draw } = chartDrawers[i];
-    if (!el.isConnected) chartDrawers.splice(i, 1); // removed from the page
-    else if (el.offsetParent !== null) draw(el); // skip charts that are hidden
+    if (!chartDrawers[i].el.isConnected) chartDrawers.splice(i, 1); // removed from the page
   }
+  // Hidden = inside a hidden tab or a closed dialog. (Checked without measuring anything.)
+  const visible = chartDrawers.filter(({ el }) => !el.closest('[hidden], dialog:not([open])'));
+  const widths = visible.map(({ el }) => el.clientWidth); // 1. measure all
+  visible.forEach(({ el, draw }, i) => { // 2. then draw all
+    if (!widths[i]) return; // width 0 = hidden by CSS (e.g. card charts on phones)
+    el.dataset.width = widths[i];
+    draw(el);
+  });
 }

@@ -4,18 +4,34 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Snow and Surf Report</title>
-  <meta name="description" content="A morning snapshot of snow at every US Ikon and Epic Pass mountain and surf at four breaks, with a simple should-I-go rating.">
+  <meta name="description" content="A morning snapshot of snow at every US Ikon and Epic Pass mountain and surf at 52 US surf spots, with a simple should-I-go rating.">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 22c4-4 8-4 12 0s8 4 12 0 4-2 4-2v10H2z' fill='%232a78d6'/%3E%3Cpath d='M6 16 16 3l10 13z' fill='%2352514e'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
   <script>
-    // Apply a saved Light/Dark choice before the page draws, so it never
-    // flashes the wrong colors. (No saved choice = "Auto" = follow the system.)
+    // Apply a saved light/dark choice before the page draws, so it never flashes
+    // the wrong colors. (No saved choice = follow the phone/computer setting.)
     try {
       const theme = localStorage.getItem('ssr-theme');
       if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
-    } catch { /* storage blocked: just use Auto */ }
+    } catch { /* storage blocked: follow the system */ }
+
+    // Start downloading the report now, at the same time as the JavaScript files,
+    // instead of waiting for them to load first. app.js picks this up.
+    window.reportDownload = fetch('data/report.json', { cache: 'no-cache' })
+      .then((res) => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); });
+    window.reportDownload.catch(() => {}); // app.js shows any error
   </script>
+  <!-- Tell the browser about every JavaScript file up front, so it downloads them all
+       at once instead of discovering them one import at a time. -->
+  <link rel="modulepreload" href="js/ui.js">
+  <link rel="modulepreload" href="js/charts.js">
+  <link rel="modulepreload" href="js/places.js">
+  <link rel="modulepreload" href="js/map.js">
+  <link rel="modulepreload" href="js/us-map-data.js">
+  <link rel="modulepreload" href="js/snow.js">
+  <link rel="modulepreload" href="js/surf.js">
+  <link rel="modulepreload" href="js/background.js">
   <!-- type="module" lets app.js use `import`. Modules only load over http(s),
        which is why you need a local server instead of double-clicking this file. -->
   <script type="module" src="js/app.js"></script>
@@ -24,11 +40,9 @@
   <header class="masthead">
     <div class="masthead-top">
       <p class="kicker">Morning conditions</p>
-      <div class="switch theme-switch" role="group" aria-label="Color theme">
-        <button type="button" data-theme-choice="auto" aria-pressed="true">Auto</button>
-        <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
-        <button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
-      </div>
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to dark mode">
+        <span class="theme-icon" aria-hidden="true">☾</span> <span class="theme-text" aria-hidden="true">Dark</span>
+      </button>
     </div>
     <h1>Snow and Surf Report</h1>
     <p class="updated" id="updated">Loading the latest report…</p>

@@ -43,21 +43,27 @@ export function project(lat, lon) {
 }
 
 /**
- * Draw the map.
- * items:     report items (each has id, name, lat, lon, rating)
- * icon:      'peak' (mountains) or 'wave' (beaches)
- * label:     what the map shows, for screen readers, e.g. 'Ikon and Epic mountains'
- * pinned:    Set of pinned ids (drawn larger, in the accent color, with a name label)
- * selected:  id of the place open in the detail view (highlighted), or null
- * visible:   Set of ids that match the current list filter (others are faded)
- * onSelect:  called with a resort id when a dot is clicked or activated by keyboard
+ * Build the map once and return an object with update(), which changes only what's
+ * needed (colors, sizes, labels, fading). Rebuilding the whole map — a big outline
+ * plus 50–80 icons — on every keystroke or pin change was the slowest part of the page.
+ *
+ * createMap(container, { items, icon, label, width, onSelect })
+ *   items:    report items (each has id, name, lat, lon, rating)
+ *   icon:     'peak' (mountains) or 'wave' (beaches)
+ *   label:    what the map shows, for screen readers
+ *   width:    the container's width in pixels (measured by the caller)
+ *   onSelect: called with an id when an icon is clicked or activated by keyboard
+ * map.update({ pinned, selected, visible })
+ *   pinned:   Set of pinned ids (larger, accent color, name label)
+ *   selected: id open in the detail view (highlighted), or null
+ *   visible:  Set of ids matching the list filter (others are faded)
  */
-export function drawMap(container, { items, icon = 'peak', label: mapLabel = 'places', pinned, selected = null, visible, onSelect }) {
+export function createMap(container, { items, icon = 'peak', label: mapLabel = 'places', width, onSelect }) {
   const [w, h] = VIEWBOX;
   // The map is drawn in a 975-wide coordinate box and then shrunk or stretched to
-  // fit the screen. k converts 'real screen pixels' into map units, so dots, labels
+  // fit the screen. k converts 'real screen pixels' into map units, so icons, labels
   // and tap targets stay the same on-screen size on a phone and on a desktop.
-  const k = w / Math.max(280, container.clientWidth || w);
+  const k = w / Math.max(280, width || w);
   const root = svg('svg', {
     viewBox: `0 0 ${w} ${h}`,
     class: 'us-map',
@@ -70,33 +76,15 @@ export function drawMap(container, { items, icon = 'peak', label: mapLabel = 'pl
     svg('path', { d: STATE_BORDERS, class: 'map-borders' }),
   );
 
-  // Draw faded dots first and pinned dots last, so pinned ones sit on top.
-  const rank = (r) => (r.id === selected ? 3 : pinned.has(r.id) ? 2 : visible.has(r.id) ? 1 : 0);
-  const order = [...items].sort((a, b) => rank(a) - rank(b));
-
-  const placed = []; // label boxes already drawn, so new ones can avoid them
-
-  for (const r of order) {
+  // One <g> per place, created once.
+  const nodes = items.map((r) => {
     const [x, y] = project(r.lat, r.lon);
-    const isPinned = pinned.has(r.id);
-    const isSelected = r.id === selected;
-    const score = r.rating.score;
     const where = r.city ? `${r.city}, ${r.region}` : r.region;
-    const label = `${r.name}, ${where}${score != null ? `, rated ${score} of 5` : ''}${isPinned ? ', pinned' : ''}. Open details.`;
-    const g = svg('g', {
-      class: `map-dot${isPinned ? ' is-pinned' : ''}${isSelected ? ' is-selected' : ''}${visible.has(r.id) || isSelected ? '' : ' is-faded'}`,
-      tabindex: '0',
-      role: 'button',
-      'aria-label': label,
-      transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})`,
-    });
+    const score = r.rating.score;
+    const g = svg('g', { tabindex: '0', role: 'button', transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` });
     g.append(svg('title', {}, `${r.name} (${where})${score != null ? ` · ${score}/5` : ''}`));
-    // A larger invisible circle makes the dot easy to tap on a phone.
-    g.append(svg('circle', { cy: -7 * k, r: 16 * k, class: 'map-hit' })); // centered on the peak, not its base
-    g.append(ICONS[icon]((isPinned || isSelected ? 1.45 : 1) * k));
-    if (isPinned || isSelected) {
-      g.append(placeLabel(r.name, x, y, k, w, placed));
-    }
+    // A larger invisible circle makes the icon easy to tap on a phone.
+    g.append(svg('circle', { cy: -7 * k, r: 16 * k, class: 'map-hit' }));
     g.addEventListener('click', () => onSelect(r.id));
     g.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -105,8 +93,39 @@ export function drawMap(container, { items, icon = 'peak', label: mapLabel = 'pl
       }
     });
     root.append(g);
-  }
+    return { r, g, x, y, where, score, big: null, iconEl: null, labelEl: null };
+  });
   container.replaceChildren(root);
+
+  function update({ pinned, selected = null, visible }) {
+    const placed = []; // label boxes, so new labels can avoid them
+    for (const n of nodes) {
+      const isPinned = pinned.has(n.r.id);
+      const isSelected = n.r.id === selected;
+      const big = isPinned || isSelected;
+      n.g.setAttribute('class', `map-dot${isPinned ? ' is-pinned' : ''}${isSelected ? ' is-selected' : ''}${visible.has(n.r.id) || isSelected ? '' : ' is-faded'}`);
+      n.g.setAttribute('aria-label', `${n.r.name}, ${n.where}${n.score != null ? `, rated ${n.score} of 5` : ''}${isPinned ? ', pinned' : ''}. Open details.`);
+      if (n.big !== big) { // only swap the icon when its size changes
+        const iconEl = ICONS[icon]((big ? 1.45 : 1) * k);
+        if (n.iconEl) n.iconEl.replaceWith(iconEl);
+        else n.g.append(iconEl);
+        n.iconEl = iconEl;
+        n.big = big;
+      }
+      n.labelEl?.remove();
+      n.labelEl = null;
+    }
+    // Pinned and selected icons go last, so they're drawn on top...
+    const top = nodes.filter((n) => n.big).sort((a, b) => Number(a.r.id === selected) - Number(b.r.id === selected));
+    for (const n of top) root.append(n.g);
+    // ...and get name labels, placed so they don't overlap each other.
+    for (const n of top) {
+      n.labelEl = placeLabel(n.r.name, n.x, n.y, k, w, placed);
+      n.g.append(n.labelEl);
+    }
+  }
+
+  return { update, width };
 }
 
 // A name label beside an icon. Start on the side with more room (so it never runs off

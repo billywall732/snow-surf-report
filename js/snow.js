@@ -146,12 +146,13 @@ function resortCard(r, ui) {
           h('span', { class: 'fc-day' }, formatDay(d.date, i)),
           h('span', { class: 'fc-snow' }, `${d.snowfall > 0 ? d.snowfall : 0}"`, h('span', { class: 'visually-hidden' }, ' snow')),
           h('span', { class: 'fc-temp' }, `${d.tempHigh}° / ${d.tempLow}°`),
-          h('span', { class: 'fc-wind' }, `Wind ${d.windMax} mph`)))));
+          h('span', { class: 'fc-wind' }, h('span', { class: 'fc-wind-label' }, 'Wind '), `${d.windMax} mph`)))));
   } else {
     add(card, unavailable('Forecast', fc));
   }
 
-  if (ok(obs) && obs.data.depthHistory.length > 1) add(card, depthChart(r));
+  // (On phones the chart is left out of the card to keep it short; Details has it.)
+  if (ok(obs) && obs.data.depthHistory.length > 1) add(card, h('div', { class: 'card-extra' }, depthChart(r)));
   add(card, h('div', { class: 'card-actions' }, ui.detailsButton(r), ui.pinButton(r, { withText: true })));
   return card;
 }

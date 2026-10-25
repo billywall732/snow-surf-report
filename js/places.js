@@ -8,7 +8,7 @@
 //
 // Pins and dropdown choices are saved in this browser (localStorage).
 import { ratingBar } from './charts.js';
-import { drawMap, legendIcon } from './map.js';
+import { createMap, legendIcon } from './map.js';
 import { drawCharts, h, rating } from './ui.js';
 
 const MAX_PINS = 4;
@@ -69,6 +69,8 @@ export function createPlacesTab(opts) {
   let selectedId = null; // the place open in the detail view
   let openedByUs = false; // did this page add the #key/<id> history entry?
   let visibleIds = new Set();
+  let mapView = null; // built the first time the map scrolls near the screen
+  let mapWanted = false;
   const isPinned = (id) => pinned.includes(id);
 
   const els = {
@@ -80,7 +82,7 @@ export function createPlacesTab(opts) {
     map: h('div', { class: 'map-wrap' }),
     afterMine: h('div'),
   };
-  els.more.addEventListener('click', () => { showAll = !showAll; update(); });
+  els.more.addEventListener('click', () => { showAll = !showAll; updateList(); });
 
   const dialog = h('dialog', { id: `${key}-detail`, class: 'detail', 'aria-labelledby': `${key}-detail-title` });
   document.body.append(dialog);
@@ -106,21 +108,47 @@ export function createPlacesTab(opts) {
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-map` }, 'Map'),
         h('p', { class: 'fine map-legend' },
-          legendIcon(opts.mapIcon), ` ${words.one[0].toUpperCase()}${words.one.slice(1)}  `,
-          legendIcon(opts.mapIcon, 'is-pinned'), ' Pinned  ',
-          legendIcon(opts.mapIcon, 'is-selected'), ' Open in details · Tap one for details.')),
+          h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon), ` ${words.one[0].toUpperCase()}${words.one.slice(1)}`),
+          h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon, 'is-pinned'), ' Pinned'),
+          h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon, 'is-selected'), ' Open in details'),
+          h('span', { class: 'legend-item' }, 'Tap one for details.'))),
       els.map),
   );
 
+  // The map is far down the page, so don't draw it until it's about to scroll
+  // into view. (IntersectionObserver tells us when an element nears the screen.)
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        mapWanted = true;
+        io.disconnect();
+        redrawMap();
+      }
+    }, { rootMargin: '600px' });
+    io.observe(els.map);
+  } else {
+    mapWanted = true;
+  }
+
   // ---------- Re-draw ----------
+  // Two parts, so typing in the search box doesn't rebuild the pinned cards
+  // (and their charts) on every keystroke.
 
   function update() {
+    updatePins();
+    updateList();
+    drawCharts();
+  }
+
+  function updatePins() {
     els.pinned.replaceChildren(...pinned.map((id) => opts.card(byId(id), ui)));
     if (!pinned.length) {
       els.pinned.append(h('p', { class: 'empty' }, `No pinned ${words.many} yet. Use ☆ in the list below to pin up to four.`));
     }
     els.afterMine.replaceChildren(...(opts.afterMine?.(pinned) ?? []));
+  }
 
+  function updateList() {
     const rows = filteredSorted();
     const shown = showAll || list.query ? rows : rows.slice(0, SHORT_LIST);
     els.list.replaceChildren(...shown.map(listRow));
@@ -131,15 +159,17 @@ export function createPlacesTab(opts) {
 
     visibleIds = new Set(rows.map((x) => x.id));
     redrawMap();
-    drawCharts();
   }
 
   function redrawMap() {
-    if (els.map.offsetParent === null) return; // on the hidden tab: drawn when shown
-    drawMap(els.map, {
-      items: section.items, icon: opts.mapIcon, label: opts.mapLabel,
-      pinned: new Set(pinned), selected: selectedId, visible: visibleIds, onSelect: openDetail,
-    });
+    if (!mapWanted || document.getElementById(opts.panelId).hidden) return; // drawn when shown
+    // Build the map the first time, or again only if its width changed
+    // (sizes on the map depend on width); otherwise just update it.
+    const width = els.map.clientWidth;
+    if (!mapView || Math.abs(mapView.width - width) > 1) {
+      mapView = createMap(els.map, { items: section.items, icon: opts.mapIcon, label: opts.mapLabel, width, onSelect: openDetail });
+    }
+    mapView.update({ pinned: new Set(pinned), selected: selectedId, visible: visibleIds });
   }
 
   function refresh() {
@@ -233,7 +263,7 @@ export function createPlacesTab(opts) {
       save(opts.listKey, choices);
     };
     const search = h('input', { type: 'search', id: `${key}-search`, placeholder: opts.searchPlaceholder, autocomplete: 'off' });
-    search.addEventListener('input', () => { list.query = search.value.trim().toLowerCase(); update(); });
+    search.addEventListener('input', () => { list.query = search.value.trim().toLowerCase(); updateList(); });
 
     const selects = opts.filters.map((f) => {
       const sel = h('select', { id: `${key}-${f.id}` },
@@ -241,14 +271,14 @@ export function createPlacesTab(opts) {
         f.options.map((o) => h('option', { value: o }, o)));
       sel.value = f.options.includes(list[f.id]) ? list[f.id] : 'all';
       list[f.id] = sel.value;
-      sel.addEventListener('change', () => { list[f.id] = sel.value; remember(); update(); });
+      sel.addEventListener('change', () => { list[f.id] = sel.value; remember(); updateList(); });
       return h('label', { class: 'control' }, h('span', {}, f.label), sel);
     });
 
     const sort = h('select', { id: `${key}-sort` }, opts.sorts.map((s) => h('option', { value: s.value }, s.label)));
     sort.value = opts.sorts.some((s) => s.value === list.sort) ? list.sort : opts.sorts[0].value;
     list.sort = sort.value;
-    sort.addEventListener('change', () => { list.sort = sort.value; remember(); update(); });
+    sort.addEventListener('change', () => { list.sort = sort.value; remember(); updateList(); });
 
     return h('div', { class: 'list-controls' },
       h('label', { class: 'control grow' }, h('span', {}, 'Search'), search),
