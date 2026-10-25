@@ -3,6 +3,10 @@
 import { svg, timeChart } from './charts.js';
 import { setTideLevel } from './background.js';
 import { createPlacesTab } from './places.js';
+import { notifyButton } from './alerts.js';
+import { loadRider, openProfile, recommendCard } from './rider.js';
+import { distanceMi, surfBlockers } from './recommend.js';
+import { fitDays, fitToday, hasProfile, onProfileChange, profileChips, profileText, setSkills } from './skill.js';
 import {
   add, bestBetCard, chartSlot, compass, dataTable, drawCharts, formatShortDate, formatTime,
   h, num, ok, rating, stat, unavailable,
@@ -30,6 +34,7 @@ function matches(s, q) {
 
 export function renderSurf(surfSection) {
   section = surfSection;
+  setSkills(section.skills);
   tab = createPlacesTab({
     key: 'surf',
     panelId: 'panel-surf',
@@ -42,18 +47,24 @@ export function renderSurf(surfSection) {
       allNote: `${section.items.length} US surf spots`,
     },
     pinKey: 'ssr-surf-pinned',
-    listKey: 'ssr-surf-list',
+    listKey: 'ssr-surf-list-v2', // (v2: the default sort became A–Z)
     filters: [
       { id: 'area', label: 'Area', allLabel: 'All areas', options: AREAS, test: (s, v) => s.area === v },
     ],
     sorts: [
+      { value: 'name', label: 'A–Z', compare: () => 0 }, // (ties are always broken A–Z)
       { value: 'rating', label: 'Best rating', compare: (a, b) => (b.rating.score ?? 0) - (a.rating.score ?? 0) || (period(b) ?? 0) - (period(a) ?? 0) },
       { value: 'waves', label: 'Biggest waves', compare: (a, b) => waveFt(b) - waveFt(a) },
       { value: 'period', label: 'Longest period', compare: (a, b) => (period(b) ?? 0) - (period(a) ?? 0) },
-      { value: 'name', label: 'A–Z', compare: () => 0 },
     ],
     searchPlaceholder: 'Search by beach, town or state',
     matches,
+    // Your levels and boards (tap one or more): show only beaches whose waves fit
+    // you today. The same chips are on the Notifications page; they stay in sync.
+    extraControls: () => profileChips({ compact: true }),
+    extraFilter: (s) => !hasProfile() || fitToday(s).fits === true,
+    // A small "Fits you" tag on beaches that suit your level/board today
+    rowExtras: (s) => (hasProfile() && fitToday(s).fits ? h('span', { class: 'fit-tag' }, '✓ Fits you') : null),
     rowStats: (s) => {
       const w = ok(s.wind) ? ` · ${s.wind.data.speedMph} mph ${s.wind.data.relative}` : '';
       const t = waterTemp(s);
@@ -62,11 +73,15 @@ export function renderSurf(surfSection) {
     card: spotCard,
     detailPill: (s) => (s.beachFacingDeg != null ? h('span', { class: 'pill' }, `Faces ${compass(s.beachFacingDeg)} (${s.beachFacingDeg}°)`) : null),
     detailBody,
-    top: () => [bestBetCard(section, 'surf', (id) => tab.openDetail(id))],
+    detailButtons: (s) => notifyButton('surf', s),
+    top: () => [bestBetCard(section, 'surf', (id) => tab.openDetail(id)), recommendCard('surf', (id) => tab.openDetail(id))],
     afterMine: (pinnedIds) => [drawTideCard(pinnedIds)],
     mapIcon: 'wave',
     mapLabel: 'surf spots',
   });
+  // When your levels/boards change (here or on the Notifications page), re-filter.
+  onProfileChange(() => tab.refreshList());
+  return tab;
 }
 
 // ---------- Tides ----------
@@ -238,6 +253,7 @@ function detailBody(s) {
     h('dl', { class: 'facts' },
       h('dt', {}, 'Wind'), h('dd', {}, windText(s)),
       h('dt', {}, 'Buoy'), h('dd', {}, buoyText(s))),
+    forYou(s),
     directionCompass(s),
     hourlyChart(s),
     h('h4', {}, "Today's tide"),
@@ -245,6 +261,7 @@ function detailBody(s) {
     h('h4', {}, 'About'),
     h('dl', { class: 'facts' },
       h('dt', {}, 'Faces'), h('dd', {}, s.beachFacingDeg != null ? `${compass(s.beachFacingDeg)} (${s.beachFacingDeg}°)` : '—'),
+      h('dt', {}, 'Best for'), h('dd', {}, s.minLevel ? `${section.skills.levels[s.minLevel].label} surfers and up${s.minLevelNote ? ` — ${s.minLevelNote}` : ''}` : 'All levels (in the right conditions)'),
       h('dt', {}, 'Tide station'), h('dd', {}, st ? `${st.name} (${s.tideStation})` : '—'),
       h('dt', {}, 'Wave model'), h('dd', {}, ok(s.waves) ? `Open-Meteo grid point ${s.waves.data.gridPoint.lat.toFixed(2)}, ${s.waves.data.gridPoint.lon.toFixed(2)}` : '—'),
       h('dt', {}, 'Location'), h('dd', {}, `${s.lat.toFixed(3)}, ${s.lon.toFixed(3)}`),
@@ -331,4 +348,40 @@ function directionCompass(s) {
       h('li', {}, h('span', { class: 'key swell' }), `Swell from ${compass(s.waves.data.directionDeg)} (${s.waves.data.directionDeg}°)`),
       ok(s.wind) ? h('li', {}, h('span', { class: 'key wind' }), `Wind from ${compass(s.wind.data.directionDeg)}, ${s.wind.data.relative}`) : null,
       h('li', {}, h('span', { class: 'key land' }), `Land side; beach faces ${compass(s.beachFacingDeg)}`)));
+}
+
+// ---------- For you ----------
+
+const dayName = (date, i) => (i === 0 ? 'Today' : new Date(`${date}T12:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }));
+
+// Does this beach suit your level and board today and over the next couple of days?
+function forYou(s) {
+  // Water temperature and distance, from your Rider Profile
+  const rider = loadRider();
+  const notes = [
+    ...surfBlockers(s, rider).map((x) => h('p', { class: 'fine warn' }, `✗ ${x}`)),
+    rider.home && !surfBlockers(s, rider).some((x) => x.includes(' mi away')) ? h('p', { class: 'fine' }, `${distanceMi(rider.home, s)} mi from ${rider.home.label}`) : null,
+  ];
+  if (!hasProfile()) {
+    const b = h('button', { type: 'button', class: 'text-button inline-link' }, 'Rider Profile');
+    b.addEventListener('click', openProfile);
+    return [
+      h('h4', {}, 'For you'),
+      notes,
+      h('p', { class: 'fine' }, 'Set your level and board (in the Surf filters or your ', b, ') to see whether this beach suits you.'),
+    ];
+  }
+  const days = fitDays(s);
+  return [
+    h('h4', {}, 'For you'),
+    notes,
+    h('p', { class: 'fine' }, `As a ${profileText()}, at ${section.sessionHour ?? 7} AM each day:`),
+    h('ul', { class: 'fit-days' }, days.map((d, i) => h('li', { class: d.fits ? 'fits' : 'no-fit' },
+      h('span', { class: 'fit-mark', 'aria-hidden': 'true' }, d.fits ? '✓' : '✗'),
+      h('span', { class: 'fit-day' }, dayName(d.date, i)),
+      h('span', { class: 'fit-what' },
+        `${d.ft} ft @ ${d.s} s${d.wind ? `, ${d.wind.mph} mph ${d.wind.relative}` : ''}`,
+        h('span', { class: 'fit-why' }, d.fits ? 'Fits you' : d.reasons[0])),
+    ))),
+  ];
 }

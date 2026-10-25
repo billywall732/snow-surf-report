@@ -104,6 +104,64 @@
           "good": 10
         }
       }
+    },
+    "skills": {
+      "_readme": "What 'fits you' means on the Surf tab and in surf alerts. You can pick more than one level and board: a day fits when it suits at least one level you picked with at least one board you picked. For a single level and board, a day fits when the wave height is inside BOTH your level's range and your board's range, the period is at least the board's minPeriodS (if any), and the wind isn't stronger than your level allows (unless it's blowing offshore, which cleans waves up). Beaches with a minLevel (in locations.json) never fit lower levels. Wave heights in feet, wind in mph.",
+      "levels": {
+        "beginner": {
+          "label": "Beginner",
+          "minFt": 1,
+          "maxFt": 3,
+          "maxWindMph": 12
+        },
+        "intermediate": {
+          "label": "Intermediate",
+          "minFt": 2,
+          "maxFt": 6,
+          "maxWindMph": 18
+        },
+        "advanced": {
+          "label": "Advanced",
+          "minFt": 3,
+          "maxFt": 15,
+          "maxWindMph": 25
+        },
+        "pro": {
+          "label": "Pro",
+          "minFt": 15,
+          "maxFt": 60,
+          "maxWindMph": 35
+        }
+      },
+      "boards": {
+        "softtop": {
+          "label": "Soft-top / foamie",
+          "minFt": 0.5,
+          "maxFt": 3
+        },
+        "longboard": {
+          "label": "Longboard",
+          "minFt": 1,
+          "maxFt": 5
+        },
+        "midlength": {
+          "label": "Mid-length / funboard",
+          "minFt": 1.5,
+          "maxFt": 6
+        },
+        "shortboard": {
+          "label": "Shortboard",
+          "minFt": 2.5,
+          "maxFt": 10,
+          "minPeriodS": 8
+        },
+        "gun": {
+          "label": "Step-up / gun",
+          "minFt": 6,
+          "maxFt": 40,
+          "minPeriodS": 11
+        }
+      }
     }
   }
 }

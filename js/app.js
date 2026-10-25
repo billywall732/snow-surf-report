@@ -5,6 +5,9 @@ import { drawCharts, formatTime, h, state } from './ui.js';
 import { redrawMaps } from './places.js';
 import { renderSnow } from './snow.js';
 import { renderSurf, updateTideBackground } from './surf.js';
+import { renderAlerts } from './alerts.js';
+import { renderFaq } from './faq.js';
+import { renderProfile, setNavigate } from './rider.js';
 import { refreshBackground, setMotion, setScene, startBackground } from './background.js';
 
 const TAB_KEY = 'ssr-tab';
@@ -70,39 +73,93 @@ function renderSources() {
     h('p', { class: 'fine' }, 'Season dates and beach directions come from the config file. Ratings are simple rules, not advice — check the resort and the beach before you go.'));
 }
 
-function setupTabs() {
-  const tabs = [...document.querySelectorAll('[role="tab"]')];
-  const select = (tab, focus) => {
+// ---------- Pages and the bottom bar ----------
+// Five pages: Snow, Surf, Notifications and Profile are tabs in the bottom bar;
+// FAQs opens from the "More" menu (which also holds light/dark and animations).
+const PAGES = ['snow', 'surf', 'alerts', 'profile', 'faq'];
+let showPage = () => {};
+
+function setupPages() {
+  const tabs = [...document.querySelectorAll('.bottom-tabs [role="tab"]')];
+  const moreButton = document.getElementById('more-button');
+
+  showPage = (name, focus) => {
+    if (!PAGES.includes(name)) name = 'snow';
+    for (const p of PAGES) document.getElementById(`panel-${p}`).hidden = p !== name;
     for (const t of tabs) {
-      const on = t === tab;
+      const on = t.id === `tab-${name}`;
       t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
-      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      t.tabIndex = on || (name === 'faq' && t === tabs[0]) ? 0 : -1;
+      if (on && focus) t.focus();
     }
-    if (focus) tab.focus();
-    try { localStorage.setItem(TAB_KEY, tab.id); } catch { /* private mode: fine */ }
-    drawCharts(); // charts on a newly shown tab need drawing at their real width
+    moreButton.classList.toggle('is-active', name === 'faq'); // FAQs lives under More
+    try { localStorage.setItem(TAB_KEY, name); } catch { /* private mode: fine */ }
+    // Keep the address in step with the page (#profile, #surf, ...), without adding
+    // a Back-button step. Then closing a detail view, which goes Back, lands on the
+    // page you were on. (Leave #surf/<id> alone: that's an open detail view.)
+    if (!location.hash.includes('/') && location.hash !== `#${name}`) history.replaceState(null, '', `#${name}`);
+    drawCharts(); // charts on a newly shown page need drawing at their real width
     redrawMaps();
-    setScene(...sceneFor(tab.id)); // snow or water in the background
+    if (name === 'snow' || name === 'surf') setScene(...sceneFor(`tab-${name}`)); // snow or water behind
+    if (name === 'faq' || name === 'alerts' || name === 'profile') window.scrollTo(0, 0);
   };
+
   tabs.forEach((t, i) => {
-    t.addEventListener('click', () => select(t));
+    t.addEventListener('click', () => showPage(t.id.slice(4)));
     // Arrow keys move between tabs (the standard keyboard pattern for tabs)
     t.addEventListener('keydown', (e) => {
       const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (d) select(tabs[(i + d + tabs.length) % tabs.length], true);
+      if (d) showPage(tabs[(i + d + tabs.length) % tabs.length].id.slice(4), true);
     });
   });
-  // A link like .../#surf opens that tab; otherwise use the last tab you picked.
-  // (#snow/mammoth is a detail-view link, so only the part before "/" picks the tab.)
-  let saved = location.hash ? `tab-${location.hash.slice(1).split("/")[0]}` : null;
-  try { saved ??= localStorage.getItem(TAB_KEY); } catch { /* ignore */ }
-  select(tabs.find((t) => t.id === saved) ?? tabs[0]);
 
-  // Opening a link like #surf/pipeline while on the Snow tab switches tabs too.
+  // A link like .../#surf or .../#faq opens that page; otherwise the last page you used.
+  // (#snow/mammoth is a detail-view link, so only the part before "/" picks the page.)
+  const fromHash = () => location.hash.slice(1).split('/')[0];
+  let start = PAGES.includes(fromHash()) ? fromHash() : null;
+  try { start ??= localStorage.getItem(TAB_KEY)?.replace(/^tab-/, ''); } catch { /* ignore */ }
+  showPage(start ?? 'snow');
+
+  // A plain page link like #surf switches pages. A detail link like #surf/pipeline
+  // only opens that place's detail view on top of whatever page you're on, so
+  // closing it leaves you where you were (places.js handles the detail view).
   window.addEventListener('hashchange', () => {
-    const t = tabs.find((x) => x.id === `tab-${location.hash.slice(1).split('/')[0]}`);
-    if (t && t.getAttribute('aria-selected') !== 'true') select(t);
+    if (location.hash.includes('/')) return;
+    const name = fromHash();
+    if (PAGES.includes(name) && document.getElementById(`panel-${name}`).hidden) showPage(name);
+  });
+
+  setupMoreMenu();
+  setNavigate((name) => showPage(name)); // lets "Open Rider Profile" buttons switch pages
+}
+
+// The "More" menu: opens above the bottom bar; closes on a tap outside, Esc, or
+// after choosing FAQs. (Light/dark and animations keep it open so you see the change.)
+function setupMoreMenu() {
+  const button = document.getElementById('more-button');
+  const menu = document.getElementById('more-menu');
+  const open = (on) => {
+    menu.hidden = !on;
+    button.setAttribute('aria-expanded', String(on));
+    if (on) menu.querySelector('button').focus();
+  };
+  button.addEventListener('click', (e) => {
+    e.stopPropagation();
+    open(menu.hidden);
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.hidden && !menu.contains(e.target)) open(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.hidden) {
+      open(false);
+      button.focus();
+    }
+  });
+  document.getElementById('faq-button').addEventListener('click', () => {
+    open(false);
+    showPage('faq');
+    document.getElementById('panel-faq').focus();
   });
 }
 
@@ -177,11 +234,14 @@ async function main() {
     return;
   }
   renderHeader();
-  // Choose the tab first: then the tab you're not looking at skips drawing its
-  // charts and map until you switch to it.
-  setupTabs();
-  renderSnow(report.sections.snow);
-  renderSurf(report.sections.surf);
+  // Choose the page first: then the pages you're not looking at skip drawing their
+  // charts and maps until you switch to them.
+  setupPages();
+  const snowTab = renderSnow(report.sections.snow);
+  const surfTab = renderSurf(report.sections.surf);
+  renderAlerts(report, { snow: snowTab, surf: surfTab });
+  renderProfile();
+  renderFaq();
   renderSources();
   drawCharts();
   redrawMaps();

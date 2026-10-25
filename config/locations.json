@@ -24,7 +24,16 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 874 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 874 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 25,
+          "intermediate": 50,
+          "advanced": 25,
+          "expert": null,
+          "source": "Wikipedia (Afton Alps)"
+        },
+        "acres": 300,
+        "acresSource": "Wikipedia (Afton Alps)"
       },
       {
         "id": "alpine-valley-oh",
@@ -48,7 +57,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 1853 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 1853 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 72,
+        "acresSource": "Wikipedia (Alpine Valley Ski Area)"
       },
       {
         "id": "alta",
@@ -76,7 +88,19 @@
             "pass": "Ikon",
             "access": "7 days (shared with Snowbird)"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 15,
+          "intermediate": 30,
+          "advanced": 55,
+          "expert": null,
+          "source": "Wikipedia (Alta Ski Area)"
+        },
+        "terrainParks": false,
+        "skiersOnly": true,
+        "skiersOnlyNote": "Alta does not allow snowboarding.",
+        "acres": 2614,
+        "acresSource": "Wikipedia (Alta Ski Area)"
       },
       {
         "id": "alyeska",
@@ -104,7 +128,16 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 11,
+          "intermediate": 52,
+          "advanced": 37,
+          "expert": null,
+          "source": "Wikipedia (Alyeska Resort)"
+        },
+        "acres": 1400,
+        "acresSource": "Wikipedia (Alyeska Resort)"
       },
       {
         "id": "arapahoe-basin",
@@ -132,7 +165,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 7,
+          "intermediate": 20,
+          "advanced": 73,
+          "expert": 24,
+          "source": "Wikipedia (Arapahoe Basin)"
+        },
+        "terrainParks": false,
+        "acres": 1428,
+        "acresSource": "Wikipedia (Arapahoe Basin)"
       },
       {
         "id": "aspen-snowmass",
@@ -160,7 +203,10 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 5527,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "attitash",
@@ -184,7 +230,16 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2581 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2581 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 29,
+          "intermediate": 44,
+          "advanced": 27,
+          "expert": null,
+          "source": "Wikipedia (Attitash Mountain Resort)"
+        },
+        "acres": 311,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "beaver-creek",
@@ -212,7 +267,17 @@
           "name": "Mccoy Park",
           "distanceKm": 3.7,
           "note": "Auto-picked: nearest active SNOTEL, 9,500 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 28,
+          "intermediate": 38,
+          "advanced": 34,
+          "expert": null,
+          "source": "Wikipedia (Beaver Creek Resort)"
+        },
+        "terrainParks": true,
+        "acres": 2082,
+        "acresSource": "Wikipedia (Beaver Creek Resort)"
       },
       {
         "id": "big-bear",
@@ -237,7 +302,16 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 10,
+          "intermediate": 25,
+          "advanced": 25,
+          "expert": null,
+          "source": "Wikipedia (Snow Summit)"
+        },
+        "acres": 438,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "big-sky",
@@ -265,7 +339,16 @@
             "pass": "Ikon",
             "access": "7 days (tram not included)"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 21,
+          "intermediate": 29,
+          "advanced": 50,
+          "expert": 19,
+          "source": "Wikipedia (Big Sky Resort)"
+        },
+        "acres": 5850,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "blue-mountain-pa",
@@ -289,7 +372,9 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "acres": 164,
+        "acresSource": "Wikipedia (Blue Mountain Resort)"
       },
       {
         "id": "boston-mills-brandywine",
@@ -313,7 +398,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 1838 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 1838 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 88,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "boyne-mountain",
@@ -337,7 +425,10 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 175,
+        "acresSource": "Wikipedia (Boyne Mountain Resort)"
       },
       {
         "id": "breckenridge",
@@ -365,7 +456,17 @@
           "name": "Copper Mountain",
           "distanceKm": 9.7,
           "note": "Auto-picked: nearest active SNOTEL, 10,500 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 14,
+          "intermediate": 31,
+          "advanced": 55,
+          "expert": 36,
+          "source": "Wikipedia (Breckenridge Ski Resort)"
+        },
+        "terrainParks": true,
+        "acres": 2908,
+        "acresSource": "Wikipedia (Breckenridge Ski Resort)"
       },
       {
         "id": "brighton",
@@ -393,7 +494,10 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 1050,
+        "acresSource": "Wikipedia (Brighton Ski Resort)"
       },
       {
         "id": "camelback",
@@ -417,7 +521,17 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 39,
+          "intermediate": 26,
+          "advanced": 35,
+          "expert": 9,
+          "source": "Wikipedia (Camelback Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 166,
+        "acresSource": "Wikipedia (Camelback Mountain Resort)"
       },
       {
         "id": "copper-mountain",
@@ -445,7 +559,16 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 21,
+          "intermediate": 25,
+          "advanced": 54,
+          "expert": 18,
+          "source": "Wikipedia (Copper Mountain (Colorado))"
+        },
+        "acres": 2465,
+        "acresSource": "Wikipedia (Copper Mountain (Colorado))"
       },
       {
         "id": "crested-butte",
@@ -473,7 +596,10 @@
           "name": "Butte",
           "distanceKm": 1.2,
           "note": "Auto-picked: nearest active SNOTEL, 10,190 ft."
-        }
+        },
+        "terrainParks": true,
+        "acres": 1547,
+        "acresSource": "Wikipedia (Crested Butte Mountain Resort)"
       },
       {
         "id": "crotched-mountain",
@@ -497,7 +623,9 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2556 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2556 km away; using Open-Meteo's modelled snow depth.",
+        "acres": 100,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "crystal-mountain",
@@ -525,7 +653,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 11,
+          "intermediate": 54,
+          "advanced": 35,
+          "expert": null,
+          "source": "Wikipedia (Crystal Mountain (Washington))"
+        },
+        "terrainParks": true,
+        "acres": 2600,
+        "acresSource": "Wikipedia (Crystal Mountain (Washington))"
       },
       {
         "id": "deer-valley",
@@ -553,7 +691,19 @@
             "pass": "Ikon",
             "access": "7 days (reservations required)"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 35,
+          "intermediate": 44,
+          "advanced": 21,
+          "expert": null,
+          "source": "Wikipedia (Deer Valley)"
+        },
+        "terrainParks": false,
+        "skiersOnly": true,
+        "skiersOnlyNote": "Deer Valley does not allow snowboarding.",
+        "acres": 4300,
+        "acresSource": "Wikipedia (Deer Valley)"
       },
       {
         "id": "eldora",
@@ -581,7 +731,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 20,
+          "intermediate": 50,
+          "advanced": 30,
+          "expert": null,
+          "source": "Wikipedia (Eldora Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 680,
+        "acresSource": "Wikipedia (Eldora Mountain Resort)"
       },
       {
         "id": "granite-peak",
@@ -605,7 +765,10 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 400,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "heavenly",
@@ -633,7 +796,17 @@
           "name": "Heavenly Valley",
           "distanceKm": 2.4,
           "note": "Auto-picked: nearest active SNOTEL, 8,540 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 20,
+          "intermediate": 45,
+          "advanced": 35,
+          "expert": null,
+          "source": "Wikipedia (Heavenly Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 4800,
+        "acresSource": "Wikipedia (Heavenly Mountain Resort)"
       },
       {
         "id": "hidden-valley-mo",
@@ -657,7 +830,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 1251 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 1251 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 25,
+          "intermediate": 33,
+          "advanced": 19,
+          "expert": null,
+          "source": "Wikipedia (Hidden Valley Ski Area)"
+        },
+        "terrainParks": true,
+        "acres": 65,
+        "acresSource": "Wikipedia (Hidden Valley Ski Area)"
       },
       {
         "id": "hidden-valley-pa",
@@ -681,7 +864,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2067 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2067 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 110,
+        "acresSource": "Wikipedia (Hidden Valley Resort (Pennsylvania))"
       },
       {
         "id": "hunter-mountain",
@@ -705,7 +891,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2393 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2393 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 320,
+        "acresSource": "Wikipedia (Hunter Mountain (ski area))"
       },
       {
         "id": "jack-frost-big-boulder",
@@ -729,7 +918,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2315 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2315 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 175,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "jackson-hole",
@@ -757,7 +949,17 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 10,
+          "intermediate": 40,
+          "advanced": 50,
+          "expert": null,
+          "source": "Wikipedia (Jackson Hole Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 2500,
+        "acresSource": "Wikipedia (Jackson Hole Mountain Resort)"
       },
       {
         "id": "june-mountain",
@@ -781,7 +983,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 15,
+          "intermediate": 40,
+          "advanced": 45,
+          "expert": null,
+          "source": "Wikipedia (June Mountain)"
+        },
+        "terrainParks": true,
+        "acres": 1500,
+        "acresSource": "Wikipedia (June Mountain)"
       },
       {
         "id": "keystone",
@@ -809,7 +1021,9 @@
           "name": "Grizzly Peak",
           "distanceKm": 8.6,
           "note": "Auto-picked: nearest active SNOTEL, 11,110 ft."
-        }
+        },
+        "acres": 3148,
+        "acresSource": "Wikipedia (Keystone Resort)"
       },
       {
         "id": "killington",
@@ -833,7 +1047,16 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 28,
+          "intermediate": 33,
+          "advanced": 39,
+          "expert": null,
+          "source": "Wikipedia (Killington Ski Resort)"
+        },
+        "acres": 1509,
+        "acresSource": "Wikipedia (Killington Ski Resort)"
       },
       {
         "id": "kirkwood",
@@ -861,7 +1084,17 @@
           "name": "Carson Pass",
           "distanceKm": 5.8,
           "note": "Auto-picked: nearest active SNOTEL, 8,360 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 12,
+          "intermediate": 30,
+          "advanced": 58,
+          "expert": null,
+          "source": "Wikipedia (Kirkwood Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 2300,
+        "acresSource": "Wikipedia (Kirkwood Mountain Resort)"
       },
       {
         "id": "laurel-mountain",
@@ -885,7 +1118,9 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2070 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2070 km away; using Open-Meteo's modelled snow depth.",
+        "acres": 70,
+        "acresSource": "Wikipedia (Laurel Mountain Ski Resort)"
       },
       {
         "id": "liberty-mountain",
@@ -909,7 +1144,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2228 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2228 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 27,
+          "intermediate": 41,
+          "advanced": 32,
+          "expert": 18,
+          "source": "Wikipedia (Liberty Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 100,
+        "acresSource": "Wikipedia (Liberty Mountain Resort)"
       },
       {
         "id": "loon",
@@ -933,7 +1178,9 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "acres": 370,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "lutsen",
@@ -957,7 +1204,9 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "acres": 593,
+        "acresSource": "Wikipedia (Lutsen Mountains)"
       },
       {
         "id": "mad-river-mountain",
@@ -981,7 +1230,9 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 1705 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 1705 km away; using Open-Meteo's modelled snow depth.",
+        "acres": 144,
+        "acresSource": "Wikipedia (Mad River Mountain)"
       },
       {
         "id": "mammoth",
@@ -1010,7 +1261,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 15,
+          "intermediate": 48,
+          "advanced": 37,
+          "expert": null,
+          "source": "Wikipedia (Mammoth Mountain Ski Area)"
+        },
+        "terrainParks": true,
+        "acres": 3500,
+        "acresSource": "Wikipedia (Mammoth Mountain Ski Area)"
       },
       {
         "id": "mount-snow",
@@ -1034,7 +1295,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2475 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2475 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 601,
+        "acresSource": "Wikipedia (Mount Snow)"
       },
       {
         "id": "mount-sunapee",
@@ -1058,7 +1322,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2532 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2532 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 26,
+          "intermediate": 48,
+          "advanced": 26,
+          "expert": null,
+          "source": "Wikipedia (Mount Sunapee Resort)"
+        },
+        "terrainParks": true,
+        "acres": 230,
+        "acresSource": "Wikipedia (Mount Sunapee Resort)"
       },
       {
         "id": "mt-bachelor",
@@ -1086,7 +1360,17 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 15,
+          "intermediate": 35,
+          "advanced": 50,
+          "expert": 20,
+          "source": "Wikipedia (Mount Bachelor ski area)"
+        },
+        "terrainParks": true,
+        "acres": 4323,
+        "acresSource": "Wikipedia (Mount Bachelor ski area)"
       },
       {
         "id": "mt-brighton",
@@ -1110,7 +1394,9 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 1622 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 1622 km away; using Open-Meteo's modelled snow depth.",
+        "acres": 130,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "northstar",
@@ -1138,7 +1424,17 @@
           "name": "Truckee #2",
           "distanceKm": 7.6,
           "note": "Auto-picked: nearest active SNOTEL, 6,500 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 13,
+          "intermediate": 60,
+          "advanced": 27,
+          "expert": null,
+          "source": "Wikipedia (Northstar California)"
+        },
+        "terrainParks": true,
+        "acres": 3170,
+        "acresSource": "Wikipedia (Northstar California)"
       },
       {
         "id": "okemo",
@@ -1162,7 +1458,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2480 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2480 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 667,
+        "acresSource": "Wikipedia (Okemo Mountain)"
       },
       {
         "id": "palisades-tahoe",
@@ -1190,7 +1489,10 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 3600,
+        "acresSource": "Wikipedia (Palisades Tahoe)"
       },
       {
         "id": "paoli-peaks",
@@ -1214,7 +1516,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 1568 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 1568 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 25,
+          "intermediate": 55,
+          "advanced": 20,
+          "expert": null,
+          "source": "Wikipedia (Paoli Peaks)"
+        },
+        "terrainParks": true,
+        "acres": 65,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "park-city",
@@ -1242,7 +1554,17 @@
           "name": "Thaynes Canyon",
           "distanceKm": 3.8,
           "note": "Auto-picked: nearest active SNOTEL, 9,260 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 7,
+          "intermediate": 49,
+          "advanced": 44,
+          "expert": null,
+          "source": "Wikipedia (Park City Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 6700,
+        "acresSource": "Wikipedia (Park City Mountain Resort)"
       },
       {
         "id": "roundtop",
@@ -1266,7 +1588,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2250 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2250 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 29,
+          "intermediate": 30,
+          "advanced": 41,
+          "expert": 10,
+          "source": "Wikipedia (Roundtop Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 103,
+        "acresSource": "Wikipedia (Roundtop Mountain Resort)"
       },
       {
         "id": "schweitzer",
@@ -1294,7 +1626,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 20,
+          "intermediate": 40,
+          "advanced": 40,
+          "expert": 5,
+          "source": "Wikipedia (Schweitzer Mountain)"
+        },
+        "terrainParks": true,
+        "acres": 2900,
+        "acresSource": "Wikipedia (Schweitzer Mountain)"
       },
       {
         "id": "seven-springs",
@@ -1318,7 +1660,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2065 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2065 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 35,
+          "intermediate": 40,
+          "advanced": 25,
+          "expert": 10,
+          "source": "Wikipedia (Seven Springs Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 285,
+        "acresSource": "Wikipedia (Seven Springs Mountain Resort)"
       },
       {
         "id": "sierra-at-tahoe",
@@ -1346,7 +1698,17 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 25,
+          "intermediate": 50,
+          "advanced": 25,
+          "expert": null,
+          "source": "Wikipedia (Sierra-at-Tahoe)"
+        },
+        "terrainParks": true,
+        "acres": 2000,
+        "acresSource": "Wikipedia (Sierra-at-Tahoe)"
       },
       {
         "id": "snow-creek",
@@ -1370,7 +1732,9 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 873 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 873 km away; using Open-Meteo's modelled snow depth.",
+        "acres": 25,
+        "acresSource": "Resort figures (approx.)"
       },
       {
         "id": "snow-valley",
@@ -1394,7 +1758,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 14,
+          "intermediate": 45,
+          "advanced": 41,
+          "expert": 10,
+          "source": "Wikipedia (Snow Valley Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 240,
+        "acresSource": "Wikipedia (Snow Valley Mountain Resort)"
       },
       {
         "id": "snowbasin",
@@ -1422,7 +1796,17 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 20,
+          "intermediate": 50,
+          "advanced": 30,
+          "expert": null,
+          "source": "Wikipedia (Snowbasin)"
+        },
+        "terrainParks": true,
+        "acres": 3000,
+        "acresSource": "Wikipedia (Snowbasin)"
       },
       {
         "id": "snowbird",
@@ -1451,7 +1835,17 @@
             "pass": "Ikon",
             "access": "7 days (shared with Alta)"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 27,
+          "intermediate": 38,
+          "advanced": 35,
+          "expert": null,
+          "source": "Wikipedia (Snowbird, Utah)"
+        },
+        "terrainParks": false,
+        "acres": 2500,
+        "acresSource": "Wikipedia (Snowbird, Utah)"
       },
       {
         "id": "snowriver",
@@ -1475,7 +1869,10 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 195,
+        "acresSource": "Wikipedia (Snowriver Mountain Resort)"
       },
       {
         "id": "snowshoe",
@@ -1499,7 +1896,9 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "acres": 244,
+        "acresSource": "Wikipedia (Snowshoe Mountain)"
       },
       {
         "id": "solitude",
@@ -1527,7 +1926,9 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "acres": 1200,
+        "acresSource": "Wikipedia (Solitude Mountain Resort)"
       },
       {
         "id": "steamboat",
@@ -1555,7 +1956,17 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 14,
+          "intermediate": 42,
+          "advanced": 44,
+          "expert": null,
+          "source": "Wikipedia (Steamboat Ski Resort)"
+        },
+        "terrainParks": true,
+        "acres": 3741,
+        "acresSource": "Wikipedia (Steamboat Ski Resort)"
       },
       {
         "id": "stevens-pass",
@@ -1583,7 +1994,17 @@
           "name": "Stevens Pass",
           "distanceKm": 0.3,
           "note": "Auto-picked: nearest active SNOTEL, 3,940 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 11,
+          "intermediate": 54,
+          "advanced": 35,
+          "expert": null,
+          "source": "Wikipedia (Stevens Pass Ski Area)"
+        },
+        "terrainParks": true,
+        "acres": 1125,
+        "acresSource": "Wikipedia (Stevens Pass Ski Area)"
       },
       {
         "id": "stowe",
@@ -1607,7 +2028,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2450 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2450 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 16,
+          "intermediate": 55,
+          "advanced": 30,
+          "expert": null,
+          "source": "Wikipedia (Stowe Mountain Resort)"
+        },
+        "terrainParks": true,
+        "acres": 485,
+        "acresSource": "Wikipedia (Stowe Mountain Resort)"
       },
       {
         "id": "stratton",
@@ -1631,7 +2062,9 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "acres": 625,
+        "acresSource": "Wikipedia (Stratton Mountain Resort)"
       },
       {
         "id": "sugarbush",
@@ -1655,7 +2088,9 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "acres": 484,
+        "acresSource": "Wikipedia (Sugarbush Resort)"
       },
       {
         "id": "sugarloaf",
@@ -1679,7 +2114,10 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 1360,
+        "acresSource": "Wikipedia (Sugarloaf (ski resort))"
       },
       {
         "id": "sun-valley",
@@ -1707,7 +2145,16 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 36,
+          "intermediate": 42,
+          "advanced": 22,
+          "expert": null,
+          "source": "Wikipedia (Bald Mountain (Idaho))"
+        },
+        "acres": 2054,
+        "acresSource": "Wikipedia (Bald Mountain (Idaho))"
       },
       {
         "id": "sunday-river",
@@ -1731,7 +2178,16 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 33,
+          "intermediate": 36,
+          "advanced": 31,
+          "expert": 12,
+          "source": "Wikipedia (Sunday River (ski resort))"
+        },
+        "acres": 870,
+        "acresSource": "Wikipedia (Sunday River (ski resort))"
       },
       {
         "id": "taos",
@@ -1759,7 +2215,17 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 24,
+          "intermediate": 25,
+          "advanced": 51,
+          "expert": null,
+          "source": "Wikipedia (Taos Ski Valley)"
+        },
+        "terrainParks": true,
+        "acres": 1294,
+        "acresSource": "Wikipedia (Taos Ski Valley)"
       },
       {
         "id": "telluride",
@@ -1787,7 +2253,17 @@
           "name": "Alta Lakes",
           "distanceKm": 5.7,
           "note": "Auto-picked: nearest active SNOTEL, 11,290 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 23,
+          "intermediate": 36,
+          "advanced": 41,
+          "expert": null,
+          "source": "Wikipedia (Telluride Ski Resort)"
+        },
+        "terrainParks": true,
+        "acres": 2000,
+        "acresSource": "Wikipedia (Telluride Ski Resort)"
       },
       {
         "id": "the-highlands",
@@ -1811,7 +2287,10 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrainParks": true,
+        "acres": 385,
+        "acresSource": "Wikipedia (The Highlands at Harbor Springs)"
       },
       {
         "id": "summit-at-snoqualmie",
@@ -1839,7 +2318,16 @@
             "pass": "Ikon",
             "access": "7 days"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 14,
+          "intermediate": 45,
+          "advanced": 41,
+          "expert": null,
+          "source": "Wikipedia (The Summit at Snoqualmie)"
+        },
+        "acres": 1914,
+        "acresSource": "Wikipedia (The Summit at Snoqualmie)"
       },
       {
         "id": "vail",
@@ -1867,7 +2355,17 @@
           "name": "Vail Mountain",
           "distanceKm": 2.4,
           "note": "Auto-picked: nearest active SNOTEL, 10,290 ft."
-        }
+        },
+        "terrain": {
+          "beginner": 18,
+          "intermediate": 29,
+          "advanced": 53,
+          "expert": null,
+          "source": "Wikipedia (Vail Ski Resort)"
+        },
+        "terrainParks": true,
+        "acres": 5317,
+        "acresSource": "Wikipedia (Vail Ski Resort)"
       },
       {
         "id": "whitetail",
@@ -1891,7 +2389,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2184 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2184 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 27,
+          "intermediate": 50,
+          "advanced": 18,
+          "expert": null,
+          "source": "Wikipedia (Whitetail Ski Resort)"
+        },
+        "terrainParks": true,
+        "acres": 120,
+        "acresSource": "Wikipedia (Whitetail Ski Resort)"
       },
       {
         "id": "wildcat",
@@ -1915,7 +2423,17 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 2576 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 2576 km away; using Open-Meteo's modelled snow depth.",
+        "terrain": {
+          "beginner": 25,
+          "intermediate": 45,
+          "advanced": 30,
+          "expert": null,
+          "source": "Wikipedia (Wildcat Mountain Ski Area)"
+        },
+        "terrainParks": false,
+        "acres": 225,
+        "acresSource": "Wikipedia (Wildcat Mountain Ski Area)"
       },
       {
         "id": "wilmot",
@@ -1939,7 +2457,10 @@
           "todo": "Opening date not set"
         },
         "snotel": null,
-        "snotelTodo": "Nearest SNOTEL is 1273 km away; using Open-Meteo's modelled snow depth."
+        "snotelTodo": "Nearest SNOTEL is 1273 km away; using Open-Meteo's modelled snow depth.",
+        "terrainParks": true,
+        "acres": 120,
+        "acresSource": "Wikipedia (Wilmot Mountain)"
       },
       {
         "id": "winter-park",
@@ -1968,7 +2489,16 @@
             "pass": "Ikon",
             "access": "Unlimited"
           }
-        ]
+        ],
+        "terrain": {
+          "beginner": 8,
+          "intermediate": 18,
+          "advanced": 55,
+          "expert": 3,
+          "source": "Wikipedia (Winter Park Resort)"
+        },
+        "acres": 3081,
+        "acresSource": "Resort figures (approx.)"
       }
     ],
     "defaultPinned": [
@@ -2289,7 +2819,9 @@
           "id": "46277",
           "name": "Green Beach Offshore, CA",
           "distanceKm": 9
-        }
+        },
+        "minLevel": "intermediate",
+        "minLevelNote": "Crowded cobblestone point"
       },
       {
         "id": "oceanside",
@@ -2325,7 +2857,9 @@
           "id": "46274",
           "name": "Leucadia Nearshore, CA",
           "distanceKm": 4
-        }
+        },
+        "minLevel": "intermediate",
+        "minLevelNote": "Reef break, crowded"
       },
       {
         "id": "blacks",
@@ -2343,7 +2877,9 @@
           "id": "46254",
           "name": "SCRIPPS Nearshore, CA",
           "distanceKm": 4
-        }
+        },
+        "minLevel": "intermediate",
+        "minLevelNote": "Powerful beach break, long cliff trail"
       },
       {
         "id": "pacific-beach",
@@ -2469,7 +3005,9 @@
           "id": "46053",
           "name": "EAST SANTA BARBARA  - 12NM Southwest of Santa Barbara, CA",
           "distanceKm": 36
-        }
+        },
+        "minLevel": "intermediate",
+        "minLevelNote": "Crowded cobblestone point"
       },
       {
         "id": "pismo-beach",
@@ -2523,7 +3061,9 @@
           "id": "46236",
           "name": "Monterey Canyon Outer, CA",
           "distanceKm": 22
-        }
+        },
+        "minLevel": "intermediate",
+        "minLevelNote": "Rocky point, crowded"
       },
       {
         "id": "pleasure-point",
@@ -2577,7 +3117,9 @@
           "id": "46237",
           "name": "San Francisco Bar, CA",
           "distanceKm": 11
-        }
+        },
+        "minLevel": "advanced",
+        "minLevelNote": "Cold water, strong rip currents, heavy beach break"
       },
       {
         "id": "short-sands",
@@ -2668,7 +3210,9 @@
           "id": "51201",
           "name": "Waimea Bay, HI",
           "distanceKm": 7
-        }
+        },
+        "minLevel": "advanced",
+        "minLevelNote": "Shallow, heavy reef break"
       },
       {
         "id": "sunset-beach-hi",
@@ -2686,7 +3230,9 @@
           "id": "51201",
           "name": "Waimea Bay, HI",
           "distanceKm": 7
-        }
+        },
+        "minLevel": "advanced",
+        "minLevelNote": "Powerful North Shore waves and currents"
       },
       {
         "id": "waikiki",
@@ -2718,7 +3264,9 @@
         "coordSource": "OpenStreetMap (Hookipa Beach Park)",
         "beachFacingDeg": 333,
         "tideStation": "1615680",
-        "buoy": null
+        "buoy": null,
+        "minLevel": "advanced",
+        "minLevelNote": "Reef break shared with windsurfers"
       },
       {
         "id": "hanalei",
@@ -2733,7 +3281,9 @@
         "beachFacingDeg": 0,
         "tideStation": "1611683",
         "buoy": null,
-        "facingNote": "Hand-set: Hanalei Bay opens to the north (coastline method gave 277°)"
+        "facingNote": "Hand-set: Hanalei Bay opens to the north (coastline method gave 277°)",
+        "minLevel": "intermediate",
+        "minLevelNote": "Big outer reef"
       },
       {
         "id": "south-padre",
@@ -2801,7 +3351,9 @@
           "id": "41114",
           "name": "Fort Pierce, FL",
           "distanceKm": 40
-        }
+        },
+        "minLevel": "intermediate",
+        "minLevelNote": "Jetty wedge, crowded"
       },
       {
         "id": "cocoa-beach",

@@ -78,7 +78,7 @@ export async function surfWind(spot, sessionHour) {
     latitude: spot.lat,
     longitude: spot.lon,
     hourly: 'wind_speed_10m,wind_direction_10m,wind_gusts_10m',
-    forecast_days: 1,
+    forecast_days: 3, // today + 2 more, for alerts about upcoming waves
     wind_speed_unit: 'mph',
     timezone: spot.timezone,
     timeformat: 'unixtime',
@@ -90,13 +90,15 @@ export async function surfWind(spot, sessionHour) {
     speedMph: Math.round(j.hourly.wind_speed_10m[i]),
     gustMph: Math.round(j.hourly.wind_gusts_10m[i]),
     directionDeg: j.hourly.wind_direction_10m[i],
-    // Every hour of today: t = local time, mph = speed, gust, deg = direction wind comes from
-    hourly: j.hourly.time.map((t, k) => ({
-      t: toLocalISO(t * 1000, spot.timezone),
-      mph: Math.round(j.hourly.wind_speed_10m[k]),
-      gust: Math.round(j.hourly.wind_gusts_10m[k]),
-      deg: j.hourly.wind_direction_10m[k],
-    })),
+    // Every hour of TODAY: t = local time, mph = speed, gust, deg = direction wind comes from
+    hourly: j.hourly.time
+      .map((t, k) => ({ t: toLocalISO(t * 1000, spot.timezone), mph: Math.round(j.hourly.wind_speed_10m[k]), gust: Math.round(j.hourly.wind_gusts_10m[k]), deg: j.hourly.wind_direction_10m[k] }))
+      .filter((p) => p.t.slice(0, 10) === toLocalISO(j.hourly.time[i] * 1000, spot.timezone).slice(0, 10)),
+    // The session hour on each of the 3 days
+    days: j.hourly.time
+      .map((t, k) => ({ t, k }))
+      .filter(({ t }) => Number(toLocalISO(t * 1000, spot.timezone).slice(11, 13)) === sessionHour)
+      .map(({ t, k }) => ({ date: toLocalISO(t * 1000, spot.timezone).slice(0, 10), mph: Math.round(j.hourly.wind_speed_10m[k]), deg: j.hourly.wind_direction_10m[k] })),
   };
 }
 

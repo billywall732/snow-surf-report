@@ -65,6 +65,10 @@ async function buildResort(resort, cfg) {
     region: resort.region,
     area: resort.area ?? null,
     passes: resort.passes ?? [],
+    terrain: resort.terrain ?? null, // % beginner / intermediate / advanced (expert), when known
+    terrainParks: resort.terrainParks ?? null, // true / false / null = unknown
+    acres: resort.acres ?? null, // skiable acres: how big the mountain is
+    skiersOnly: resort.skiersOnly ?? false, // no snowboarding
     lat: resort.lat,
     lon: resort.lon,
     timezone: resort.timezone,
@@ -86,6 +90,7 @@ async function buildSpot(spot, cfg) {
   ]);
   if (wind.status === 'ok') {
     wind.data.relative = windRelative(wind.data.directionDeg, spot.beachFacingDeg, cfg.offshoreToleranceDeg);
+    for (const d of wind.data.days ?? []) d.relative = windRelative(d.deg, spot.beachFacingDeg, cfg.offshoreToleranceDeg);
   }
   const item = {
     id: spot.id,
@@ -97,6 +102,8 @@ async function buildSpot(spot, cfg) {
     lon: spot.lon,
     timezone: spot.timezone,
     beachFacingDeg: spot.beachFacingDeg,
+    minLevel: spot.minLevel ?? null,
+    minLevelNote: spot.minLevelNote ?? null,
     tideStation: spot.tideStation,
     waves: wv,
     wind,
@@ -172,6 +179,7 @@ async function main() {
         defaultPinned: locations.surf.defaultPinned ?? [],
         verdict: null,
         sessionHour: ratings.surf.sessionHour,
+        skills: ratings.surf.skills, // levels + boards, used by the page for "fits you"
         bestBet: bestBet(spots, ratingPeriod),
         tideStations: Object.fromEntries(tideList),
         items: spots,

@@ -56,11 +56,29 @@ jobs:
             git push
           fi
 
+      # Email alerts to people who signed in with Google and turned them on.
+      # Skipped (without failing) until the three secrets are added; see the README.
+      # A problem here never stops the site from publishing.
+      - name: Email alerts
+        if: github.event_name != 'push'
+        continue-on-error: true
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ] || [ -z "$GMAIL_APP_PASSWORD" ]; then
+            echo "Email alerts aren't set up yet (no secrets), skipping."
+            exit 0
+          fi
+          npm install --no-save --no-audit --no-fund --prefix scripts/email firebase-admin@12.7.0 nodemailer@6.9.16
+          node scripts/email/send-emails.mjs
+
       # Copy only the files the website needs into _site/ and publish that folder.
       - name: Assemble site
         run: |
           mkdir _site
-          cp -r index.html css js data _site/
+          cp -r index.html manifest.webmanifest icon.svg css js data _site/
 
       # Cache-busting: GitHub Pages lets browsers keep files for 10 minutes, so right
       # after a publish a phone could mix the old CSS with the new JavaScript (broken

@@ -15,7 +15,7 @@ export async function waves(spot, sessionHour) {
       'swell_wave_height', 'swell_wave_period', 'swell_wave_direction',
       'sea_surface_temperature',
     ].join(','),
-    forecast_days: 1,
+    forecast_days: 3, // today + 2 more, for alerts about upcoming waves
     length_unit: 'imperial', // wave heights in feet
     temperature_unit: 'fahrenheit',
     timezone: spot.timezone,
@@ -35,13 +35,15 @@ export async function waves(spot, sessionHour) {
     swellDirectionDeg: h.swell_wave_direction[i],
     seaSurfaceTempF: round1(h.sea_surface_temperature[i]),
     gridPoint: { lat: j.latitude, lon: j.longitude },
-    // Every hour of today, for the detail view's chart. Short keys keep the file small:
+    // Every hour of TODAY, for the detail view's chart. Short keys keep the file small:
     // t = local time, ft = wave height, s = period, deg = direction waves come from.
-    hourly: h.time.map((t, k) => ({
-      t: toLocalISO(t * 1000, spot.timezone),
-      ft: round1(h.wave_height[k]),
-      s: round1(h.wave_period[k]),
-      deg: h.wave_direction[k],
-    })),
+    hourly: h.time
+      .map((t, k) => ({ t: toLocalISO(t * 1000, spot.timezone), ft: round1(h.wave_height[k]), s: round1(h.wave_period[k]), deg: h.wave_direction[k] }))
+      .filter((p) => p.t.slice(0, 10) === toLocalISO(h.time[i] * 1000, spot.timezone).slice(0, 10)),
+    // The session hour (e.g. 7 AM) on each of the 3 days, for "upcoming waves" alerts
+    days: h.time
+      .map((t, k) => ({ t, k }))
+      .filter(({ t }) => Number(toLocalISO(t * 1000, spot.timezone).slice(11, 13)) === sessionHour)
+      .map(({ t, k }) => ({ date: toLocalISO(t * 1000, spot.timezone).slice(0, 10), ft: round1(h.wave_height[k]), s: round1(h.wave_period[k]), deg: h.wave_direction[k] })),
   };
 }

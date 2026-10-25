@@ -7,6 +7,9 @@
   <meta name="description" content="A morning snapshot of snow at every US Ikon and Epic Pass mountain and surf at 52 US surf spots, with a simple should-I-go rating.">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 22c4-4 8-4 12 0s8 4 12 0 4-2 4-2v10H2z' fill='%232a78d6'/%3E%3Cpath d='M6 16 16 3l10 13z' fill='%2352514e'/%3E%3C/svg%3E">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="apple-mobile-web-app-title" content="Snow and Surf">
   <link rel="stylesheet" href="css/styles.css">
   <script>
     // Apply a saved light/dark choice before the page draws, so it never flashes
@@ -32,6 +35,16 @@
   <link rel="modulepreload" href="js/snow.js">
   <link rel="modulepreload" href="js/surf.js">
   <link rel="modulepreload" href="js/background.js">
+  <link rel="modulepreload" href="js/skill.js">
+  <link rel="modulepreload" href="js/alerts.js">
+  <link rel="modulepreload" href="js/faq.js">
+  <link rel="modulepreload" href="js/fit.js">
+  <link rel="modulepreload" href="js/alert-rules.js">
+  <link rel="modulepreload" href="js/account.js">
+  <link rel="modulepreload" href="js/firebase-config.js">
+  <link rel="modulepreload" href="js/rider.js">
+  <link rel="modulepreload" href="js/recommend.js">
+  <link rel="modulepreload" href="js/cities.js">
   <!-- type="module" lets app.js use `import`. Modules only load over http(s),
        which is why you need a local server instead of double-clicking this file. -->
   <script type="module" src="js/app.js"></script>
@@ -47,12 +60,15 @@
     <p class="stale" id="stale" role="status" hidden></p>
     <section id="panel-snow" role="tabpanel" aria-labelledby="tab-snow" tabindex="0"></section>
     <section id="panel-surf" role="tabpanel" aria-labelledby="tab-surf" tabindex="0" hidden></section>
+    <section id="panel-alerts" role="tabpanel" aria-labelledby="tab-alerts" tabindex="0" hidden></section>
+    <section id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" tabindex="0" hidden></section>
+    <section id="panel-faq" aria-label="FAQs" tabindex="-1" hidden></section>
   </main>
 
   <footer id="sources"></footer>
 
-  <!-- The bar along the bottom of the screen, like a phone app: the two tabs,
-       then the light/dark and animation switches. -->
+  <!-- The bar along the bottom of the screen, like a phone app: four tabs, then
+       "More", which opens a small menu (light/dark, animations, FAQs). -->
   <nav class="bottom-bar" aria-label="Main">
     <div class="bottom-tabs" role="tablist" aria-label="Report sections">
       <button type="button" class="bar-button" role="tab" id="tab-snow" aria-controls="panel-snow" aria-selected="true">
@@ -60,18 +76,41 @@
         <span>Snow</span>
       </button>
       <button type="button" class="bar-button" role="tab" id="tab-surf" aria-controls="panel-surf" aria-selected="false" tabindex="-1">
-        <svg class="bar-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="bar-wave" d="M2 15c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3M2 20c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3" /></svg>
+        <svg class="bar-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="bar-line" d="M2 15c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3M2 20c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3" /></svg>
         <span>Surf</span>
       </button>
+      <button type="button" class="bar-button" role="tab" id="tab-alerts" aria-controls="panel-alerts" aria-selected="false" tabindex="-1">
+        <span class="bar-icon-wrap">
+          <svg class="bar-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="bar-line" d="M6 16V10a6 6 0 0 1 12 0v6l2 2H4l2-2Zm4 4a2 2 0 0 0 4 0" /></svg>
+          <span class="badge" id="alerts-badge" hidden></span>
+        </span>
+        <span>Notifications</span>
+      </button>
+      <button type="button" class="bar-button" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="false" tabindex="-1">
+        <svg class="bar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0Z" /></svg>
+        <span>Profile</span>
+      </button>
     </div>
-    <button type="button" class="bar-button" id="theme-toggle" aria-label="Switch to dark mode">
-      <span class="bar-glyph theme-icon" aria-hidden="true">☾</span>
-      <span class="theme-text" aria-hidden="true">Dark</span>
-    </button>
-    <button type="button" class="bar-button" id="motion-toggle" aria-pressed="false">
-      <span class="bar-glyph motion-icon" aria-hidden="true">❚❚</span>
-      <span class="motion-text">Animations off</span>
+    <button type="button" class="bar-button" id="more-button" aria-expanded="false" aria-controls="more-menu">
+      <svg class="bar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+      <span>More</span>
     </button>
   </nav>
+
+  <!-- The "More" menu: opens just above the bottom bar -->
+  <div class="more-menu" id="more-menu" role="group" aria-label="More" hidden>
+    <button type="button" class="menu-item" id="theme-toggle" aria-label="Switch to dark mode">
+      <span class="menu-glyph theme-icon" aria-hidden="true">☾</span>
+      <span class="theme-text" aria-hidden="true">Dark</span>
+    </button>
+    <button type="button" class="menu-item" id="motion-toggle" aria-pressed="false">
+      <span class="menu-glyph motion-icon" aria-hidden="true">❚❚</span>
+      <span class="motion-text">Animations off</span>
+    </button>
+    <button type="button" class="menu-item" id="faq-button">
+      <span class="menu-glyph" aria-hidden="true">?</span>
+      <span>FAQs</span>
+    </button>
+  </div>
 </body>
 </html>

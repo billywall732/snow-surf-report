@@ -41,14 +41,19 @@ export const place = (item) => (item.city ? `${item.city}, ${item.region}` : ite
  *   section:    report.sections.snow / .surf
  *   words:      { one: 'mountain', many: 'mountains', mine: 'My mountains', all: 'All mountains', allNote }
  *   pinKey, listKey:  localStorage keys
- *   filters:    [{ id, label, allLabel, options: [...], test(item, value) }]
+ *   filters:    [{ id, label, allLabel, options, test(item, value), initial?(), onChange?(value) }]
+ *               options: ['West', ...] or [['beginner', 'Beginner'], ...] (value, label)
+ *               initial/onChange: let a filter mirror a setting saved elsewhere
  *   sorts:      [{ value, label, compare(a, b) }]   (first one is the default)
  *   searchPlaceholder, matches(item, query)
  *   rowExtras(item)   -> nodes after the place name (e.g. pass tags)
+ *   extraControls()   -> extra filter controls shown under the dropdowns (e.g. skill chips)
+ *   extraFilter(item) -> false hides an item from the list and fades it on the map
  *   rowStats(item)    -> one line of numbers under the name
  *   card(item, ui)    -> a pinned place's card (ui = { pinButton, detailsButton })
  *   detailPill(item)  -> a pill shown next to the Pin button in the detail view
  *   detailBody(item)  -> nodes for the detail view, after the rating
+ *   detailButtons(item) -> extra buttons beside Pin in the detail view (e.g. Notify me)
  *   top()             -> nodes shown above "My …" (e.g. the best-bet card)
  *   afterMine(pinnedIds) -> nodes shown after the pinned cards (e.g. the tide card)
  *   itemClass(item)   -> extra CSS classes for the list row and map icon (e.g. 'pass-ikon')
@@ -71,6 +76,7 @@ export function createPlacesTab(opts) {
   let selectedId = null; // the place open in the detail view
   let openedByUs = false; // did this page add the #key/<id> history entry?
   let visibleIds = new Set();
+  const filterSelects = {}; // filter id -> its <select>, so setFilter() can change it
   let mapView = null; // built the first time the map scrolls near the screen
   let mapWanted = false;
   const isPinned = (id) => pinned.includes(id);
@@ -211,9 +217,17 @@ export function createPlacesTab(opts) {
     pinsChanged();
   }
 
+  // Replace all pins at once (e.g. with the pins saved in your account).
+  function setPinned(ids) {
+    pinned = (ids ?? []).filter((id) => known.has(id)).slice(0, MAX_PINS);
+    save(opts.pinKey, pinned);
+    refresh();
+  }
+
   function pinsChanged() {
     save(opts.pinKey, pinned);
     opts.onPinsChange?.(pinned);
+    api.onPinsChange?.(pinned);
     refresh();
   }
 
@@ -261,6 +275,15 @@ export function createPlacesTab(opts) {
 
   // ---------- List ----------
 
+  // Change a filter from outside (e.g. the Notifications page changed your level).
+  function setFilter(id, value) {
+    const sel = filterSelects[id];
+    if (!sel) return;
+    sel.value = [...sel.options].some((o) => o.value === value) ? value : 'all';
+    list[id] = sel.value;
+    updateList();
+  }
+
   function listControls() {
     const remember = () => {
       const { query, ...choices } = list;
@@ -270,12 +293,20 @@ export function createPlacesTab(opts) {
     search.addEventListener('input', () => { list.query = search.value.trim().toLowerCase(); updateList(); });
 
     const selects = opts.filters.map((f) => {
+      const choices = f.options.map((o) => (Array.isArray(o) ? o : [o, o])); // [value, label]
       const sel = h('select', { id: `${key}-${f.id}` },
         h('option', { value: 'all' }, f.allLabel),
-        f.options.map((o) => h('option', { value: o }, o)));
-      sel.value = f.options.includes(list[f.id]) ? list[f.id] : 'all';
+        choices.map(([value, label]) => h('option', { value }, label)));
+      const start = f.initial ? f.initial() ?? 'all' : list[f.id];
+      sel.value = choices.some(([value]) => value === start) ? start : 'all';
       list[f.id] = sel.value;
-      sel.addEventListener('change', () => { list[f.id] = sel.value; remember(); updateList(); });
+      sel.addEventListener('change', () => {
+        list[f.id] = sel.value;
+        remember();
+        f.onChange?.(sel.value);
+        updateList();
+      });
+      filterSelects[f.id] = sel;
       return h('label', { class: 'control' }, h('span', {}, f.label), sel);
     });
 
@@ -284,15 +315,19 @@ export function createPlacesTab(opts) {
     list.sort = sort.value;
     sort.addEventListener('change', () => { list.sort = sort.value; remember(); updateList(); });
 
-    return h('div', { class: 'list-controls' },
-      h('label', { class: 'control grow' }, h('span', {}, 'Search'), search),
-      selects,
-      h('label', { class: 'control' }, h('span', {}, 'Sort'), sort));
+    return [
+      h('div', { class: 'list-controls' },
+        h('label', { class: 'control grow' }, h('span', {}, 'Search'), search),
+        selects,
+        h('label', { class: 'control' }, h('span', {}, 'Sort'), sort)),
+      opts.extraControls?.(),
+    ];
   }
 
   function filteredSorted() {
     const rows = section.items.filter((x) =>
       opts.filters.every((f) => list[f.id] === 'all' || f.test(x, list[f.id])) &&
+      opts.extraFilter?.(x) !== false &&
       (!list.query || opts.matches(x, list.query)));
     const sorter = opts.sorts.find((s) => s.value === list.sort) ?? opts.sorts[0];
     // Every sort ends with A–Z, so ties are in a predictable order.
@@ -339,7 +374,9 @@ export function createPlacesTab(opts) {
         history.back();
         return;
       }
-      history.replaceState(null, '', `#${key}`);
+      // (the page you're looking at, which may not be this tab's)
+      const page = document.querySelector('main > section:not([hidden])')?.id.replace('panel-', '') ?? key;
+      history.replaceState(null, '', `#${page}`);
     }
     hideDetail();
   }
@@ -385,7 +422,8 @@ export function createPlacesTab(opts) {
           h('h2', { id: `${key}-detail-title` }, item.name)),
         close),
       h('div', { class: 'detail-body' },
-        h('div', { class: 'detail-actions' }, opts.detailPill?.(item) ?? h('span'), pinButton(item, { withText: true })),
+        h('div', { class: 'detail-actions' }, opts.detailPill?.(item) ?? h('span'),
+          h('div', { class: 'detail-buttons' }, opts.detailButtons?.(item), pinButton(item, { withText: true }))),
         pendingPin === id ? replacePrompt(id) : null,
         rating(item.rating),
         h('h4', {}, 'Why this rating'),
@@ -396,9 +434,11 @@ export function createPlacesTab(opts) {
 
   window.addEventListener('hashchange', syncDialogWithHash);
   update();
-  syncDialogWithHash();
+  // Arrived on a link like #surf/el-porto (e.g. from an alert email)? Open it once
+  // the rest of the page (other tabs, Notifications) has finished setting up.
+  setTimeout(syncDialogWithHash, 0);
 
-  const api = { redrawMap, openDetail, pinned: () => [...pinned], refresh };
+  const api = { redrawMap, openDetail, pinned: () => [...pinned], refresh, setFilter, refreshList: () => updateList(), setPinned, onPinsChange: null };
   instances.push(api);
   return api;
 }

@@ -1,0 +1,11 @@
+{
+  "name": "Snow and Surf Report",
+  "short_name": "Snow and Surf",
+  "description": "Morning snow and surf conditions, with alerts.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f3ee",
+  "theme_color": "#f4f3ee",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -2,3 +2,5 @@ node_modules/
 .DS_Store
 Thumbs.db
 _site/
+scripts/email/node_modules/
+scripts/email/package*.json

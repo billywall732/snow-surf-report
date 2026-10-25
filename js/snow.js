@@ -2,6 +2,9 @@
 // detail view, map) come from places.js.
 import { timeChart } from './charts.js';
 import { createPlacesTab } from './places.js';
+import { notifyButton } from './alerts.js';
+import { loadRider, openProfile, recommendCard } from './rider.js';
+import { hasSkiRider, skiFit, skiText } from './recommend.js';
 import {
   add, bestBetCard, chartSlot, dataTable, formatDay, formatShortDate,
   h, num, ok, rating, sourceName, stat, unavailable,
@@ -28,9 +31,12 @@ function matches(r, q) {
 // 'pass-ikon' / 'pass-epic': colors the list row, map icon and card by pass
 const passClass = (r) => passNames(r).map((p) => `pass-${p.toLowerCase()}`).join(' ');
 
-// Small "IKON" / "EPIC" labels
+// Small "IKON" / "EPIC" labels (and "SKIERS ONLY" where snowboards aren't allowed)
 function passTags(r) {
-  return passNames(r).map((p) => h('span', { class: `pass-tag pass-${p.toLowerCase()}` }, p));
+  return [
+    ...passNames(r).map((p) => h('span', { class: `pass-tag pass-${p.toLowerCase()}` }, p)),
+    r.skiersOnly ? h('span', { class: 'pass-tag skiers-only', title: 'No snowboarding' }, 'Skiers only') : null,
+  ];
 }
 
 let tab;
@@ -48,17 +54,17 @@ export function renderSnow(section) {
       allNote: `${section.items.length} US mountains on the Ikon and Epic passes`,
     },
     pinKey: 'ssr-pinned', // (kept from before, so existing pins survive)
-    listKey: 'ssr-snow-list',
+    listKey: 'ssr-snow-list-v2', // (v2: the default sort became A–Z)
     filters: [
       { id: 'pass', label: 'Pass', allLabel: 'All passes', options: PASSES, test: (r, v) => passNames(r).includes(v) },
       { id: 'area', label: 'Area', allLabel: 'All areas', options: AREAS, test: (r, v) => r.area === v },
     ],
     sorts: [
+      { value: 'name', label: 'A–Z', compare: () => 0 }, // (ties are always broken A–Z)
       { value: 'rating', label: 'Best rating', compare: (a, b) => (b.rating.score ?? 0) - (a.rating.score ?? 0) || (fresh(b) + coming(b)) - (fresh(a) + coming(a)) },
       { value: 'new', label: 'Most new snow (48h)', compare: (a, b) => fresh(b) - fresh(a) },
       { value: 'forecast', label: 'Most snow coming (72h)', compare: (a, b) => coming(b) - coming(a) },
       { value: 'base', label: 'Deepest base', compare: (a, b) => base(b) - base(a) },
-      { value: 'name', label: 'A–Z', compare: () => 0 },
     ],
     searchPlaceholder: 'Search by name, town, state or pass',
     matches,
@@ -77,11 +83,13 @@ export function renderSnow(section) {
     ].join(''),
     card: resortCard,
     detailPill: (r) => seasonPill(r.season),
+    detailButtons: (r) => notifyButton('snow', r),
     detailBody,
-    top: () => [bestBetCard(section, 'snow', (id) => tab.openDetail(id))],
+    top: () => [bestBetCard(section, 'snow', (id) => tab.openDetail(id)), recommendCard('snow', (id) => tab.openDetail(id))],
     mapIcon: 'peak',
     mapLabel: 'Ikon and Epic mountains',
   });
+  return tab;
 }
 
 // ---------- Pieces ----------
@@ -175,15 +183,50 @@ function detailBody(r) {
     : `SNOTEL ${obs.stationName} (${obs.stationId}), ${obs.distanceKm} km away`;
   return [
     ok(obs) ? snowStats(obs) : unavailable('Snow depth', obs),
+    forYou(r),
     ok(fc) ? forecastTable(fc) : unavailable('Forecast', fc),
     ok(obs) && obs.data.depthHistory.length > 1 ? depthChart(r) : null,
     h('h4', {}, 'About'),
     h('dl', { class: 'facts' },
       (r.passes ?? []).map((p) => [h('dt', {}, `${p.pass} Pass`), h('dd', {}, p.access)]),
+      h('dt', {}, 'Terrain'), h('dd', {}, terrainText(r.terrain)),
+      h('dt', {}, 'Terrain parks'), h('dd', {}, r.terrainParks === true ? 'Yes' : r.terrainParks === false ? 'No' : 'Not listed'),
+      h('dt', {}, 'Snowboarding'), h('dd', {}, r.skiersOnly ? 'Not allowed (skiers only)' : 'Allowed'),
       h('dt', {}, 'Season'), h('dd', {}, r.season.opensOn ? `Opens ${formatShortDate(r.season.opensOn)}` : 'Dates not set'),
       h('dt', {}, 'Snow data'), h('dd', {}, station),
       h('dt', {}, 'Location'), h('dd', {}, `${r.lat.toFixed(3)}, ${r.lon.toFixed(3)}`),
       h('dt', {}, 'Fetched'), h('dd', {}, ok(fc) ? new Date(fc.fetchedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—')),
+  ];
+}
+
+// "15% beginner · 30% intermediate · 55% advanced (20% expert)"
+function terrainText(t) {
+  if (!t) return 'Not listed';
+  const parts = [['beginner', t.beginner], ['intermediate', t.intermediate], ['advanced', t.advanced]]
+    .filter(([, v]) => v != null).map(([k, v]) => `${v}% ${k}`);
+  return `${parts.join(' · ')}${t.expert ? ` (${t.expert}% expert)` : ''}`;
+}
+
+// Does this mountain suit you? Uses your Rider Profile.
+function forYou(r) {
+  const rider = loadRider();
+  if (!hasSkiRider(rider)) {
+    const b = h('button', { type: 'button', class: 'text-button inline-link' }, 'Set up your Rider Profile');
+    b.addEventListener('click', openProfile);
+    return [h('h4', {}, 'For you'), h('p', { class: 'fine' }, b, ' to see whether this mountain suits how you ride.')];
+  }
+  const { blockers, reasons } = skiFit(r, rider);
+  const row = (good, text) => h('li', { class: good ? 'fits' : 'no-fit' },
+    h('span', { class: 'fit-mark', 'aria-hidden': 'true' }, good ? '✓' : '✗'),
+    h('span', {}, h('span', { class: 'visually-hidden' }, good ? 'Good: ' : 'Not for you: '), text));
+  // Reasons that are really downsides get a ✗ too
+  const bad = /^(No terrain park|Little beginner terrain|Terrain mix unknown)/;
+  return [
+    h('h4', {}, 'For you'),
+    h('p', { class: 'fine' }, `As a ${skiText(rider) || 'rider'}:`),
+    h('ul', { class: 'for-you-list' },
+      blockers.map((x) => row(false, x)),
+      reasons.filter(Boolean).map((x) => row(!bad.test(x), x))),
   ];
 }
 

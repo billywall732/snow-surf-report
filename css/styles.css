@@ -702,7 +702,7 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   border-top: 1px solid var(--rule);
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
 }
-.bottom-tabs { flex: 2; display: flex; gap: 4px; }
+.bottom-tabs { flex: 4; display: flex; gap: 4px; }
 .bar-button {
   flex: 1;
   min-width: 0;
@@ -727,5 +727,352 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .bar-icon { width: 24px; height: 24px; fill: currentColor; }
-.bar-wave { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.bar-line { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 .bar-glyph { display: block; height: 24px; font-size: 19px; line-height: 24px; }
+
+/* ==========================================================================
+   Bottom bar extras: badge, More button, More menu
+   ========================================================================== */
+
+#more-button { flex: 1; }
+#more-button.is-active, #more-button[aria-expanded='true'] {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.bar-icon-wrap { position: relative; display: inline-flex; }
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font: 700 11px/18px var(--sans);
+  text-align: center;
+  color: #fff;
+  background: #d03b3b;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+}
+
+.more-menu {
+  position: fixed;
+  z-index: 21;
+  right: max(8px, calc((100% - 560px) / 2));
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  min-width: 220px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 12px;
+  font: 600 15px var(--sans);
+  color: var(--ink);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.menu-item:hover, .menu-item:focus-visible { background: var(--bg); }
+.menu-glyph { width: 24px; text-align: center; font-size: 18px; color: var(--ink-2); }
+
+/* ==========================================================================
+   Notifications page
+   ========================================================================== */
+
+#panel-alerts > .card, #panel-profile > .card, #panel-faq > section { margin-top: 16px; }
+.alerts-card h3 { font-size: 20px; margin-bottom: 8px; }
+.alerts-card .list-controls { margin-top: 10px; margin-bottom: 0; }
+.alerts-card .control { flex: 1 1 200px; }
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.switch-row input { width: 22px; height: 22px; accent-color: var(--accent); flex-shrink: 0; }
+
+.alert-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.alert-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.alert-item.alert-snow { border-left-color: var(--ikon); }
+.alert-title { font-weight: 650; }
+.alert-detail { font-size: 14px; color: var(--ink-2); }
+
+.delivery-list { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 10px; font-size: 15px; }
+.delivery-list .fine { margin: 2px 0 0 32px; }
+
+/* ==========================================================================
+   Surf: "Fits you" tag and the For you list
+   ========================================================================== */
+
+.fit-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font: 700 11px/1.5 var(--sans);
+  color: var(--r5);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+.fit-days { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.fit-days li {
+  display: grid;
+  grid-template-columns: 22px 52px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.fit-mark { font-weight: 700; }
+.fit-days .fits .fit-mark { color: var(--r5); }
+.fit-days .no-fit .fit-mark { color: #d03b3b; }
+.fit-day { font-weight: 650; }
+.fit-why { display: block; color: var(--ink-2); font-size: 13px; }
+
+/* ==========================================================================
+   FAQs
+   ========================================================================== */
+
+.faq-group h3 { font-size: 20px; margin: 22px 0 8px; }
+.faq {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.faq summary {
+  padding: 12px 14px;
+  min-height: 44px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.faq p { margin: 0 14px 12px; color: var(--ink-2); font-size: 15px; }
+.faq[open] summary { border-bottom: 1px solid var(--rule); margin-bottom: 10px; }
+
+/* ==========================================================================
+   Level / board chips (tap one or more)
+   ========================================================================== */
+
+.skill-chips { display: grid; gap: 10px; margin: 8px 0 4px; }
+.chip-row { display: grid; gap: 6px; }
+.chip-row-label { font-size: 12px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 40px;
+  padding: 6px 12px;
+  font: 600 14px/1.2 var(--sans);
+  color: var(--ink);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.chip-note { font-weight: 400; font-size: 12px; color: var(--muted); }
+.chip[aria-pressed='true'] {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.chip[aria-pressed='true'] .chip-note { color: rgba(255, 255, 255, 0.85); }
+.chip[aria-pressed='true']::before { content: '✓ '; } /* not color alone: a check mark too */
+.skill-chips.compact { margin-bottom: 10px; }
+.skill-chips.compact .chip { min-height: 36px; padding: 5px 10px; font-size: 13px; border-radius: 999px; flex-direction: row; }
+.chip-clear { justify-self: start; padding: 0; min-height: 32px; }
+
+/* ---------- Email alerts card ---------- */
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 10px 0 6px;
+  padding: 8px 18px;
+  font: 600 15px var(--sans);
+  color: var(--bg);
+  background: var(--ink);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.action-button.google::before {
+  content: 'G';
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font: 700 14px var(--sans);
+  color: #2a78d6;
+  background: #fff;
+  border-radius: 50%;
+}
+.account-actions { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.text-button.danger { color: #d03b3b; }
+
+/* ---------- Choosing places for alerts, Notify me ---------- */
+
+.detail-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.notify-button[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); }
+.chooser { margin-top: 10px; }
+.chooser-summary { margin: 0; }
+.chooser-search { margin: 8px 0; }
+.alerts-card .chooser-filters { margin: 0 0 4px; }
+.alerts-card .chooser-filters .control { flex: 1 1 130px; }
+.chooser-count { margin: 4px 0; }
+.chooser-search input {
+  font: 16px var(--sans); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--axis); border-radius: 8px; padding: 8px 10px; min-height: 44px; width: 100%;
+}
+.chooser-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 340px;
+  overflow-y: auto;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+}
+.chooser-list li + li { border-top: 1px solid var(--rule); }
+.chooser-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  font: 600 15px var(--sans);
+  color: var(--ink);
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.chooser-item[aria-pressed='true'] { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.chooser-check {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--ink-2);
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+}
+.chooser-item[aria-pressed='true'] .chooser-check { color: #fff; background: var(--accent); border-color: var(--accent); }
+.chooser-where { font-weight: 400; font-size: 13px; color: var(--muted); }
+
+/* ==========================================================================
+   Rider Profile: Recommended for you, For you
+   ========================================================================== */
+
+.recs { margin-bottom: 16px; }
+.recs h3 { font-size: 20px; margin-bottom: 4px; }
+.alerts-card h4 { margin: 14px 0 6px; }
+.rec-list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; counter-reset: rec; }
+.rec-item {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px 10px 40px;
+  position: relative;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.rec-item:hover { border-color: var(--axis); }
+.rec-list li { counter-increment: rec; }
+.rec-item::before {
+  content: counter(rec);
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  font: 700 18px/1.2 var(--serif, Georgia, serif);
+  color: var(--accent);
+}
+.rec-name { font-weight: 650; }
+.rec-score { font-weight: 400; font-size: 13px; color: var(--muted); }
+.rec-where { font-size: 13px; color: var(--muted); }
+.rec-why { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.rec-reason { padding: 1px 8px; font-size: 12px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; }
+.rec-farther-head { margin: 12px 0 4px; font-size: 13px; font-weight: 650; color: var(--muted); }
+.rec-farther { counter-reset: none; }
+.rec-farther .rec-item { padding-left: 12px; }
+.rec-farther .rec-item::before { content: none; }
+.text-button.inline-link { display: inline; min-height: 0; padding: 0; text-decoration: underline; }
+.for-you-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.for-you-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px; padding: 6px 10px; background: var(--bg); border-radius: 8px; }
+.for-you-list .fits .fit-mark { color: var(--r5); }
+.for-you-list .no-fit .fit-mark { color: #d03b3b; }
+.pass-tag.skiers-only { color: var(--muted); }
+
+/* Five buttons in the bar: a little tighter on small phones */
+@media (max-width: 380px) {
+  .bar-button { font-size: 10px; padding: 4px 0; }
+  .bottom-bar { gap: 2px; padding-left: 4px; padding-right: 4px; }
+  .bottom-tabs { gap: 2px; }
+}
+
+/* ---------- Notifications: what you're watching ---------- */
+
+.watching { margin-top: 12px; }
+.watching summary { min-height: 44px; display: flex; align-items: center; font-weight: 650; cursor: pointer; }
+.watching h4 { margin: 8px 0 4px; font-size: 13px; color: var(--muted); }
+.watch-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.watch-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.watch-mark { grid-row: span 2; font-weight: 700; color: var(--muted); }
+.watch-item.is-match .watch-mark { color: var(--r5); }
+.watch-name { font-weight: 600; font-size: 15px; }
+.watch-status { font-size: 13px; color: var(--ink-2); }
