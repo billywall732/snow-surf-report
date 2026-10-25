@@ -62,6 +62,19 @@ jobs:
           mkdir _site
           cp -r index.html css js data _site/
 
+      # Cache-busting: GitHub Pages lets browsers keep files for 10 minutes, so right
+      # after a publish a phone could mix the old CSS with the new JavaScript (broken
+      # layout). Adding "?v=<commit>" to every CSS/JS address in the published copy
+      # makes each version's files brand-new addresses. (Your own files don't change.)
+      - name: Stamp file versions
+        run: |
+          V="${GITHUB_SHA::8}"
+          # index.html: the stylesheet, the app script and the modulepreload links
+          sed -i -E "s#(href|src)=\"(css/[a-z0-9-]+\.css|js/[a-z0-9-]+\.js)\"#\1=\"\2?v=$V\"#g" _site/index.html
+          # every import between the JavaScript files: from './ui.js' -> from './ui.js?v=...'
+          sed -i -E "s#(from '\./[a-z0-9-]+\.js)'#\1?v=$V'#g" _site/js/*.js
+          grep -c "?v=$V" _site/index.html _site/js/*.js
+
       - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v5

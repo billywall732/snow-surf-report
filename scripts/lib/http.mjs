@@ -1,25 +1,31 @@
 // Small wrappers around Node's built-in fetch().
 // - Every request gets a User-Agent (api.weather.gov requires one; it's polite everywhere).
 // - Requests time out after 20 seconds instead of hanging the whole run.
-// - Server errors (5xx) and network errors get one retry after a short pause.
+// - Network hiccups and server errors (5xx) are retried twice, after 2 s and then 5 s.
+//   (A morning run once lost three resorts in a row to a brief "fetch failed".)
+// - Other errors, like 404 Not Found, fail straight away: retrying won't fix them.
 
 const USER_AGENT = 'snow-surf-report/1.0 (personal hobby project; https://github.com/)';
+const RETRY_WAITS = [2000, 5000]; // pause before the 2nd and 3rd tries
 
 async function request(url) {
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 0; ; attempt++) {
+    let res;
     try {
-      const res = await fetch(url, {
+      res = await fetch(url, {
         headers: { 'User-Agent': USER_AGENT },
         signal: AbortSignal.timeout(20_000),
       });
-      if (res.ok) return res;
-      if (res.status < 500 || attempt === 2) {
-        throw new Error(`HTTP ${res.status} from ${new URL(url).host}`);
-      }
     } catch (err) {
-      if (attempt === 2) throw err;
+      // Network error or timeout: worth another try
+      if (attempt >= RETRY_WAITS.length) throw err;
+      await new Promise((r) => setTimeout(r, RETRY_WAITS[attempt]));
+      continue;
     }
-    await new Promise((r) => setTimeout(r, 2000));
+    if (res.ok) return res;
+    const error = new Error(`HTTP ${res.status} from ${new URL(url).host}`);
+    if (res.status < 500 || attempt >= RETRY_WAITS.length) throw error; // not retryable, or out of tries
+    await new Promise((r) => setTimeout(r, RETRY_WAITS[attempt]));
   }
 }
 

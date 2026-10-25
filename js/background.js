@@ -53,6 +53,17 @@ const FPS = 30; // repaints per second
 const MAX_PIXEL_RATIO = 1; // raise to 2 for a sharper (but slower) background on phones
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+// The page's Animations button can also turn motion off. Either way, we show a
+// still picture of the same scene instead of animating it.
+let motionOff = false;
+const still = () => motionOff || reduceMotion.matches;
+
+// Called by app.js when the Animations button is pressed.
+export function setMotion(on) {
+  motionOff = !on;
+  if (motionOff) tideLevel = tideTarget;
+  drawStill();
+}
 const darkMode = matchMedia('(prefers-color-scheme: dark)');
 
 // Colors for each scene in light and dark mode.
@@ -134,7 +145,7 @@ export function setScene(name, opts = {}) {
 // Called by app.js with the current tide as a fraction of today's range.
 export function setTideLevel(fraction) {
   tideTarget = Math.max(0, Math.min(1, fraction));
-  if (reduceMotion.matches) tideLevel = tideTarget;
+  if (still()) tideLevel = tideTarget;
   drawStill();
 }
 
@@ -210,14 +221,14 @@ function loop(time) {
   const dt = Math.min(0.1, (time - last) / 1000 || 0); // seconds since our last frame (capped)
   last = time;
   clock = time / 1000;
-  if (!reduceMotion.matches) {
+  if (!still()) {
     update(dt, clock);
     draw(clock);
   }
 }
 
 function drawStill() {
-  if (ctx && reduceMotion.matches) draw(0);
+  if (ctx && still()) draw(0);
 }
 
 function update(dt, t) {

@@ -22,6 +22,8 @@
   --r4: #8fbf3a;
   --r5: #0ca30c;
   --track: #e8e7e1;
+  --ikon: #0f8a7e;        /* Ikon mountains: teal */
+  --epic: #6250d6;        /* Epic mountains: violet */
 
   --serif: ui-serif, Georgia, 'Times New Roman', serif;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -47,6 +49,8 @@
     --warn: #f0a35e;
     --focus: #6da7ec;
     --track: #2f2f2d;
+    --ikon: #2bbfab;
+    --epic: #9085e9;
   }
 }
 :root[data-theme='dark'] {
@@ -63,6 +67,8 @@
   --warn: #f0a35e;
   --focus: #6da7ec;
   --track: #2f2f2d;
+  --ikon: #2bbfab;
+  --epic: #9085e9;
 }
 
 /* ---------- Base ---------- */
@@ -107,7 +113,7 @@ a { color: inherit; text-underline-offset: 2px; }
 }
 
 /* Every top-level block shares the same width and 16px side padding */
-.masthead, .tabs, main, footer {
+.masthead, main, footer {
   max-width: 980px;
   margin: 0 auto;
   padding-left: 16px;
@@ -131,27 +137,6 @@ a { color: inherit; text-underline-offset: 2px; }
 }
 .masthead h1 { font-size: clamp(32px, 8vw, 52px); margin: 4px 0 6px; letter-spacing: -0.01em; }
 .updated { color: var(--ink-2); font-size: 14px; }
-
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--rule);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: color-mix(in srgb, var(--bg) 94%, transparent);
-}
-.tabs button {
-  font: 600 16px var(--sans);
-  color: var(--ink-2);
-  background: none;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  padding: 12px 16px 9px;
-  min-height: 44px; /* comfortable tap target */
-  cursor: pointer;
-}
-.tabs button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--ink); }
 
 main { padding-top: 20px; padding-bottom: 32px; }
 
@@ -299,22 +284,7 @@ main { padding-top: 20px; padding-bottom: 32px; }
 }
 .switch button[aria-pressed='true'] { background: var(--ink); color: var(--bg); }
 
-/* Light/dark toggle in the masthead */
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font: 600 14px var(--sans);
-  color: var(--ink);
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  padding: 6px 14px;
-  min-height: 36px;
-  cursor: pointer;
-}
-.theme-toggle:hover { border-color: var(--axis); }
-.theme-icon { font-size: 16px; line-height: 1; }
+
 
 /* ---------- Charts ---------- */
 
@@ -615,6 +585,7 @@ dialog.detail::backdrop {
 /* Safety net: nothing may make the page wider than the screen. On iPhones an
    element sticking out even a little lets the whole page slide side to side.
    ("clip" rather than "hidden" so the sticky tab bar keeps working.) */
+body { overflow-x: hidden; } /* fallback for older iPhones */
 html, body { overflow-x: clip; }
 
 /* Tide card: the beach buttons become wrapping pills under the title, instead
@@ -662,3 +633,99 @@ html, body { overflow-x: clip; }
   #panel-snow > section, #panel-surf > section { margin-top: 22px; }
   .section-head h2 { font-size: 22px; }
 }
+
+/* ==========================================================================
+   Ikon / Epic colors
+   ========================================================================== */
+
+.pass-tag.pass-ikon { color: var(--ikon); }
+.pass-tag.pass-epic { color: var(--epic); }
+/* A colored stripe down the left of each list row, and across the top of pinned cards */
+.resort-row.pass-ikon { box-shadow: inset 4px 0 0 var(--ikon); }
+.resort-row.pass-epic { box-shadow: inset 4px 0 0 var(--epic); }
+.card.pass-ikon { border-top: 4px solid var(--ikon); }
+.card.pass-epic { border-top: 4px solid var(--epic); }
+
+/* Map icons: colored by pass. Pinned = larger with a dark outline; open = orange. */
+.map-dot.pass-ikon .icon-body { fill: var(--ikon); }
+.map-dot.pass-epic .icon-body { fill: var(--epic); }
+.map-dot.is-pinned .icon-body { stroke: var(--ink); stroke-width: calc(1.6 * var(--k)); }
+.map-dot.is-selected .icon-body { fill: #e8590c; }
+
+/* ==========================================================================
+   Map zoom
+   ========================================================================== */
+
+.map-stage { position: relative; }
+/* Not zoomed: a finger swiping over the map scrolls the page; two fingers pinch-zoom
+   the map. Zoomed in: one finger drags the map around. */
+.us-map { touch-action: pan-x pan-y; }
+.map-stage.is-zoomed .us-map { touch-action: none; cursor: grab; }
+.map-borders { vector-effect: non-scaling-stroke; } /* stays thin when zoomed in */
+.map-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.map-zoom-button {
+  width: 36px;
+  height: 36px;
+  font: 600 20px/1 var(--sans);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.map-zoom-button:disabled { opacity: 0.4; cursor: default; }
+
+/* ==========================================================================
+   Bottom bar: Snow · Surf · Light/Dark · Animations
+   ========================================================================== */
+
+body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for the bar */
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  gap: 4px;
+  /* On wide screens the buttons gather in the middle instead of spreading out */
+  padding: 6px max(8px, calc((100% - 560px) / 2)) calc(6px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-top: 1px solid var(--rule);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+}
+.bottom-tabs { flex: 2; display: flex; gap: 4px; }
+.bar-button {
+  flex: 1;
+  min-width: 0;
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 2px;
+  font: 600 11px/1.2 var(--sans);
+  color: var(--ink-2);
+  text-align: center;
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.bar-button:hover { color: var(--ink); }
+.bar-button[aria-selected='true'] {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.bar-icon { width: 24px; height: 24px; fill: currentColor; }
+.bar-wave { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.bar-glyph { display: block; height: 24px; font-size: 19px; line-height: 24px; }

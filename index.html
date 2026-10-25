@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Snow and Surf Report</title>
   <meta name="description" content="A morning snapshot of snow at every US Ikon and Epic Pass mountain and surf at 52 US surf spots, with a simple should-I-go rating.">
   <meta name="color-scheme" content="light dark">
@@ -38,20 +38,10 @@
 </head>
 <body>
   <header class="masthead">
-    <div class="masthead-top">
-      <p class="kicker">Morning conditions</p>
-      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to dark mode">
-        <span class="theme-icon" aria-hidden="true">☾</span> <span class="theme-text" aria-hidden="true">Dark</span>
-      </button>
-    </div>
+    <p class="kicker">Morning conditions</p>
     <h1>Snow and Surf Report</h1>
     <p class="updated" id="updated">Loading the latest report…</p>
   </header>
-
-  <div class="tabs" role="tablist" aria-label="Report sections">
-    <button type="button" role="tab" id="tab-snow" aria-controls="panel-snow" aria-selected="true">Snow</button>
-    <button type="button" role="tab" id="tab-surf" aria-controls="panel-surf" aria-selected="false" tabindex="-1">Surf</button>
-  </div>
 
   <main>
     <p class="stale" id="stale" role="status" hidden></p>
@@ -60,5 +50,28 @@
   </main>
 
   <footer id="sources"></footer>
+
+  <!-- The bar along the bottom of the screen, like a phone app: the two tabs,
+       then the light/dark and animation switches. -->
+  <nav class="bottom-bar" aria-label="Main">
+    <div class="bottom-tabs" role="tablist" aria-label="Report sections">
+      <button type="button" class="bar-button" role="tab" id="tab-snow" aria-controls="panel-snow" aria-selected="true">
+        <svg class="bar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20 9 7l4 6 3-4 6 11Z" /></svg>
+        <span>Snow</span>
+      </button>
+      <button type="button" class="bar-button" role="tab" id="tab-surf" aria-controls="panel-surf" aria-selected="false" tabindex="-1">
+        <svg class="bar-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="bar-wave" d="M2 15c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3M2 20c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3" /></svg>
+        <span>Surf</span>
+      </button>
+    </div>
+    <button type="button" class="bar-button" id="theme-toggle" aria-label="Switch to dark mode">
+      <span class="bar-glyph theme-icon" aria-hidden="true">☾</span>
+      <span class="theme-text" aria-hidden="true">Dark</span>
+    </button>
+    <button type="button" class="bar-button" id="motion-toggle" aria-pressed="false">
+      <span class="bar-glyph motion-icon" aria-hidden="true">❚❚</span>
+      <span class="motion-text">Animations off</span>
+    </button>
+  </nav>
 </body>
 </html>

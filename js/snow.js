@@ -25,6 +25,9 @@ function matches(r, q) {
     passNames(r).some((p) => p.toLowerCase() === q);
 }
 
+// 'pass-ikon' / 'pass-epic': colors the list row, map icon and card by pass
+const passClass = (r) => passNames(r).map((p) => `pass-${p.toLowerCase()}`).join(' ');
+
 // Small "IKON" / "EPIC" labels
 function passTags(r) {
   return passNames(r).map((p) => h('span', { class: `pass-tag pass-${p.toLowerCase()}` }, p));
@@ -60,6 +63,13 @@ export function renderSnow(section) {
     searchPlaceholder: 'Search by name, town, state or pass',
     matches,
     rowExtras: passTags,
+    itemClass: passClass,
+    legend: [
+      ['pass-ikon', 'Ikon'],
+      ['pass-epic', 'Epic'],
+      ['pass-ikon is-pinned', 'Pinned (larger, outlined)'],
+      ['is-selected', 'Open in details'],
+    ],
     rowStats: (r) => [
       `New 48h ${num(ok(r.observed) ? r.observed.data.newSnow.h48 : null, '"')}`,
       ` · Base ${num(ok(r.observed) ? r.observed.data.depthNow : null, '"')}`,
@@ -128,7 +138,7 @@ function depthChart(r) {
 function resortCard(r, ui) {
   const obs = r.observed;
   const fc = r.forecast;
-  const card = h('article', { class: 'card', 'aria-labelledby': `h-${r.id}` },
+  const card = h('article', { class: `card ${passClass(r)}`, 'aria-labelledby': `h-${r.id}` },
     h('header', { class: 'card-head' },
       h('div', {},
         h('h3', { id: `h-${r.id}` }, r.name),

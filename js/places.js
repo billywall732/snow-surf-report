@@ -51,6 +51,8 @@ export const place = (item) => (item.city ? `${item.city}, ${item.region}` : ite
  *   detailBody(item)  -> nodes for the detail view, after the rating
  *   top()             -> nodes shown above "My …" (e.g. the best-bet card)
  *   afterMine(pinnedIds) -> nodes shown after the pinned cards (e.g. the tide card)
+ *   itemClass(item)   -> extra CSS classes for the list row and map icon (e.g. 'pass-ikon')
+ *   legend:     [[classes, label], ...] for the map legend (default: place / pinned / open)
  *   mapIcon:    'peak' | 'wave'
  *   mapLabel:   'Ikon and Epic mountains'
  *   onPinsChange(pinnedIds)
@@ -108,10 +110,12 @@ export function createPlacesTab(opts) {
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-map` }, 'Map'),
         h('p', { class: 'fine map-legend' },
-          h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon), ` ${words.one[0].toUpperCase()}${words.one.slice(1)}`),
-          h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon, 'is-pinned'), ' Pinned'),
-          h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon, 'is-selected'), ' Open in details'),
-          h('span', { class: 'legend-item' }, 'Tap one for details.'))),
+          (opts.legend ?? [
+            ['', `${words.one[0].toUpperCase()}${words.one.slice(1)}`],
+            ['is-pinned', 'Pinned'],
+            ['is-selected', 'Open in details'],
+          ]).map(([cls, text]) => h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon, cls), ` ${text}`)),
+          h('span', { class: 'legend-item' }, 'Tap one for details · pinch or + to zoom.'))),
       els.map),
   );
 
@@ -167,7 +171,7 @@ export function createPlacesTab(opts) {
     // (sizes on the map depend on width); otherwise just update it.
     const width = els.map.clientWidth;
     if (!mapView || Math.abs(mapView.width - width) > 1) {
-      mapView = createMap(els.map, { items: section.items, icon: opts.mapIcon, label: opts.mapLabel, width, onSelect: openDetail });
+      mapView = createMap(els.map, { items: section.items, icon: opts.mapIcon, label: opts.mapLabel, width, onSelect: openDetail, classFor: opts.itemClass });
     }
     mapView.update({ pinned: new Set(pinned), selected: selectedId, visible: visibleIds });
   }
@@ -309,7 +313,7 @@ export function createPlacesTab(opts) {
       h('span', { class: 'row-rating' }, ratingBar(score), h('span', { class: 'rating-score' }, score == null ? '–' : `${score}/5`)),
       h('span', { class: 'row-stats' }, opts.rowStats(item)));
     main.addEventListener('click', () => openDetail(item.id));
-    return h('li', { class: `resort-row${isPinned(item.id) ? ' is-pinned' : ''}` },
+    return h('li', { class: `resort-row ${opts.itemClass?.(item) ?? ''}${isPinned(item.id) ? ' is-pinned' : ''}` },
       h('div', { class: 'row-line' }, pinButton(item), main),
       pendingPin === item.id ? replacePrompt(item.id) : null);
   }

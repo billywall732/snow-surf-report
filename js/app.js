@@ -5,7 +5,7 @@ import { drawCharts, formatTime, h, state } from './ui.js';
 import { redrawMaps } from './places.js';
 import { renderSnow } from './snow.js';
 import { renderSurf, updateTideBackground } from './surf.js';
-import { refreshBackground, setScene, startBackground } from './background.js';
+import { refreshBackground, setMotion, setScene, startBackground } from './background.js';
 
 const TAB_KEY = 'ssr-tab';
 let report;
@@ -132,6 +132,29 @@ function setupThemeToggle() {
   label();
 }
 
+// Animations on/off. Off freezes the background into a still picture. The choice
+// is saved; with no saved choice, phones set to "Reduce Motion" start with it off.
+const MOTION_KEY = 'ssr-motion';
+function setupMotionToggle() {
+  const button = document.getElementById('motion-toggle');
+  let saved = null;
+  try { saved = localStorage.getItem(MOTION_KEY); } catch { /* ignore */ }
+  let on = saved ? saved === 'on' : !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const apply = () => {
+    setMotion(on);
+    // The button says what pressing it will do
+    button.querySelector('.motion-icon').textContent = on ? '❚❚' : '▶︎';
+    button.querySelector('.motion-text').textContent = on ? 'Animations off' : 'Animations on';
+    button.setAttribute('aria-pressed', String(!on)); // pressed = animations are off
+  };
+  button.addEventListener('click', () => {
+    on = !on;
+    try { localStorage.setItem(MOTION_KEY, on ? 'on' : 'off'); } catch { /* not remembered */ }
+    apply();
+  });
+  apply();
+}
+
 // ---------- Start ----------
 
 function loadReport() {
@@ -143,7 +166,8 @@ function loadReport() {
 
 async function main() {
   setupThemeToggle();
-  startBackground(); // starts with snow; switches once the tabs are set up
+  startBackground();
+  setupMotionToggle();
   try {
     // index.html already started downloading the report while this code loaded.
     report = await (window.reportDownload ?? loadReport());
