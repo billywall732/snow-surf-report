@@ -1,5 +1,10 @@
-# Fetches fresh conditions every morning, saves them to data/report.json,
-# and publishes the site to GitHub Pages.
+# Fetches fresh conditions every hour and publishes the site to GitHub Pages.
+#
+#   - Every hour: fetch, then publish (the site always has the latest report).
+#   - Once a day: also commit data/report.json to the repo, as a daily snapshot.
+#     (Committing every hour would add ~500 KB x 24 to the repo each day.)
+#   - Once a day, in the morning (Pacific): email alerts.
+#   - On a code push: fetch too, so a code change never publishes old data.
 #
 # Why this workflow also deploys the site: commits pushed by a workflow (using the
 # built-in GITHUB_TOKEN) do NOT trigger GitHub's normal "deploy from branch" Pages
@@ -10,16 +15,15 @@ name: Update report
 
 on:
   schedule:
-    # GitHub cron uses UTC and ignores daylight saving time.
-    # 12:00 UTC = 5:00 AM Pacific in summer (PDT), 4:00 AM in winter (PST).
-    # Scheduled runs often start 10-30 minutes late; the early time absorbs that.
-    - cron: '0 12 * * *'
+    # Every hour at 17 minutes past. GitHub is busiest on the hour, and runs set
+    # for :00 can start very late; an off-minute starts more reliably.
+    - cron: '17 * * * *'
   workflow_dispatch: # adds a "Run workflow" button on the Actions tab
   push:
-    branches: [main] # redeploy when you push code changes (no data fetch)
+    branches: [main] # redeploy when you push code changes
 
 permissions:
-  contents: write # commit data/report.json
+  contents: write # commit the daily snapshot of data/report.json
   pages: write # publish to GitHub Pages
   id-token: write # required by actions/deploy-pages
 
@@ -39,24 +43,39 @@ jobs:
         with:
           node-version: 24
 
+      # On a code push, a failed fetch still publishes (with the last saved report).
       - name: Fetch conditions
-        if: github.event_name != 'push'
+        continue-on-error: ${{ github.event_name == 'push' }}
         run: node scripts/fetch-report.mjs
 
-      - name: Commit report if it changed
+      # The daily snapshot: the first run from 12:00 UTC (4-5 AM Pacific) that finds
+      # no report committed yet today. Every other hour publishes without committing.
+      # A problem here never stops the site from publishing.
+      - name: Commit daily snapshot
         if: github.event_name != 'push'
+        continue-on-error: true
         run: |
+          today=$(date -u +%F)
+          last=$(git log -1 --format=%cs -- data/report.json)
+          if [ "$(date -u +%H)" -lt 12 ] || [ "$last" = "$today" ]; then
+            echo "Not snapshot time (last snapshot: $last). Publishing without a commit."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/report.json
+          git add data/report.json data/version.json
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update report $(date -u +%Y-%m-%d)"
-            git push
+            git commit -m "Update report $today"
+            # If code was pushed meanwhile, put the snapshot on top of it
+            git push || (git pull --rebase -X theirs && git push)
           fi
 
       # Email alerts to people who signed in with Google and turned them on.
+      # Only in the morning (5-11 AM Pacific): the first run after 5 AM sends, and the
+      # script never emails anyone twice in a day, so later morning runs (which
+      # cover for a late start) skip them. "Run workflow" by hand always runs it.
       # Skipped (without failing) until the three secrets are added; see the README.
       # A problem here never stops the site from publishing.
       - name: Email alerts
@@ -69,6 +88,11 @@ jobs:
         run: |
           if [ -z "$FIREBASE_SERVICE_ACCOUNT" ] || [ -z "$GMAIL_APP_PASSWORD" ]; then
             echo "Email alerts aren't set up yet (no secrets), skipping."
+            exit 0
+          fi
+          hour=$(TZ=America/Los_Angeles date +%-H)
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] && { [ "$hour" -lt 5 ] || [ "$hour" -gt 11 ]; }; then
+            echo "Emails go out in the morning (5-11 AM Pacific); it's $hour:00 there. Skipping."
             exit 0
           fi
           npm install --no-save --no-audit --no-fund --prefix scripts/email firebase-admin@12.7.0 nodemailer@6.9.16

@@ -457,7 +457,7 @@ function matchesList(alerts) {
       return h('li', {}, b);
     }))
     : h('p', { class: 'empty' }, settings.snowOn || settings.surfOn
-      ? 'Nothing matches right now. Conditions are checked every morning.'
+      ? 'Nothing matches right now. Conditions are checked every hour.'
       : 'Alerts are off. Turn on snow or surf alerts below.');
 }
 

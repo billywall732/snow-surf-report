@@ -201,6 +201,9 @@ async function main() {
   // to a file every visitor downloads. (To read it, open it in VS Code and run
   // "Format Document".)
   await fs.writeFile(new URL('data/report.json', root), JSON.stringify(report) + '\n');
+  // A tiny file with just the time, so pages left open can check for a newer
+  // report every few minutes without downloading the whole thing (~500 KB).
+  await fs.writeFile(new URL('data/version.json', root), JSON.stringify({ generatedAt: report.generatedAt }) + '\n');
 
   // A short human-readable summary in the terminal / Action log.
   console.log(`Wrote data/report.json — ${blocks.length - failed.length}/${blocks.length} sources OK\n`);

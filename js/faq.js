@@ -5,8 +5,9 @@ import { h } from './ui.js';
 const FAQ = [
   ['Getting started', [
     ['What is this?', [
-      'A morning snapshot of snow at every US Ikon and Epic Pass mountain and surf at 52 US beaches, with a simple 1–5 “should I go?” rating for each.',
-      'It updates every morning at about 5 AM Pacific (4 AM in winter). The time of the latest update is at the top of the page.',
+      'Up-to-date snow conditions at every US Ikon and Epic Pass mountain and surf at 52 US beaches, with a simple 1–5 “should I go?” rating for each.',
+      'It updates every hour (GitHub sometimes runs a few minutes late). The time of the latest update is at the top of the page, and if you leave the app open, a “New conditions available” bar offers to refresh when there’s a newer report.',
+      'Ratings and “fits you” look at the morning session (7 AM) for today and the next two days. Email alerts go out once a day, in the morning.',
     ]],
     ['How do I get around?', [
       'Use the bar at the bottom: Snow and Surf for conditions, Notifications for alerts, Profile for how you ride, and More for light/dark mode, animations and these FAQs.',
@@ -107,7 +108,7 @@ const FAQ = [
       'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Google’s Firebase), so we can email your alerts. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” on the Notifications tab to remove everything.',
     ]],
     ['The page looks broken or old after an update', [
-      'Close the tab and open the site again. The site updates every morning, and your browser may briefly hold on to the previous version.',
+      'Close the tab and open the site again. The site updates every hour, and your browser may briefly hold on to the previous version.',
     ]],
   ]],
 ];

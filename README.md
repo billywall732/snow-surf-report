@@ -1,6 +1,6 @@
 # Snow and Surf Report
 
-A morning snapshot of snow conditions at every US Ikon and Epic Pass mountain (76 of them) and surf conditions at 52 US surf spots, with a simple 1–5 "should I go?" rating for each.
+Hourly snow conditions at every US Ikon and Epic Pass mountain (76 of them) and surf conditions at 52 US surf spots, with a simple 1–5 "should I go?" rating for each.
 
 **Live site:** https://billywall732.github.io/snow-surf-report/
 
@@ -18,17 +18,18 @@ Plain HTML, CSS and JavaScript. No build step, no backend, no API keys, no depen
 ## How it works
 
 ```
-GitHub Action (every morning)          GitHub Pages
+GitHub Action (every hour)             GitHub Pages
  └─ node scripts/fetch-report.mjs       └─ index.html
      ├─ calls the free public APIs          └─ fetch('data/report.json')
      ├─ computes the ratings                    └─ draws the cards and charts
      └─ writes data/report.json
 ```
 
-1. **`.github/workflows/update-report.yml`** runs every day at 12:00 UTC (5 AM Pacific in summer, 4 AM in winter) and whenever you press **Run workflow** on the Actions tab.
-2. It runs **`scripts/fetch-report.mjs`**, which reads the places in `config/locations.json`, fetches each data source, scores each place using `config/ratings.json`, and writes `data/report.json`.
-3. If the report changed, the Action commits it, then publishes the site to GitHub Pages.
-4. The page (`index.html` + `js/app.js`) loads `data/report.json` and draws everything in the browser.
+1. **`.github/workflows/update-report.yml`** runs every hour (at :17 past; GitHub may start scheduled runs a few minutes late), when you push code, and whenever you press **Run workflow** on the Actions tab.
+2. It runs **`scripts/fetch-report.mjs`**, which reads the places in `config/locations.json`, fetches each data source, scores each place using `config/ratings.json`, and writes `data/report.json` (plus a tiny `data/version.json` with just the time).
+3. It publishes the site to GitHub Pages with the fresh report. **Once a day** (the first run from 12:00 UTC) it also commits the report to the repo as a daily snapshot; committing every hour would grow the repo by ~12 MB a day.
+4. In the morning (5–11 AM Pacific), it sends the email alerts; nobody gets more than one a day.
+5. The page (`index.html` + `js/app.js`) loads `data/report.json` and draws everything in the browser. A page left open checks `data/version.json` every 15 minutes and offers to refresh when there's a newer report.
 
 **One broken source never breaks the page.** Every piece of data is stored as a block like:
 

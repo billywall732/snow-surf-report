@@ -39,9 +39,12 @@ function renderHeader() {
 
   const ageHours = (Date.now() - updated) / 3_600_000;
   const stale = document.getElementById('stale');
-  if (ageHours > 30) {
-    stale.textContent = `Heads up: this report is ${Math.round(ageHours / 24)} day(s) old. The morning update may have failed.`;
+  // Updates come every hour, so more than 3 hours old means something's off
+  if (ageHours > 3) {
+    const age = ageHours < 48 ? `${Math.round(ageHours)} hours` : `${Math.round(ageHours / 24)} days`;
+    stale.textContent = `Heads up: this report is ${age} old. The hourly update may be delayed.`;
     stale.hidden = false;
+    document.getElementById('updated').classList.add('is-stale'); // amber dot instead of green
   }
 }
 
@@ -264,6 +267,32 @@ async function main() {
   });
   // Keep the background water in step with the tide if the page stays open.
   setInterval(updateTideBackground, 60_000);
+  watchForUpdates();
+}
+
+// ---------- Newer report? ----------
+// The report is rebuilt every hour. A page left open checks a tiny file
+// (data/version.json, just the time) every 15 minutes, and when you come back to
+// the tab. If there's a newer report, a small bar offers to refresh.
+const CHECK_EVERY_MS = 15 * 60_000;
+function watchForUpdates() {
+  const bar = document.getElementById('update-bar');
+  let lastCheck = Date.now();
+  const check = async () => {
+    lastCheck = Date.now();
+    try {
+      const res = await fetch('data/version.json', { cache: 'no-cache' });
+      if (!res.ok) return;
+      const { generatedAt } = await res.json();
+      if (generatedAt && Date.parse(generatedAt) > Date.parse(report.generatedAt)) bar.hidden = false;
+    } catch { /* offline: try again later */ }
+  };
+  setInterval(check, CHECK_EVERY_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - lastCheck > 60_000) check();
+  });
+  document.getElementById('update-refresh').addEventListener('click', () => location.reload());
+  document.getElementById('update-dismiss').addEventListener('click', () => { bar.hidden = true; });
 }
 
 main();

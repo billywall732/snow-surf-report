@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Snow and Surf Report</title>
-  <meta name="description" content="A morning snapshot of snow at every US Ikon and Epic Pass mountain and surf at 52 US surf spots, with a simple should-I-go rating.">
+  <meta name="description" content="Hourly snow conditions at every US Ikon and Epic Pass mountain and surf at 52 US surf spots, with a simple should-I-go rating.">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 22c4-4 8-4 12 0s8 4 12 0 4-2 4-2v10H2z' fill='%232a78d6'/%3E%3Cpath d='M6 16 16 3l10 13z' fill='%2352514e'/%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
@@ -87,9 +87,9 @@
     </svg>
 
     <div class="intro-content">
-      <p class="intro-kicker">Morning conditions · Player 1</p>
+      <p class="intro-kicker">Live conditions · Player 1</p>
       <h1 class="intro-title" id="intro-title"><span class="intro-snow-word">Snow</span> <span class="intro-amp">&amp;</span> <span class="intro-surf-word">Surf</span></h1>
-      <p class="intro-sub">76 mountains · 52 beaches · fresh every morning</p>
+      <p class="intro-sub">76 mountains · 52 beaches · updated every hour</p>
 
       <div class="intro-quest" id="intro-quest" hidden>
         <p class="intro-quest-head">Today’s quest</p>
@@ -109,7 +109,7 @@
   </div>
 
   <header class="masthead">
-    <p class="kicker">Morning conditions</p>
+    <p class="kicker">Snow &amp; surf conditions · updated hourly</p>
     <h1>Snow and Surf Report</h1>
     <p class="updated" id="updated">Loading the latest report…</p>
   </header>
@@ -154,6 +154,13 @@
       <span>More</span>
     </button>
   </nav>
+
+  <!-- Shown when a newer report is out while the page is open (js/app.js) -->
+  <div class="update-bar" id="update-bar" role="status" hidden>
+    <span>New conditions available</span>
+    <button type="button" class="update-refresh" id="update-refresh">Refresh</button>
+    <button type="button" class="update-dismiss" id="update-dismiss" aria-label="Dismiss">×</button>
+  </div>
 
   <!-- The "More" menu: opens just above the bottom bar -->
   <div class="more-menu" id="more-menu" role="group" aria-label="More" hidden>
