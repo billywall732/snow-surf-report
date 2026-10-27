@@ -13,7 +13,7 @@ export async function mountainForecast(resort) {
     latitude: resort.lat,
     longitude: resort.lon,
     daily: 'snowfall_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max',
-    hourly: 'snowfall,snow_depth',
+    hourly: 'snowfall,snow_depth,apparent_temperature',
     past_days: 10,
     forecast_days: 7,
     precipitation_unit: 'inch',
@@ -42,8 +42,19 @@ export async function mountainForecast(resort) {
     }))
     .filter((d) => d.date >= today);
 
-  // Hourly snowfall: add up the past 24h / 48h / 7d and the next 72h.
   const h = j.hourly;
+  // "Feels like" (wind chill) on the slopes: the coldest and warmest hour between
+  // 9 AM and 4 PM local time, for each day. Used for what to wear.
+  for (const d of days) {
+    const lifts = h.time
+      .map((t, i) => ({ local: toLocalISO(t * 1000, tz), f: h.apparent_temperature[i] }))
+      .filter((x) => x.local.slice(0, 10) === d.date && Number(x.local.slice(11, 13)) >= 9 && Number(x.local.slice(11, 13)) <= 16 && x.f != null)
+      .map((x) => x.f);
+    d.feelsLow = lifts.length ? Math.round(Math.min(...lifts)) : null;
+    d.feelsHigh = lifts.length ? Math.round(Math.max(...lifts)) : null;
+  }
+
+  // Hourly snowfall: add up the past 24h / 48h / 7d and the next 72h.
   const sumSnow = (from, to) =>
     round1(h.time.reduce((s, t, i) => (t > from && t <= to ? s + (h.snowfall[i] ?? 0) : s), 0));
 
@@ -72,14 +83,17 @@ export async function mountainForecast(resort) {
   };
 }
 
-// Wind at a surf spot for the morning session hour (e.g. 7 AM local).
+// Wind at a surf spot for the morning session hour (e.g. 7 AM local), plus the
+// air temperature then and the day's highest UV index (same request).
 export async function surfWind(spot, sessionHour) {
   const params = new URLSearchParams({
     latitude: spot.lat,
     longitude: spot.lon,
-    hourly: 'wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+    hourly: 'wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m',
+    daily: 'uv_index_max,temperature_2m_max',
     forecast_days: 3, // today + 2 more, for alerts about upcoming waves
     wind_speed_unit: 'mph',
+    temperature_unit: 'fahrenheit',
     timezone: spot.timezone,
     timeformat: 'unixtime',
   });
@@ -90,6 +104,9 @@ export async function surfWind(spot, sessionHour) {
     speedMph: Math.round(j.hourly.wind_speed_10m[i]),
     gustMph: Math.round(j.hourly.wind_gusts_10m[i]),
     directionDeg: j.hourly.wind_direction_10m[i],
+    airTempF: Math.round(j.hourly.temperature_2m[i]), // at the session hour
+    airHighF: Math.round(j.daily.temperature_2m_max[0]),
+    uvIndexMax: round1(j.daily.uv_index_max[0]), // today's peak (around midday)
     // Every hour of TODAY: t = local time, mph = speed, gust, deg = direction wind comes from
     hourly: j.hourly.time
       .map((t, k) => ({ t: toLocalISO(t * 1000, spot.timezone), mph: Math.round(j.hourly.wind_speed_10m[k]), gust: Math.round(j.hourly.wind_gusts_10m[k]), deg: j.hourly.wind_direction_10m[k] }))

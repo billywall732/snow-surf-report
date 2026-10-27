@@ -10,6 +10,12 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon.svg">
   <meta name="apple-mobile-web-app-title" content="Snow and Surf">
+  <!-- The arcade-style font for the landing screen ("Press Start 2P", free from Google
+       Fonts). Loaded in the background (media="print" until it arrives) so it never
+       holds up the page; until then the intro uses a plain monospace font. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="css/styles.css">
   <script>
     // Apply a saved light/dark choice before the page draws, so it never flashes
@@ -18,6 +24,15 @@
       const theme = localStorage.getItem('ssr-theme');
       if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
     } catch { /* storage blocked: follow the system */ }
+
+    // The landing screen: show it on the first visit of a browser session, but not
+    // on links straight to a place (like #surf/pipeline from an alert email).
+    // Decided here, before the page draws, so it never flashes. js/intro.js runs it.
+    (function () {
+      let seen = false;
+      try { seen = sessionStorage.getItem('ssr-intro-seen') === '1'; } catch { /* show it */ }
+      document.documentElement.classList.add(seen || location.hash.includes('/') ? 'no-intro' : 'intro-open');
+    })();
 
     // Start downloading the report now, at the same time as the JavaScript files,
     // instead of waiting for them to load first. app.js picks this up.
@@ -45,11 +60,54 @@
   <link rel="modulepreload" href="js/rider.js">
   <link rel="modulepreload" href="js/recommend.js">
   <link rel="modulepreload" href="js/cities.js">
+  <link rel="modulepreload" href="js/gear.js">
+  <link rel="modulepreload" href="js/intro.js">
   <!-- type="module" lets app.js use `import`. Modules only load over http(s),
        which is why you need a local server instead of double-clicking this file. -->
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
+  <!-- The landing screen, like a video game's loading screen. It's plain HTML and
+       CSS so it shows instantly; js/intro.js fills the loading bar and shows the
+       Start Shredding button once the report has loaded. -->
+  <div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <div class="intro-sky" aria-hidden="true">
+      <div class="intro-sun"></div>
+      <div class="intro-snow"></div>
+      <div class="intro-snow intro-snow-far"></div>
+    </div>
+    <svg class="intro-scene" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <path class="intro-peaks-far" d="M0 300 140 170l90 70 130-150 120 110 80-60 150 140 110-90 140 120 120-150 130 120 90-60 140 120v160H0Z" />
+      <path class="intro-peaks" d="M0 330 110 240l80 50 170-190 110 120 70-50 160 150 140-130 120 90 150-170 130 140 100-70 100 80v220H0Z" />
+      <path class="intro-caps" d="M360 100 404 149 386 143 370 158 352 144 330 134ZM840 190 887 225 866 221 848 234 830 220 802 225ZM1110 110 1152 155 1132 150 1114 166 1096 150 1075 150Z" />
+      <g class="intro-waves">
+        <path class="intro-wave intro-wave-back" d="M0 360c60-20 120-20 180 0s120 20 180 0 120-20 180 0 120 20 180 0 120-20 180 0 120 20 180 0 120-20 180 0 120 20 180 0 120-20 180 0 120 20 180 0 120-20 180 0 120 20 180 0 120-20 180 0 120 20 180 0 120-20 180 0 120 20 180 0V420H0Z" />
+        <path class="intro-wave intro-wave-front" d="M0 385c60-18 120-18 180 0s120 18 180 0 120-18 180 0 120 18 180 0 120-18 180 0 120 18 180 0 120-18 180 0 120 18 180 0 120-18 180 0 120 18 180 0 120-18 180 0 120 18 180 0 120-18 180 0 120 18 180 0 120-18 180 0 120 18 180 0V420H0Z" />
+      </g>
+    </svg>
+
+    <div class="intro-content">
+      <p class="intro-kicker">Morning conditions · Player 1</p>
+      <h1 class="intro-title" id="intro-title"><span class="intro-snow-word">Snow</span> <span class="intro-amp">&amp;</span> <span class="intro-surf-word">Surf</span></h1>
+      <p class="intro-sub">76 mountains · 52 beaches · fresh every morning</p>
+
+      <div class="intro-quest" id="intro-quest" hidden>
+        <p class="intro-quest-head">Today’s quest</p>
+        <ul class="intro-quest-list" id="intro-quest-list"></ul>
+      </div>
+
+      <div class="intro-load" id="intro-load">
+        <div class="intro-bar" id="intro-bar" role="progressbar" aria-label="Loading today’s report" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span class="intro-fill" id="intro-fill"></span>
+        </div>
+        <p class="intro-status" id="intro-status" aria-live="polite">Loading…</p>
+      </div>
+
+      <button type="button" class="intro-start" id="intro-start" hidden>Start Shredding</button>
+      <p class="intro-tip" id="intro-tip"></p>
+    </div>
+  </div>
+
   <header class="masthead">
     <p class="kicker">Morning conditions</p>
     <h1>Snow and Surf Report</h1>
@@ -110,6 +168,10 @@
     <button type="button" class="menu-item" id="faq-button">
       <span class="menu-glyph" aria-hidden="true">?</span>
       <span>FAQs</span>
+    </button>
+    <button type="button" class="menu-item" id="replay-intro">
+      <span class="menu-glyph" aria-hidden="true">▶</span>
+      <span>Replay intro</span>
     </button>
   </div>
 </body>

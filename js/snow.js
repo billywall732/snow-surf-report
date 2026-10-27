@@ -5,6 +5,7 @@ import { createPlacesTab } from './places.js';
 import { notifyButton } from './alerts.js';
 import { loadRider, openProfile, recommendCard } from './rider.js';
 import { hasSkiRider, skiFit, skiText } from './recommend.js';
+import { layersFor } from './gear.js';
 import {
   add, bestBetCard, chartSlot, dataTable, formatDay, formatShortDate,
   h, num, ok, rating, sourceName, stat, unavailable,
@@ -80,6 +81,7 @@ export function renderSnow(section) {
       `New 48h ${num(ok(r.observed) ? r.observed.data.newSnow.h48 : null, '"')}`,
       ` · Base ${num(ok(r.observed) ? r.observed.data.depthNow : null, '"')}`,
       ` · Next 3 days ${num(ok(r.forecast) ? r.forecast.data.next72hIn : null, '"')}`,
+      ok(r.forecast) ? ` · ${r.forecast.data.days[0].tempHigh}°/${r.forecast.data.days[0].tempLow}°F` : '',
     ].join(''),
     card: resortCard,
     detailPill: (r) => seasonPill(r.season),
@@ -169,6 +171,7 @@ function resortCard(r, ui) {
     add(card, unavailable('Forecast', fc));
   }
 
+  if (ok(fc)) add(card, wearSummary(fc.data.days[0]));
   // (On phones the chart is left out of the card to keep it short; Details has it.)
   if (ok(obs) && obs.data.depthHistory.length > 1) add(card, h('div', { class: 'card-extra' }, depthChart(r)));
   add(card, h('div', { class: 'card-actions' }, ui.detailsButton(r), ui.pinButton(r, { withText: true })));
@@ -182,8 +185,10 @@ function detailBody(r) {
     : obs.modelled ? `Modelled (${sourceName(obs.source)})`
     : `SNOTEL ${obs.stationName} (${obs.stationId}), ${obs.distanceKm} km away`;
   return [
+    h('h4', {}, 'Snow on the ground'),
     ok(obs) ? snowStats(obs) : unavailable('Snow depth', obs),
     forYou(r),
+    ok(fc) ? wearSection(fc.data.days[0]) : null,
     ok(fc) ? forecastTable(fc) : unavailable('Forecast', fc),
     ok(obs) && obs.data.depthHistory.length > 1 ? depthChart(r) : null,
     h('h4', {}, 'About'),
@@ -230,18 +235,52 @@ function forYou(r) {
   ];
 }
 
+// One line for a card: "What to wear: feels like 18–27°F on the hill · midweight base, fleece..., shell jacket"
+function wearSummary(day) {
+  const w = layersFor(day);
+  if (!w) return null;
+  const short = (x) => (x === 'No mid layer' ? '' : x.replace(/ layer$/, '').toLowerCase());
+  return h('p', { class: 'wear-line' },
+    h('strong', {}, 'What to wear: '),
+    `${w.feelsLike ? 'feels like ' : ''}${w.low}–${w.high}°F on the hill · `,
+    [w.layers.base, w.layers.mid, w.layers.outer].map(short).filter(Boolean).join(', '));
+}
+
+// The detail view's "What to wear today" section
+function wearSection(day) {
+  const w = layersFor(day);
+  if (!w) return null;
+  return [
+    h('h4', {}, 'What to wear today'),
+    h('div', { class: 'stats' },
+      stat('High', `${day.tempHigh}°F`),
+      stat('Low', `${day.tempLow}°F`),
+      stat('Feels like', w.feelsLike ? `${w.low}–${w.high}°F` : '—'),
+      stat('Wind', `${day.windMax} mph`)),
+    h('dl', { class: 'facts' },
+      h('dt', {}, 'Base'), h('dd', {}, w.layers.base),
+      h('dt', {}, 'Mid'), h('dd', {}, w.layers.mid),
+      h('dt', {}, 'Outer'), h('dd', {}, w.layers.outer),
+      h('dt', {}, 'Extras'), h('dd', {}, w.layers.extras)),
+    w.notes.map((n) => h('p', { class: 'fine' }, n)),
+    w.warning ? h('p', { class: 'fine warn' }, w.warning) : null,
+    h('p', { class: 'fine' }, '“Feels like” includes wind chill, from 9 AM to 4 PM at the mountain’s location. It’s colder up top: about 3–5°F less for every 1,000 ft you climb.'),
+  ];
+}
+
 function forecastTable(fc) {
   return [
     h('h4', {}, '7-day forecast'),
     h('div', { class: 'table-scroll' },
       h('table', { class: 'forecast-table' },
         h('thead', {}, h('tr', {},
-          ['Day', 'Snow', 'High', 'Low', 'Wind', 'Gusts'].map((x) => h('th', { scope: 'col' }, x)))),
+          ['Day', 'Snow', 'High', 'Low', 'Feels like', 'Wind', 'Gusts'].map((x) => h('th', { scope: 'col' }, x)))),
         h('tbody', {}, fc.data.days.map((d, i) => h('tr', {},
           h('th', { scope: 'row' }, formatDay(d.date, i)),
           h('td', {}, `${d.snowfall > 0 ? d.snowfall : 0}"`),
           h('td', {}, `${d.tempHigh}°`),
           h('td', {}, `${d.tempLow}°`),
+          h('td', {}, d.feelsLow != null ? `${d.feelsLow}–${d.feelsHigh}°` : '—'),
           h('td', {}, `${d.windMax} mph`),
           h('td', {}, `${d.gustMax} mph`)))))),
   ];

@@ -96,7 +96,7 @@ export function createPlacesTab(opts) {
   document.body.append(dialog);
 
   document.getElementById(opts.panelId).replaceChildren(
-    ...(opts.top?.() ?? []),
+    h('div', { class: 'top-grid' }, opts.top?.() ?? []), // side by side on wide screens
     h('section', { 'aria-labelledby': `${key}-h-mine` },
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-mine` }, words.mine),

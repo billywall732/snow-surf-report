@@ -24,6 +24,11 @@
   --track: #e8e7e1;
   --ikon: #0f8a7e;        /* Ikon mountains: teal */
   --epic: #6250d6;        /* Epic mountains: violet */
+  --surface-2: #f2f1ec;   /* inset tiles and rows inside cards */
+  --shadow: 0 1px 2px rgba(30, 30, 20, 0.05), 0 6px 20px rgba(30, 30, 20, 0.07);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.22);
+  --radius: 14px;         /* cards, lists, the map */
+  --radius-sm: 10px;      /* tiles and rows inside them */
 
   --serif: ui-serif, Georgia, 'Times New Roman', serif;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -51,6 +56,9 @@
     --track: #2f2f2d;
     --ikon: #2bbfab;
     --epic: #9085e9;
+    --surface-2: #242423;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
   }
 }
 :root[data-theme='dark'] {
@@ -69,6 +77,9 @@
   --track: #2f2f2d;
   --ikon: #2bbfab;
   --epic: #9085e9;
+  --surface-2: #242423;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
 }
 
 /* ---------- Base ---------- */
@@ -114,7 +125,7 @@ a { color: inherit; text-underline-offset: 2px; }
 
 /* Every top-level block shares the same width and 16px side padding */
 .masthead, main, footer {
-  max-width: 980px;
+  max-width: 1080px;
   margin: 0 auto;
   padding-left: 16px;
   padding-right: 16px;
@@ -122,7 +133,7 @@ a { color: inherit; text-underline-offset: 2px; }
 
 /* ---------- Masthead & tabs ---------- */
 
-.masthead { padding-top: 20px; padding-bottom: 12px; }
+.masthead { padding-top: 28px; padding-bottom: 8px; }
 .masthead-top {
   display: flex;
   justify-content: space-between;
@@ -136,9 +147,21 @@ a { color: inherit; text-underline-offset: 2px; }
   color: var(--muted);
 }
 .masthead h1 { font-size: clamp(32px, 8vw, 52px); margin: 4px 0 6px; letter-spacing: -0.01em; }
-.updated { color: var(--ink-2); font-size: 14px; }
+/* "Updated …" as a small status pill with a green dot */
+.updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 10px;
+  color: var(--ink-2);
+  font-size: 13px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+}
+.updated::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--r5); }
 
-main { padding-top: 20px; padding-bottom: 32px; }
+main { padding-top: 24px; padding-bottom: 48px; }
 
 .stale {
   margin-bottom: 16px;
@@ -157,15 +180,25 @@ main { padding-top: 20px; padding-bottom: 32px; }
 }
 
 .card, .best-bet {
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
   min-width: 0; /* lets grid children shrink instead of overflowing sideways */
 }
 
-.best-bet { margin-bottom: 16px; border-top: 3px solid var(--ink); }
-.best-bet h2 { font-size: 28px; margin: 4px 0 10px; }
+/* Best bet: the headline card at the top of each tab */
+.best-bet { position: relative; overflow: hidden; }
+.best-bet::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, var(--r3), var(--r5)); }
+.best-bet h2 { font-size: 32px; margin: 6px 0 12px; }
+
+/* Best bet + Recommended for you: side by side on wide screens */
+.top-grid { display: grid; gap: 16px; }
+.top-grid > * { margin: 0; }
+@media (min-width: 900px) {
+  .top-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: start; }
+}
 .verdict { margin-top: 10px; font-family: var(--serif); font-size: 18px; }
 
 .card-head {
@@ -175,7 +208,7 @@ main { padding-top: 20px; padding-bottom: 32px; }
   gap: 12px;
   margin-bottom: 12px;
 }
-.card-head h3 { font-size: 22px; }
+.card-head h3 { font-size: 23px; }
 .region { color: var(--muted); font-size: 14px; }
 
 .pill {
@@ -209,23 +242,30 @@ main { padding-top: 20px; padding-bottom: 32px; }
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin-top: 16px;
-  padding: 12px 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
 }
-.stat { display: flex; flex-direction: column; min-width: 0; }
-.stat-value { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+.stat-value { font-size: 20px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .stat-label { font-size: 12px; color: var(--muted); }
 
 .facts {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 6px 14px;
+  column-gap: 16px;
   margin: 14px 0 0;
   font-size: 15px;
 }
+.facts dt, .facts dd { padding: 7px 0; border-bottom: 1px solid var(--rule); }
 .facts dt { color: var(--muted); }
 .facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.facts dt:last-of-type, .facts dd:last-of-type { border-bottom: 0; }
 
 .fine { font-size: 13px; color: var(--muted); margin-top: 8px; }
 .unavailable {
@@ -253,8 +293,8 @@ main { padding-top: 20px; padding-bottom: 32px; }
   flex-direction: column;
   gap: 2px;
   padding: 8px 6px;
-  border-radius: 6px;
-  background: var(--bg);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
   font-size: 13px;
   text-align: center;
 }
@@ -337,11 +377,11 @@ footer li { margin: 2px 0; }
    Snow tab: sections, list, pins, map, detail view
    ========================================================================== */
 
-#panel-snow > section, #panel-surf > section { margin-top: 28px; }
-.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 12px; }
-.section-head h2 { font-size: 24px; }
+#panel-snow > section, #panel-surf > section { margin-top: 44px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 14px; }
+.section-head h2 { font-size: 27px; letter-spacing: -0.01em; }
 .section-head .fine { margin-top: 0; }
-.empty { color: var(--ink-2); padding: 16px; border: 1px dashed var(--axis); border-radius: 10px; }
+.empty { color: var(--ink-2); padding: 16px; border: 1px dashed var(--axis); border-radius: var(--radius-sm); }
 .pin-msg { min-height: 1.5em; font-size: 14px; color: var(--ink-2); }
 .pin-msg:empty { min-height: 0; }
 
@@ -361,8 +401,8 @@ footer li { margin: 2px 0; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 12px;
-  padding-top: 8px;
+  margin-top: 16px;
+  padding-top: 10px;
   border-top: 1px solid var(--rule);
 }
 
@@ -405,11 +445,14 @@ footer li { margin: 2px 0; }
   list-style: none;
   margin: 0;
   padding: 0;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
-.resort-row { padding: 4px 8px 4px 4px; border-top: 1px solid var(--rule); }
+.resort-row { padding: 4px 10px 4px 6px; border-top: 1px solid var(--rule); transition: background-color 0.15s; }
+.resort-row:hover { background: var(--surface-2); }
 .row-line { display: flex; align-items: center; gap: 4px; }
 .resort-row:first-child { border-top: 0; }
 .row-main {
@@ -419,7 +462,7 @@ footer li { margin: 2px 0; }
   grid-template-columns: 1fr auto;
   gap: 2px 12px;
   align-items: center;
-  padding: 8px 4px;
+  padding: 10px 6px;
   text-align: left;
   font: inherit;
   color: inherit;
@@ -438,10 +481,11 @@ footer li { margin: 2px 0; }
 /* ---------- Map ---------- */
 
 .map-wrap {
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 8px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px;
 }
 .us-map { display: block; width: 100%; height: auto; }
 .map-land { fill: var(--track); }
@@ -470,17 +514,24 @@ footer li { margin: 2px 0; }
 /* ---------- Detail view (a <dialog>) ---------- */
 
 dialog.detail {
-  width: min(720px, calc(100% - 24px));
-  max-height: calc(100% - 24px);
+  width: min(780px, calc(100% - 32px));
+  max-height: calc(100% - 48px);
   padding: 0;
   color: var(--ink);
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
   overscroll-behavior: contain;
 }
 dialog.detail::backdrop {
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(10, 14, 20, 0.5);
+  backdrop-filter: blur(3px);
+}
+/* Opens with a short rise and fade (skipped if you've asked for less motion) */
+@media (prefers-reduced-motion: no-preference) {
+  dialog.detail[open] { animation: detail-in 0.22s ease-out; }
+  @keyframes detail-in { from { opacity: 0; transform: translateY(16px); } }
 }
 .detail-head {
   position: sticky;
@@ -490,11 +541,12 @@ dialog.detail::backdrop {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  padding: 16px 16px 12px;
-  background: var(--surface);
+  padding: 20px 24px 16px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--rule);
 }
-.detail-head h2 { font-size: 28px; margin-top: 2px; }
+.detail-head h2 { font-size: 32px; margin-top: 4px; letter-spacing: -0.01em; }
 .close-button {
   min-width: 44px;
   min-height: 44px;
@@ -505,9 +557,20 @@ dialog.detail::backdrop {
   border-radius: 999px;
   cursor: pointer;
 }
-.detail-body { padding: 16px; }
-.detail-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
-.factors { margin: 0; padding-left: 20px; font-size: 15px; color: var(--ink-2); }
+.detail-body { padding: 18px 24px 32px; }
+.detail-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+.detail-buttons { display: flex; gap: 8px; }
+
+/* Each part of the detail view (Why this rating, For you, What to wear, Forecast…)
+   starts with a small heading and a hairline, so the page reads in clear sections. */
+.detail-body h4 { margin: 28px 0 12px; padding-top: 22px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+.detail-body .rating-top { gap: 14px; }
+.detail-body .rating-score { font-size: 22px; }
+.detail-body .rating-reason { font-size: 16px; }
+
+/* Why this rating: each reason as a chip */
+.factors { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.factors li { padding: 5px 12px; background: var(--surface-2); border-radius: 999px; }
 .table-scroll { overflow-x: auto; }
 .forecast-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
 .forecast-table th, .forecast-table td { padding: 6px 8px 6px 0; text-align: left; border-bottom: 1px solid var(--rule); white-space: nowrap; }
@@ -523,7 +586,7 @@ dialog.detail::backdrop {
   padding: 12px;
   border: 1px solid var(--axis);
   border-radius: 8px;
-  background: var(--bg);
+  background: var(--surface-2);
   font-size: 14px;
 }
 .detail-body .pin-replace { margin-left: 0; margin-bottom: 14px; }
@@ -627,11 +690,24 @@ html, body { overflow-x: clip; }
     border: 0;
     border-radius: 0;
   }
-  .detail-head h2 { font-size: 24px; }
+  .detail-head { padding: 14px 16px 12px; }
+  .detail-head h2 { font-size: 26px; }
+  .detail-body { padding: 14px 16px 32px; }
+  .detail-body h4 { margin-top: 22px; padding-top: 18px; }
+  @media (prefers-reduced-motion: no-preference) {
+    dialog.detail[open] { animation: detail-in 0.25s ease-out; }
+  }
 
   /* A little less space around section headings */
-  #panel-snow > section, #panel-surf > section { margin-top: 22px; }
-  .section-head h2 { font-size: 22px; }
+  #panel-snow > section, #panel-surf > section { margin-top: 32px; }
+  .section-head h2 { font-size: 24px; }
+
+  /* Cards: a touch less padding; stat tiles more compact */
+  .card, .best-bet { padding: 16px; }
+  .best-bet h2 { font-size: 28px; }
+  .stats { gap: 6px; }
+  .stat { padding: 8px; }
+  .stat-value { font-size: 18px; }
 }
 
 /* ==========================================================================
@@ -782,7 +858,7 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   border-radius: 10px;
   cursor: pointer;
 }
-.menu-item:hover, .menu-item:focus-visible { background: var(--bg); }
+.menu-item:hover, .menu-item:focus-visible { background: var(--surface-2); }
 .menu-glyph { width: 24px; text-align: center; font-size: 18px; color: var(--ink-2); }
 
 /* ==========================================================================
@@ -814,10 +890,10 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   text-align: left;
   font: inherit;
   color: var(--ink);
-  background: var(--bg);
+  background: var(--surface-2);
   border: 1px solid var(--rule);
   border-left: 4px solid var(--accent);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .alert-item.alert-snow { border-left-color: var(--ikon); }
@@ -849,7 +925,7 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   align-items: baseline;
   gap: 6px;
   padding: 8px 10px;
-  background: var(--bg);
+  background: var(--surface-2);
   border-radius: 8px;
   font-size: 14px;
 }
@@ -1014,12 +1090,13 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   font: inherit;
   color: inherit;
   text-align: left;
-  background: var(--bg);
-  border: 1px solid var(--rule);
-  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
 }
-.rec-item:hover { border-color: var(--axis); }
+.rec-item:hover { border-color: var(--axis); transform: translateY(-1px); }
 .rec-list li { counter-increment: rec; }
 .rec-item::before {
   content: counter(rec);
@@ -1040,7 +1117,7 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
 .rec-farther .rec-item::before { content: none; }
 .text-button.inline-link { display: inline; min-height: 0; padding: 0; text-decoration: underline; }
 .for-you-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
-.for-you-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px; padding: 6px 10px; background: var(--bg); border-radius: 8px; }
+.for-you-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px; padding: 8px 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
 .for-you-list .fits .fit-mark { color: var(--r5); }
 .for-you-list .no-fit .fit-mark { color: #d03b3b; }
 .pass-tag.skiers-only { color: var(--muted); }
@@ -1067,8 +1144,8 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   font: inherit;
   color: inherit;
   text-align: left;
-  background: var(--bg);
-  border: 1px solid var(--rule);
+  background: var(--surface-2);
+  border: 1px solid transparent;
   border-radius: 8px;
   cursor: pointer;
 }
@@ -1076,3 +1153,187 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
 .watch-item.is-match .watch-mark { color: var(--r5); }
 .watch-name { font-weight: 600; font-size: 15px; }
 .watch-status { font-size: 13px; color: var(--ink-2); }
+
+/* ---------- What to wear ---------- */
+
+.wear-line { margin: 10px 0 0; font-size: 14px; color: var(--ink-2); }
+.wear-line strong { color: var(--ink); }
+.uv { font-weight: 650; }
+.uv-high, .uv-very-high { color: #b35600; }
+.uv-extreme { color: #b0307c; }
+:root[data-theme='dark'] .uv-high, :root[data-theme='dark'] .uv-very-high { color: #f0a050; }
+:root[data-theme='dark'] .uv-extreme { color: #f08ac8; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .uv-high, :root:not([data-theme='light']) .uv-very-high { color: #f0a050; }
+  :root:not([data-theme='light']) .uv-extreme { color: #f08ac8; }
+}
+
+/* ==========================================================================
+   Landing screen ("Start Shredding"), styled like a video game loading screen.
+   It has its own dawn-sky colors, the same in light and dark mode.
+   ========================================================================== */
+
+.intro {
+  --intro-ink: #fff7ec;
+  --intro-glow: #ffb36b;
+  --pixel: 'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  position: fixed;
+  inset: 0;
+  z-index: 100; /* above everything, including the bottom bar */
+  display: none;
+  overflow: hidden;
+  color: var(--intro-ink);
+  background: linear-gradient(180deg, #0b1230 0%, #2a2560 38%, #8a3f6e 64%, #f08a4b 86%, #ffc178 100%);
+}
+.intro-open .intro { display: grid; place-items: center; }
+.intro-open, .intro-open body { overflow: hidden; } /* no scrolling the page behind it */
+
+/* Sky: a rising sun and two layers of falling snow (pure CSS) */
+.intro-sky { position: absolute; inset: 0; pointer-events: none; }
+.intro-sun {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: min(60vw, 420px);
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe2a8 0%, #ffb36b 38%, rgba(255, 140, 90, 0) 70%);
+  opacity: 0.85;
+}
+.intro-snow {
+  position: absolute;
+  inset: -200px 0 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+    radial-gradient(2px 2px at 90px 120px, #fff, transparent),
+    radial-gradient(3px 3px at 150px 60px, #fff, transparent),
+    radial-gradient(2px 2px at 60px 170px, #fff, transparent),
+    radial-gradient(2px 2px at 180px 150px, #fff, transparent);
+  background-size: 200px 200px;
+  opacity: 0.8;
+}
+.intro-snow-far { background-size: 120px 120px; opacity: 0.45; }
+
+/* Mountains and waves along the bottom */
+.intro-scene { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 46vh; min-height: 220px; }
+.intro-peaks-far { fill: #3b3466; opacity: 0.85; }
+.intro-peaks { fill: #241f45; }
+.intro-caps { fill: #f4eef8; }
+.intro-wave-back { fill: #2a78d6; opacity: 0.75; }
+.intro-wave-front { fill: #1b4f9a; }
+
+/* The text and button in the middle */
+.intro-content {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 100% - 32px);
+  margin-bottom: 18vh; /* sit above the mountains */
+  text-align: center;
+}
+.intro-kicker {
+  font: 10px/1.6 var(--pixel);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffd9b0;
+}
+.intro-title {
+  margin: 14px 0 12px;
+  font: 400 clamp(34px, 9vw, 64px)/1.15 var(--pixel);
+  letter-spacing: 0.02em;
+  text-shadow: 0 4px 0 #3a1d4a, 0 0 24px rgba(255, 179, 107, 0.55);
+}
+.intro-snow-word { color: #e8f3ff; }
+.intro-surf-word { color: #8fd3ff; }
+.intro-amp { color: var(--intro-glow); }
+.intro-sub { font-size: 15px; color: #ffe7cf; }
+
+/* Loading bar: chunky, segmented, like a game's */
+.intro-load { margin-top: 28px; }
+.intro-bar {
+  height: 22px;
+  padding: 3px;
+  background: rgba(10, 10, 30, 0.55);
+  border: 3px solid var(--intro-ink);
+  border-radius: 4px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+}
+.intro-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: repeating-linear-gradient(90deg, var(--intro-glow) 0 14px, #ff8a5b 14px 18px);
+  transition: width 0.25s ease-out;
+}
+.intro-status { margin-top: 12px; font: 10px/1.6 var(--pixel); color: #ffe7cf; }
+
+/* Today's quest: best snow and best surf */
+.intro-quest { margin-top: 22px; }
+.intro-quest-head { font: 10px/1.6 var(--pixel); color: var(--intro-glow); text-transform: uppercase; }
+.intro-quest-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+.intro-quest-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  background: rgba(10, 10, 30, 0.45);
+  border: 2px solid rgba(255, 247, 236, 0.35);
+  border-radius: 8px;
+}
+.intro-quest-icon { font-size: 24px; }
+.intro-quest-label { display: block; font: 8px/1.6 var(--pixel); color: #ffd9b0; text-transform: uppercase; }
+.intro-quest-name { display: block; font-weight: 700; font-size: 15px; line-height: 1.25; }
+.intro-quest-stars { display: block; color: #ffd36b; letter-spacing: 0.1em; font-size: 13px; }
+
+/* The big arcade button */
+.intro-start {
+  margin-top: 26px;
+  padding: 18px 28px;
+  min-height: 60px;
+  font: 16px/1.2 var(--pixel);
+  color: #2b1030;
+  background: linear-gradient(180deg, #ffe08a, #ffb34d);
+  border: 3px solid #fff3d6;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 #b85a1d, 0 10px 30px rgba(255, 160, 80, 0.55);
+  cursor: pointer;
+}
+.intro-start:hover { filter: brightness(1.06); }
+.intro-start:active { translate: 0 4px; box-shadow: 0 2px 0 #b85a1d, 0 6px 20px rgba(255, 160, 80, 0.5); }
+.intro-start:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.intro-tip { margin-top: 22px; min-height: 2.6em; font-size: 14px; color: #ffe7cf; opacity: 0.9; }
+
+/* Phones: stack the quest cards, smaller type */
+@media (max-width: 480px) {
+  .intro-quest-list { grid-template-columns: 1fr; }
+  .intro-start { font-size: 14px; padding: 16px 20px; }
+  .intro-content { margin-bottom: 22vh; }
+}
+@media (max-height: 640px) {
+  .intro-scene { height: 34vh; }
+  .intro-content { margin-bottom: 10vh; }
+  .intro-load, .intro-quest { margin-top: 16px; }
+  .intro-start { margin-top: 16px; }
+}
+
+/* Motion (all skipped when the device asks for reduced motion) */
+@media (prefers-reduced-motion: no-preference) {
+  .intro-snow { animation: intro-fall 9s linear infinite; }
+  .intro-snow-far { animation-duration: 15s; }
+  .intro-sun { animation: intro-rise 3s ease-out both; }
+  .intro-waves { animation: intro-roll 6s linear infinite; }
+  .intro-wave-back { animation: intro-roll 9s linear infinite reverse; }
+  .intro-title { animation: intro-pop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+  .intro-start:not([hidden]) { animation: intro-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both, intro-pulse 1.6s ease-in-out 0.5s infinite; }
+  .intro-quest:not([hidden]) { animation: intro-fade 0.5s ease-out both; }
+  .intro.is-leaving { animation: intro-out 0.65s ease-in forwards; }
+
+  @keyframes intro-fall { to { transform: translateY(200px); } }
+  @keyframes intro-rise { from { bottom: 4%; opacity: 0.3; } }
+  @keyframes intro-roll { to { transform: translateX(-360px); } }
+  @keyframes intro-pop { from { transform: scale(0.6); opacity: 0; } }
+  @keyframes intro-pulse { 50% { transform: scale(1.05); box-shadow: 0 6px 0 #b85a1d, 0 10px 44px rgba(255, 190, 110, 0.85); } }
+  @keyframes intro-fade { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes intro-out { to { opacity: 0; transform: scale(1.15); filter: blur(4px); } }
+}

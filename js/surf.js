@@ -6,6 +6,7 @@ import { createPlacesTab } from './places.js';
 import { notifyButton } from './alerts.js';
 import { loadRider, openProfile, recommendCard } from './rider.js';
 import { distanceMi, surfBlockers } from './recommend.js';
+import { uvAdvice, wetsuitFor } from './gear.js';
 import { fitDays, fitToday, hasProfile, onProfileChange, profileChips, profileText, setSkills } from './skill.js';
 import {
   add, bestBetCard, chartSlot, compass, dataTable, drawCharts, formatShortDate, formatTime,
@@ -68,7 +69,8 @@ export function renderSurf(surfSection) {
     rowStats: (s) => {
       const w = ok(s.wind) ? ` · ${s.wind.data.speedMph} mph ${s.wind.data.relative}` : '';
       const t = waterTemp(s);
-      return `${ok(s.waves) ? `${s.waves.data.heightFt} ft` : '—'} @ ${num(period(s), ' s')}${w}${t ? ` · Water ${t.f}°F` : ''}`;
+      const uv = ok(s.wind) && s.wind.data.uvIndexMax != null ? ` · UV ${Math.round(s.wind.data.uvIndexMax)}` : '';
+      return `${ok(s.waves) ? `${s.waves.data.heightFt} ft` : '—'} @ ${num(period(s), ' s')}${w}${t ? ` · Water ${t.f}°F` : ''}${uv}`;
     },
     card: spotCard,
     detailPill: (s) => (s.beachFacingDeg != null ? h('span', { class: 'pill' }, `Faces ${compass(s.beachFacingDeg)} (${s.beachFacingDeg}°)`) : null),
@@ -203,6 +205,50 @@ function waveStats(s) {
     stat('Water', t ? `${t.f}°F${t.modelled ? '*' : ''}` : '—'));
 }
 
+// Wetsuit for today's water (one step warmer if the air is cold or windy) and
+// sun protection for the UV index
+function gear(s) {
+  const t = waterTemp(s);
+  const wind = ok(s.wind) ? s.wind.data : null;
+  return {
+    t,
+    suit: wetsuitFor(t?.f, { airF: wind?.airTempF, windMph: wind?.speedMph }),
+    uv: wind?.uvIndexMax ?? null,
+    uvTip: uvAdvice(wind?.uvIndexMax),
+    air: wind?.airTempF ?? null,
+    airHigh: wind?.airHighF ?? null,
+  };
+}
+
+// "Wetsuit" and "UV index" rows for a facts list (long = with the tips)
+function gearFacts(s, { long = false } = {}) {
+  const g = gear(s);
+  return [
+    h('dt', {}, 'Wetsuit'),
+    h('dd', {}, g.suit ? [h('strong', {}, g.suit.suit), long ? ` — ${g.suit.note}` : ''] : 'No water temperature today'),
+    h('dt', {}, 'UV index'),
+    h('dd', {}, g.uv != null
+      ? [h('span', { class: `uv uv-${g.uvTip.level.toLowerCase().replace(' ', '-')}` }, `${Math.round(g.uv)} ${g.uvTip.level}`), long ? ` — ${g.uvTip.note}` : '']
+      : '—'),
+  ];
+}
+
+// The detail view's "What to wear" section
+function gearSection(s) {
+  const g = gear(s);
+  const hour = section.sessionHour ?? 7;
+  return [
+    h('h4', {}, 'What to wear'),
+    h('div', { class: 'stats' },
+      stat('Water', g.t ? `${g.t.f}°F${g.t.modelled ? '*' : ''}` : '—'),
+      stat(`Air at ${hour} AM`, g.air != null ? `${g.air}°F` : '—'),
+      stat('Air high', g.airHigh != null ? `${g.airHigh}°F` : '—'),
+      stat('UV max', g.uv != null ? String(Math.round(g.uv)) : '—')),
+    h('dl', { class: 'facts' }, gearFacts(s, { long: true })),
+    h('p', { class: 'fine' }, 'Wetsuit from a common water-temperature chart; UV is today’s peak (usually around midday). Everyone runs a little warmer or colder.'),
+  ];
+}
+
 function windText(s) {
   const wind = s.wind;
   return ok(wind)
@@ -233,6 +279,7 @@ function spotCard(s, ui) {
     waveStats(s),
     h('dl', { class: 'facts' },
       h('dt', {}, 'Wind'), h('dd', {}, windText(s)),
+      gearFacts(s),
       h('dt', {}, 'Next high'), h('dd', {}, tides?.high ? `${formatTime(tides.high.t, tz)} · ${tides.high.ft.toFixed(1)} ft` : '—'),
       h('dt', {}, 'Next low'), h('dd', {}, tides?.low ? `${formatTime(tides.low.t, tz)} · ${tides.low.ft.toFixed(1)} ft` : '—'),
       h('dt', {}, 'Buoy'), h('dd', {}, buoyText(s))));
@@ -248,12 +295,14 @@ function detailBody(s) {
   const st = section.tideStations[s.tideStation];
   const t = waterTemp(s);
   return [
+    h('h4', {}, 'Conditions'),
     waveStats(s),
     t?.modelled ? h('p', { class: 'fine' }, '* Water temperature is modelled; no buoy reading.') : null,
     h('dl', { class: 'facts' },
       h('dt', {}, 'Wind'), h('dd', {}, windText(s)),
       h('dt', {}, 'Buoy'), h('dd', {}, buoyText(s))),
     forYou(s),
+    gearSection(s),
     directionCompass(s),
     hourlyChart(s),
     h('h4', {}, "Today's tide"),
@@ -375,7 +424,7 @@ function forYou(s) {
   return [
     h('h4', {}, 'For you'),
     notes,
-    h('p', { class: 'fine' }, `As a ${profileText()}, at ${section.sessionHour ?? 7} AM each day:`),
+    h('p', { class: 'fine' }, `As ${/^[aeiou]/i.test(profileText()) ? 'an' : 'a'} ${profileText()}, at ${section.sessionHour ?? 7} AM each day:`),
     h('ul', { class: 'fit-days' }, days.map((d, i) => h('li', { class: d.fits ? 'fits' : 'no-fit' },
       h('span', { class: 'fit-mark', 'aria-hidden': 'true' }, d.fits ? '✓' : '✗'),
       h('span', { class: 'fit-day' }, dayName(d.date, i)),

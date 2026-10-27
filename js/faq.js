@@ -11,6 +11,10 @@ const FAQ = [
     ['How do I get around?', [
       'Use the bar at the bottom: Snow and Surf for conditions, Notifications for alerts, Profile for how you ride, and More for light/dark mode, animations and these FAQs.',
     ]],
+    ['What’s the “Start Shredding” screen?', [
+      'The welcome screen you see when you first open the site: it loads today’s report and shows the best snow and surf of the day. It appears once per visit (not on every reload), and links straight to a mountain or beach skip it.',
+      'To see it again, tap More → Replay intro.',
+    ]],
     ['What is the Rider Profile?', [
       'Tell the app whether you ski or snowboard, your level (Beginner to Expert), what you’re after (powder, groomers, terrain parks, steeps), your pass, how you surf, the coldest water you’ll surf and where you’re coming from.',
       'It powers “Recommended for you” at the top of the Snow and Surf tabs, the “For you” notes in each detail view, and “near me” alerts. Snowboarders never get skiers-only mountains (like Alta and Deer Valley) in their picks or alerts.',
@@ -53,6 +57,10 @@ const FAQ = [
     ['Is a resort open?', [
       'There’s no free live source for this. Opening dates come from a settings file and may be missing (“Season dates TBD”), so check the resort’s website.',
     ]],
+    ['How is “What to wear” worked out?', [
+      'From how cold it feels (temperature with wind chill) between 9 AM and 4 PM, from Open-Meteo. Colder means warmer base and mid layers; snow adds waterproof gear and a low-light goggle lens, and strong wind adds face cover.',
+      'It’s for the mountain’s listed location. The summit is usually colder: about 3–5°F less for every 1,000 ft you climb.',
+    ]],
   ]],
   ['Surf', [
     ['What do my level and board do?', [
@@ -64,6 +72,10 @@ const FAQ = [
     ['What do “period” and “offshore” mean?', [
       'Period is the time between waves, in seconds. Longer periods (12 s+) usually mean more powerful, better-shaped waves; short periods (under 8 s) are often weak and choppy.',
       'Offshore wind blows from the land out to sea and cleans up the waves; onshore wind blows in from the sea and makes them messy.',
+    ]],
+    ['How is the wetsuit chosen? What’s the UV index?', [
+      'From the water temperature (the buoy’s reading, or the model’s if there’s no buoy) and a common wetsuit chart: boardshorts at 75°F+, a spring suit around 65–69°F, a 3/2 full suit in the low 60s, a 4/3 in the mid 50s, and hoods, booties and gloves below that. If the air is under 55°F or the wind is 15 mph or more, it suggests one step warmer.',
+      'The UV index is today’s peak sun strength (usually around midday): 0–2 low, 3–5 moderate, 6–7 high, 8–10 very high, 11+ extreme. Water reflects sunlight, so use water-resistant sunscreen and a rash guard when it’s high.',
     ]],
     ['Where do the tides come from?', [
       'NOAA tide predictions for the nearest tide station to each beach. The “Today’s tide” card shows the stations your pinned beaches use, and the water in the background rises and falls with it.',
