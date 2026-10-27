@@ -56,7 +56,8 @@ jobs:
         continue-on-error: true
         run: |
           today=$(date -u +%F)
-          last=$(git log -1 --format=%cs -- data/report.json)
+          # The last snapshot's date in UTC (whatever time zone that commit was made in)
+          last=$(TZ=UTC git log -1 --date=format-local:%F --format=%cd -- data/report.json)
           if [ "$(date -u +%H)" -lt 12 ] || [ "$last" = "$today" ]; then
             echo "Not snapshot time (last snapshot: $last). Publishing without a commit."
             exit 0
