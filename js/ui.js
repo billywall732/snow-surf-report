@@ -79,21 +79,22 @@ export function dataTable(caption, headers, rows) {
       h('tbody', {}, rows.map((r) => h('tr', {}, r.map((c) => h('td', {}, c)))))));
 }
 
+// The day's best place, as one compact card: tap it for the full details.
 export function bestBetCard(section, kind, onDetails) {
   const b = section.bestBet;
-  if (!b) return h('section', { class: 'best-bet' }, h('p', {}, 'No best bet today — not enough data.'));
+  const title = `Best bet for ${kind}`;
+  if (!b) return h('section', { class: 'best-bet' }, h('p', { class: 'kicker' }, title), h('p', { class: 'fine' }, 'Not enough data today.'));
   const item = section.items.find((x) => x.id === b.id);
-  const slim = b.score <= 2;
-  const card = h('section', { class: 'best-bet', 'aria-label': `Best bet for ${kind}` },
-    h('p', { class: 'kicker' }, slim ? `Best bet for ${kind} · slim pickings` : `Best bet for ${kind}`),
-    h('h2', {}, b.name),
-    item ? rating(item.rating) : null,
-    section.verdict?.text ? h('p', { class: 'verdict' }, section.verdict.text) : null);
-  if (onDetails) {
-    const btn = h('button', { type: 'button', class: 'text-button' }, 'See details');
-    btn.addEventListener('click', () => onDetails(b.id));
-    card.append(btn);
-  }
+  const score = item?.rating.score ?? b.score;
+  const reason = item?.rating.reason ?? '';
+  const card = h('button', { type: 'button', class: 'best-bet', 'aria-label': `${title}: ${b.name}, ${score} of 5. ${reason}. Open details.` },
+    h('span', { class: 'kicker' }, b.score <= 2 ? `${title} · slim pickings` : title),
+    h('span', { class: 'best-bet-name' }, b.name),
+    h('span', { class: 'tile-rating' }, ratingBar(score), h('span', { class: 'rating-score' }, `${score}/5`)),
+    h('span', { class: 'best-bet-reason' }, reason),
+    section.verdict?.text ? h('span', { class: 'verdict' }, section.verdict.text) : null,
+    h('span', { class: 'tile-more', 'aria-hidden': 'true' }, 'Details →'));
+  card.addEventListener('click', () => onDetails?.(b.id));
   return card;
 }
 

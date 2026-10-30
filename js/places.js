@@ -50,12 +50,13 @@ export const place = (item) => (item.city ? `${item.city}, ${item.region}` : ite
  *   extraControls()   -> extra filter controls shown under the dropdowns (e.g. skill chips)
  *   extraFilter(item) -> false hides an item from the list and fades it on the map
  *   rowStats(item)    -> one line of numbers under the name
- *   card(item, ui)    -> a pinned place's card (ui = { pinButton, detailsButton })
+ *   tile(item)        -> what a pinned place's small tile shows: { stats: ['2.3 ft @ 6 s', ...], insight }
+ *                        (tapping the tile opens the full detail view)
  *   detailPill(item)  -> a pill shown next to the Pin button in the detail view
  *   detailBody(item)  -> nodes for the detail view, after the rating
  *   detailButtons(item) -> extra buttons beside Pin in the detail view (e.g. Notify me)
  *   top()             -> nodes shown above "My …" (e.g. the best-bet card)
- *   afterMine(pinnedIds) -> nodes shown after the pinned cards (e.g. the tide card)
+ *   afterMine(pinnedIds) -> nodes shown after the pinned tiles (e.g. the tide card)
  *   itemClass(item)   -> extra CSS classes for the list row and map icon (e.g. 'pass-ikon')
  *   legend:     [[classes, label], ...] for the map legend (default: place / pinned / open)
  *   mapIcon:    'peak' | 'wave'
@@ -82,7 +83,7 @@ export function createPlacesTab(opts) {
   const isPinned = (id) => pinned.includes(id);
 
   const els = {
-    pinned: h('div', { class: 'cards' }),
+    pinned: h('div', { class: 'tiles' }),
     pinMsg: h('p', { class: 'pin-msg', role: 'status' }),
     count: h('p', { class: 'fine list-count', 'aria-live': 'polite' }),
     list: h('ul', { class: 'resort-list' }),
@@ -92,6 +93,21 @@ export function createPlacesTab(opts) {
   };
   els.more.addEventListener('click', () => { showAll = !showAll; updateList(); });
 
+  // "All mountains" starts closed (one tappable row) so the page stays short;
+  // tapping it opens the search, filters and list.
+  const allBody = h('div', { id: `${key}-all-body`, class: 'all-body' }, listControls(), els.count, els.list, els.more);
+  allBody.hidden = true;
+  const allToggle = h('button', { type: 'button', class: 'section-toggle', 'aria-expanded': 'false', 'aria-controls': allBody.id },
+    h('span', { class: 'section-toggle-text' },
+      h('span', { class: 'section-toggle-title' }, words.all),
+      h('span', { class: 'section-toggle-note' }, `${words.allNote} · search, filter and pin`)),
+    h('span', { class: 'chevron', 'aria-hidden': 'true' }));
+  allToggle.addEventListener('click', () => setListOpen(allBody.hidden));
+  function setListOpen(on) {
+    allBody.hidden = !on;
+    allToggle.setAttribute('aria-expanded', String(on));
+  }
+
   const dialog = h('dialog', { id: `${key}-detail`, class: 'detail', 'aria-labelledby': `${key}-detail-title` });
   document.body.append(dialog);
 
@@ -100,18 +116,13 @@ export function createPlacesTab(opts) {
     h('section', { 'aria-labelledby': `${key}-h-mine` },
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-mine` }, words.mine),
-        h('p', { class: 'fine' }, `Pin up to ${MAX_PINS} with ☆ in the list below.`)),
+        h('p', { class: 'fine' }, 'Tap one for the full details.')),
       els.pinMsg,
       els.pinned),
     els.afterMine,
-    h('section', { 'aria-labelledby': `${key}-h-all`, class: 'all-mountains' },
-      h('div', { class: 'section-head' },
-        h('h2', { id: `${key}-h-all` }, words.all),
-        h('p', { class: 'fine' }, words.allNote)),
-      listControls(),
-      els.count,
-      els.list,
-      els.more),
+    h('section', { class: 'all-mountains card' },
+      h('h2', { class: 'section-toggle-h' }, allToggle),
+      allBody),
     h('section', { 'aria-labelledby': `${key}-h-map`, class: 'map-section' },
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-map` }, 'Map'),
@@ -151,11 +162,36 @@ export function createPlacesTab(opts) {
   }
 
   function updatePins() {
-    els.pinned.replaceChildren(...pinned.map((id) => opts.card(byId(id), ui)));
-    if (!pinned.length) {
-      els.pinned.append(h('p', { class: 'empty' }, `No pinned ${words.many} yet. Use ☆ in the list below to pin up to four.`));
-    }
+    const empty = Array.from({ length: MAX_PINS - pinned.length }, () => {
+      const b = h('button', { type: 'button', class: 'tile tile-empty' },
+        h('span', { class: 'tile-plus', 'aria-hidden': 'true' }, '+'),
+        h('span', {}, `Pin a ${words.one}`));
+      // Opens the full list with the search box ready
+      b.addEventListener('click', () => { setListOpen(true); document.getElementById(`${key}-search`)?.focus(); });
+      return b;
+    });
+    els.pinned.replaceChildren(...pinned.map((id) => tile(byId(id))), ...empty);
     els.afterMine.replaceChildren(...(opts.afterMine?.(pinned) ?? []));
+  }
+
+  // A pinned place's tile: name, rating and a couple of numbers; on wider screens
+  // also the town, a one-line insight and "Details". Tap it for everything else.
+  function tile(item) {
+    const { stats = [], insight = '' } = opts.tile(item);
+    const score = item.rating.score;
+    const b = h('button', {
+      type: 'button',
+      class: `tile ${opts.itemClass?.(item) ?? ''}`,
+      'aria-label': `${item.name}, ${place(item)}. ${score ?? 'Not rated'} of 5. ${stats.join(', ')}. ${insight} Open details.`,
+    },
+      h('span', { class: 'tile-name' }, item.name),
+      h('span', { class: 'tile-where' }, place(item)),
+      h('span', { class: 'tile-rating' }, ratingBar(score), h('span', { class: 'rating-score' }, score == null ? '–' : `${score}/5`)),
+      h('span', { class: 'tile-stats' }, stats.map((s) => h('span', { class: 'tile-stat' }, s))),
+      insight ? h('span', { class: 'tile-insight' }, insight) : null,
+      h('span', { class: 'tile-more', 'aria-hidden': 'true' }, 'Details →'));
+    b.addEventListener('click', () => openDetail(item.id));
+    return b;
   }
 
   function updateList() {
@@ -438,7 +474,7 @@ export function createPlacesTab(opts) {
   // the rest of the page (other tabs, Notifications) has finished setting up.
   setTimeout(syncDialogWithHash, 0);
 
-  const api = { redrawMap, openDetail, pinned: () => [...pinned], refresh, setFilter, refreshList: () => updateList(), setPinned, onPinsChange: null };
+  const api = { redrawMap, openDetail, pinned: () => [...pinned], refresh, setFilter, refreshList: () => updateList(), setPinned, openList: () => setListOpen(true), onPinsChange: null };
   instances.push(api);
   return api;
 }

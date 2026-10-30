@@ -10,7 +10,7 @@ import { uvAdvice, wetsuitFor } from './gear.js';
 import { fitDays, fitToday, hasProfile, onProfileChange, profileChips, profileText, setSkills } from './skill.js';
 import {
   add, bestBetCard, chartSlot, compass, dataTable, drawCharts, formatShortDate, formatTime,
-  h, num, ok, rating, stat, unavailable,
+  h, num, ok, stat, unavailable,
 } from './ui.js';
 
 const AREAS = ['Southern California', 'Central & NorCal', 'Pacific Northwest', 'Hawaii', 'Gulf Coast', 'Southeast', 'Mid-Atlantic', 'Northeast'];
@@ -19,7 +19,9 @@ const STATE_CODES = new Set(['ca', 'or', 'wa', 'hi', 'tx', 'fl', 'sc', 'nc', 'va
 let section;
 let tab;
 let tideStationId = null; // station shown in the "Today's tide" card
-const tideCard = h('section', { class: 'card tide', 'aria-labelledby': 'h-tide' });
+// Collapsed to one line ("next high · next low") until you tap it for the chart
+const tideCard = h('details', { class: 'card tide' });
+tideCard.addEventListener('toggle', () => { if (tideCard.open) drawCharts(); }); // charts draw once visible
 
 const waveFt = (s) => (ok(s.waves) ? s.waves.data.heightFt ?? 0 : 0);
 // Period: the buoy's measured one if it's reporting, else the model's (same rule as the rating)
@@ -72,7 +74,7 @@ export function renderSurf(surfSection) {
       const uv = ok(s.wind) && s.wind.data.uvIndexMax != null ? ` · UV ${Math.round(s.wind.data.uvIndexMax)}` : '';
       return `${ok(s.waves) ? `${s.waves.data.heightFt} ft` : '—'} @ ${num(period(s), ' s')}${w}${t ? ` · Water ${t.f}°F` : ''}${uv}`;
     },
-    card: spotCard,
+    tile: spotTile,
     detailPill: (s) => (s.beachFacingDeg != null ? h('span', { class: 'pill' }, `Faces ${compass(s.beachFacingDeg)} (${s.beachFacingDeg}°)`) : null),
     detailBody,
     detailButtons: (s) => notifyButton('surf', s),
@@ -90,10 +92,14 @@ export function renderSurf(surfSection) {
 
 const ms = (iso) => Date.parse(iso);
 
+// The next high and low from now. If the report is old enough that none are
+// left, the day's own high and low (better than showing blanks).
 function nextTides(station) {
   if (!ok(station)) return null;
-  const upcoming = station.data.events.filter((e) => ms(e.t) > Date.now());
-  return { high: upcoming.find((e) => e.type === 'H'), low: upcoming.find((e) => e.type === 'L') };
+  const { events } = station.data;
+  const upcoming = events.filter((e) => ms(e.t) > Date.now());
+  const find = (type) => upcoming.find((e) => e.type === type) ?? events.find((e) => e.type === type);
+  return { high: find('H'), low: find('L') };
 }
 
 // Today's tide curve for one station, with highs/lows labelled and a "Now" line.
@@ -142,7 +148,9 @@ function drawTideCard(pinnedIds = lastPinned) {
     else choices.push({ id: s.tideStation, label: s.name });
   }
   if (!choices.length) {
-    tideCard.replaceChildren(h('p', { class: 'fine' }, 'Pin a beach to see its tide here.'));
+    tideCard.replaceChildren(
+      h('summary', { class: 'tide-summary' }, h('span', { class: 'tide-title' }, "Today's tide"), h('span', { class: 'tide-next' }, 'Pin a beach to see its tide')),
+      h('p', { class: 'fine' }, 'Pin a beach to see its tide here.'));
     return tideCard;
   }
   if (!choices.some((c) => c.id === tideStationId)) tideStationId = choices[0].id;
@@ -155,16 +163,22 @@ function drawTideCard(pinnedIds = lastPinned) {
       return b;
     }));
 
-  tideCard.replaceChildren(
-    h('header', { class: 'card-head tide-head' },
-      h('div', {}, h('h3', { id: 'h-tide' }, "Today's tide"), h('p', { class: 'region' }, st?.name ?? '')),
-      switcher));
+  // The one-line summary: next high and low at the chosen station
+  const next = nextTides(st);
+  const at = (e) => (e ? formatTime(e.t, st.timezone) : '—');
+  const body = h('div', { class: 'tide-body' }, h('div', { class: 'tide-head' }, h('p', { class: 'region' }, st?.name ?? ''), switcher));
   if (!ok(st)) {
-    add(tideCard, unavailable('Tide predictions', st));
+    add(body, unavailable('Tide predictions', st));
   } else {
-    add(tideCard, tideChart(st),
+    add(body, tideChart(st),
       h('p', { class: 'fine' }, `Heights in feet above ${st.data.datum} (mean lower low water), local time. The water in the background rises and falls with this tide.`));
   }
+  tideCard.replaceChildren(
+    h('summary', { class: 'tide-summary' },
+      h('span', { class: 'tide-title', id: 'h-tide' }, "Today's tide"),
+      h('span', { class: 'tide-next' }, next ? `High ${at(next.high)} · Low ${at(next.low)}` : (st?.name ?? '')),
+      h('span', { class: 'chevron', 'aria-hidden': 'true' })),
+    body);
   updateTideBackground();
   return tideCard;
 }
@@ -263,30 +277,22 @@ function buoyText(s) {
   return `${b.stationName} (${b.stationId}${b.distanceKm != null ? `, ${b.distanceKm} km` : ''}): ${num(b.data.waveHeightFt, ' ft')} @ ${num(b.data.dominantPeriodS, ' s')}, measured ${formatTime(b.data.observedAt, s.timezone)}`;
 }
 
-// A pinned beach's card
-function spotCard(s, ui) {
-  const w = s.waves;
-  const tz = s.timezone;
-  const tides = nextTides(section.tideStations[s.tideStation]);
+// A pinned beach's tile: waves and water, plus whether it fits you, the wind
+// and the wetsuit. Details has the rest.
+function spotTile(s) {
   const t = waterTemp(s);
-  const card = h('article', { class: 'card', 'aria-labelledby': `h-${s.id}` },
-    h('header', { class: 'card-head' },
-      h('div', {},
-        h('h3', { id: `h-${s.id}` }, s.name),
-        h('p', { class: 'region' }, `${s.city ? `${s.city}, ` : ''}${s.region} · ${s.area ?? ''}`)),
-      ok(w) ? h('span', { class: 'pill' }, `Forecast for ${formatTime(w.data.forTime, tz)}`) : null),
-    rating(s.rating),
-    waveStats(s),
-    h('dl', { class: 'facts' },
-      h('dt', {}, 'Wind'), h('dd', {}, windText(s)),
-      gearFacts(s),
-      h('dt', {}, 'Next high'), h('dd', {}, tides?.high ? `${formatTime(tides.high.t, tz)} · ${tides.high.ft.toFixed(1)} ft` : '—'),
-      h('dt', {}, 'Next low'), h('dd', {}, tides?.low ? `${formatTime(tides.low.t, tz)} · ${tides.low.ft.toFixed(1)} ft` : '—'),
-      h('dt', {}, 'Buoy'), h('dd', {}, buoyText(s))));
-  if (!ok(w)) add(card, unavailable('Wave forecast', w));
-  if (t?.modelled) add(card, h('p', { class: 'fine' }, '* Water temperature is modelled; no buoy reading.'));
-  add(card, h('div', { class: 'card-actions' }, ui.detailsButton(s), ui.pinButton(s, { withText: true })));
-  return card;
+  const g = gear(s);
+  const parts = [];
+  if (hasProfile() && fitToday(s).fits) parts.push('✓ Fits you');
+  if (ok(s.wind)) parts.push(`${s.wind.data.speedMph} mph ${s.wind.data.relative}`);
+  if (g.suit) parts.push(g.suit.suit);
+  return {
+    stats: [
+      ok(s.waves) ? `${s.waves.data.heightFt} ft @ ${num(period(s), ' s')}` : 'Waves —',
+      t ? `Water ${t.f}°F` : 'Water —',
+    ],
+    insight: parts.join(' · ') || s.rating.reason,
+  };
 }
 
 // ---------- Detail view ----------

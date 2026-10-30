@@ -60,15 +60,20 @@ export function computeAlerts(report, settings, profile, pins, riderIn = EMPTY_R
     for (const spot of report.sections.surf.items) {
       if (!covered(s.surfScope, spot, pins.surf ?? [], s.surfWatch ?? [], rider)) continue;
       if (surfBlockers(spot, rider, { checkDistance: false }).length) continue; // water too cold for you
-      const good = fitDays(spot, profile, skills).filter((d) => d.fits);
+      const days = fitDays(spot, profile, skills);
+      const good = days.filter((d) => d.fits);
       if (!good.length) continue;
       const first = good[0];
+      // "Today" is the beach's own local date (its first forecast day). The report's
+      // UTC date is already tomorrow on Pacific evenings.
+      const localToday = days[0].date;
+      const when = (d) => (d.date === localToday ? 'today' : dayName(d.date));
       alerts.push({
         id: `surf:${spot.id}:${good.map((d) => d.date).join(',')}`,
         kind: 'surf',
         hash: `surf/${spot.id}`,
-        title: `${spot.name}: waves fit you ${good.map((d) => (d.date === date ? 'today' : dayName(d.date))).join(', ')}`,
-        detail: `${first.date === date ? 'Today' : dayName(first.date)}: ${first.ft} ft @ ${first.s} s${first.wind ? `, ${first.wind.mph} mph ${first.wind.relative}` : ''}`,
+        title: `${spot.name}: waves fit you ${good.map(when).join(', ')}`,
+        detail: `${first.date === localToday ? 'Today' : dayName(first.date)}: ${first.ft} ft @ ${first.s} s${first.wind ? `, ${first.wind.mph} mph ${first.wind.relative}` : ''}`,
       });
     }
   }

@@ -26,11 +26,11 @@ const FAQ = [
       'Beaches get extra points when the waves fit your level and board today, and for being closer. Places on another pass, farther than you’ll travel, closed to snowboards (if you only snowboard) or in water colder than you like are left out.',
     ]],
     ['How do I keep my favorite spots at the top?', [
-      'Tap the ☆ next to any mountain or beach in the list to pin it. You can pin up to 4 on each tab; they show as cards under “My mountains” or “My beaches”.',
+      'Open “All mountains” or “All beaches” (or tap an empty “+ Pin” tile) and tap the ☆ next to a place. You can pin up to 4 on each tab; they show as small tiles under “My mountains” or “My beaches”.',
       'If all 4 are taken, you’ll be asked which one to replace. Your pins are saved on this device.',
     ]],
     ['How do I see more detail about a place?', [
-      'Tap its name in the list, its card’s Details link, or its icon on the map. The detail view shows why it got its rating, the forecast, charts and where the data comes from.',
+      'Tap its tile, its name in the list, or its icon on the map. The detail view shows why it got its rating, the forecast, charts and where the data comes from.',
       'Close it with ✕, the Back button, or by tapping outside it.',
     ]],
     ['How do I use the map?', [
@@ -84,7 +84,7 @@ const FAQ = [
   ]],
   ['Notifications', [
     ['How do alerts work?', [
-      'On the Notifications tab, choose snow alerts (how many inches, for which mountains) and surf alerts (waves that fit your level and board, at which beaches). With “… I choose”, tap Choose to pick from a list you can search and filter by area, pass, chosen/pinned/near you, and sort A–Z or closest first. “Near me” covers every place within your travel distance from your Rider Profile.',
+      'On the Notifications tab, “What to alert me about” has one line each for snow and surf; tap Change to pick how many inches and which mountains or beaches. With “… I choose”, tap Choose to pick from a list you can search and filter by area, pass, chosen/pinned/near you, and sort A–Z or closest first. “Near me” covers every place within your travel distance from your Rider Profile.',
       'Anything that matches is listed there, and the Notifications tab shows a red badge with the count.',
     ]],
     ['Can I get alerts by email?', [
@@ -95,8 +95,8 @@ const FAQ = [
       'By email, yes (above). The app can also show a notification on this device for anything new each time you open it. Turn on “Notify me on this device” and allow notifications; you’ll get one right away so you know it works.',
       'On iPhone, notifications only work in the Home Screen app: in Safari tap Share → Add to Home Screen, open Snow and Surf from your Home Screen, and turn it on there.',
     ]],
-    ['I chose mountains but they aren’t in “Heads up now”', [
-      '“Heads up now” only lists places that match today (for example, 4" or more of snow coming). Open “Watching” just below it to see every mountain and beach your alerts cover, with how each looks today.',
+    ['I chose mountains but they aren’t under “Today”', [
+      '“Today” only lists places that match right now (for example, 4" or more of snow coming). Tap “Watching …” just below it to see every mountain and beach your alerts cover, with how each looks today.',
     ]],
   ]],
   ['Data and privacy', [

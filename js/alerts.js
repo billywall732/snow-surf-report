@@ -162,21 +162,58 @@ function button(id, text, onClick, cls = 'action-button') {
   return b;
 }
 
-// The "Email alerts" card: not set up / signed out / signed in
-function emailCard() {
-  const parts = [h('h3', { id: 'h-email' }, 'Email alerts')];
+// ---------- Layout ----------
+// Three cards, so the page reads top to bottom:
+//   1. Today: what matches right now (and, folded away, everything you watch)
+//   2. What to alert me about: snow and surf, one line each, with "Change"
+//   3. How you'll hear about it: in the app, by email, on this device
+
+const editing = { snow: false, surf: false }; // which "Change" panels are open
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+// "your 4 pinned mountains" / "3 mountains you chose" / "mountains within 300 mi of Los Angeles, CA"
+function scopeText(kind, settings, rider) {
+  const [one, many] = NOUN[kind];
+  const scope = settings[`${kind}Scope`];
+  if (scope === 'chosen') return plural(settings[`${kind}Watch`].length, `${one} you chose`, `${many} you chose`);
+  if (scope === 'nearby') {
+    if (!rider.home) return `${many} near you (set your home in your Rider Profile)`;
+    return `${many} ${rider.radiusMi ? `within ${rider.radiusMi} mi of` : 'from'} ${rider.home.label}`;
+  }
+  return `your ${plural(pins()[kind].length, `pinned ${one}`, `pinned ${many}`)}`;
+}
+
+// One alert rule: on/off, a one-line summary, and a "Change" panel with the details
+function ruleRow(kind, { icon, title, on, onToggle, summary, warn, editor }) {
+  const change = button(`edit-${kind}`, editing[kind] ? 'Done' : 'Change', () => { editing[kind] = !editing[kind]; refresh(); }, 'text-button');
+  change.setAttribute('aria-expanded', String(editing[kind]));
+  change.setAttribute('aria-controls', `editor-${kind}`);
+  const panel = h('div', { class: 'rule-editor', id: `editor-${kind}` }, editor);
+  panel.hidden = !editing[kind];
+  return h('div', { class: on ? 'rule' : 'rule is-off' },
+    h('div', { class: 'rule-line' },
+      h('span', { class: 'rule-icon', 'aria-hidden': 'true' }, icon),
+      toggle(`alerts-${kind}-on`, title, on, onToggle),
+      change),
+    h('p', { class: warn && on ? 'rule-summary warn' : 'rule-summary' }, on ? summary : 'Off'),
+    panel);
+}
+
+// Email: not available yet / sign in / signed in
+function emailChannel() {
+  const parts = [];
   if (!isConfigured) {
-    parts.push(h('p', { class: 'fine' }, 'Email alerts aren’t switched on for this site yet.'));
+    parts.push(h('p', { class: 'channel-note' }, 'Coming soon: a morning email when something matches.'));
   } else if (!account.user) {
     parts.push(
-      h('p', {}, 'Sign in with Google to get a morning email when something matches. Your settings will save to your account, so you can change them here any time, on any device.'),
+      h('p', { class: 'channel-note' }, 'A morning email when something matches. Signing in also saves your settings to your account.'),
       button('sign-in', account.busy ? 'Signing in…' : 'Sign in with Google', () => signIn(), 'action-button google'),
-      h('p', { class: 'fine' }, 'We only use your name and email address, to send your alerts. We never see your Gmail.'));
+      h('p', { class: 'fine' }, 'We only use your name and email address. We never see your Gmail.'));
   } else {
     parts.push(
-      h('p', {}, 'Signed in as ', h('strong', {}, account.user.email)),
-      toggle('email-on', 'Email me a morning summary when something matches', account.emailAlerts, (on) => setEmailAlerts(on)),
-      h('p', { class: 'fine' }, 'Emails go out around 5 AM Pacific, only on days something matches. Your settings save to your account automatically.'),
+      toggle('email-on', 'Email me a morning summary', account.emailAlerts, (on) => setEmailAlerts(on)),
+      h('p', { class: 'channel-note' }, 'Around 5 AM Pacific, only on days something matches. Signed in as ', h('strong', {}, account.user.email), '.'),
       h('div', { class: 'account-actions' },
         button('sign-out', 'Sign out', () => signOut(), 'text-button'),
         button('delete-data', 'Delete my saved data', async () => {
@@ -185,7 +222,7 @@ function emailCard() {
   }
   if (account.busy && account.user) parts.push(h('p', { class: 'fine' }, 'Loading your saved settings…'));
   if (account.error) parts.push(h('p', { class: 'fine warn', role: 'alert' }, account.error));
-  return h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-email' }, parts);
+  return parts;
 }
 
 function render() {
@@ -193,32 +230,70 @@ function render() {
   // Change a setting: save on this device, then (if signed in) to your account
   const update = (changes) => { saveSettings({ ...loadSettings(), ...changes }); refresh(); saveSoon(); };
   const alerts = currentAlerts(settings);
-
-  const list = headsUpList(alerts);
-
   const rider = loadRider();
-  const surfNote = !hasProfile()
-    ? h('p', { class: 'fine warn' }, 'Pick a level or board in your Rider Profile to get surf alerts. ', profileLink())
-    : h('p', { class: 'fine' }, `Waves that fit ${/^[aeiou]/i.test(profileText()) ? 'an' : 'a'} ${profileText()} in the next 3 days (at ${report.sections.surf.sessionHour ?? 7} AM)${rider.surf.minWaterF ? `, in water ${rider.surf.minWaterF}°F or warmer` : ''}.`);
-  // "Near me" needs a home in the Rider Profile
-  const nearNote = (scope, extra = '') => (scope === 'nearby'
-    ? h('p', { class: 'fine' + (rider.home ? '' : ' warn') }, rider.home
-      ? `Everywhere ${rider.radiusMi ? `within ${rider.radiusMi} mi of ` : 'from '}${rider.home.label}${extra}. `
-      : 'Set where you ride from in your Rider Profile to use this. ', profileLink())
-    : null);
-  const scopes = (many) => [['pinned', `My pinned ${many}`], ['chosen', `${many[0].toUpperCase()}${many.slice(1)} I choose`], ['nearby', `${many[0].toUpperCase()}${many.slice(1)} near me`]];
 
+  // "Near me" needs a home in the Rider Profile
+  const nearNote = (scope, extra = '') => {
+    if (scope !== 'nearby') return null;
+    if (!rider.home) return h('p', { class: 'fine warn' }, 'Set where you ride from in your Rider Profile to use this. ', profileLink());
+    const where = rider.radiusMi ? `within ${rider.radiusMi} mi of ` : 'from ';
+    return h('p', { class: 'fine' }, `Everywhere ${where}${rider.home.label}${extra}. `, profileLink());
+  };
+  const cap = (x) => x[0].toUpperCase() + x.slice(1);
+  const scopes = (many) => [['pinned', `My pinned ${many}`], ['chosen', `${cap(many)} I choose`], ['nearby', `${cap(many)} near me`]];
+  const boardOnly = rider.ski.ride.length === 1 && rider.ski.ride[0] === 'snowboard';
+  const passNote = rider.ski.passes.length ? ` on the ${rider.ski.passes.join(' or ')} Pass` : '';
+  const article = /^[aeiou]/i.test(profileText()) ? 'an' : 'a';
+  const waterNote = rider.surf.minWaterF ? `, in water ${rider.surf.minWaterF}°F or warmer` : '';
+
+  // ---------- 2. The rules ----------
+  const snowRule = ruleRow('snow', {
+    icon: '⛰',
+    title: 'Snow alerts',
+    on: settings.snowOn,
+    onToggle: (on) => update({ snowOn: on }),
+    summary: `${settings.snowInches}"+ of snow in the next 3 days, at ${scopeText('snow', settings, rider)}`,
+    editor: [
+      h('div', { class: 'list-controls' },
+        select('alerts-snow-inches', 'At least', [2, 4, 6, 10, 12].map((n) => [n, `${n}" in the next 3 days`]), settings.snowInches, (v) => update({ snowInches: Number(v) })),
+        select('alerts-snow-scope', 'For', scopes('mountains'), scopeValue(settings.snowScope), (v) => update({ snowScope: v }))),
+      nearNote(settings.snowScope, passNote),
+      settings.snowScope === 'chosen' ? chooser('snow') : null,
+      boardOnly ? h('p', { class: 'fine' }, 'You snowboard, so skiers-only mountains are left out.') : null,
+    ],
+  });
+  const surfRule = ruleRow('surf', {
+    icon: '🌊',
+    title: 'Surf alerts',
+    on: settings.surfOn,
+    onToggle: (on) => update({ surfOn: on }),
+    warn: !hasProfile(),
+    summary: hasProfile()
+      ? `Waves that fit you (${profileText()}), at ${scopeText('surf', settings, rider)}`
+      : ['Pick your level and board to get surf alerts. ', profileLink()],
+    editor: [
+      h('p', { class: 'fine' }, hasProfile()
+        ? `Waves that fit ${article} ${profileText()} in the next 3 days (at ${report.sections.surf.sessionHour ?? 7} AM)${waterNote}.`
+        : 'Your level and board are set in your Rider Profile.'),
+      h('div', { class: 'list-controls' },
+        select('alerts-surf-scope', 'For', scopes('beaches'), scopeValue(settings.surfScope), (v) => update({ surfScope: v }))),
+      nearNote(settings.surfScope),
+      settings.surfScope === 'chosen' ? chooser('surf') : null,
+    ],
+  });
+
+  // ---------- 3. This device ----------
   let deviceStatus = deviceMsg;
   if (!canNotify()) {
     deviceStatus = /iPhone|iPad/.test(navigator.userAgent)
-      ? 'On iPhone, notifications only work in the app version: tap Share → Add to Home Screen, open Snow and Surf from your Home Screen, and turn this on there.'
+      ? 'On iPhone, this works in the Home Screen app: tap Share → Add to Home Screen, then turn it on there.'
       : 'This browser can’t show notifications.';
   } else if (Notification.permission === 'denied') {
-    deviceStatus = 'Notifications are blocked for this site. Allow them in your browser’s site settings, then try again.';
-  } else if (!deviceStatus && settings.deviceOn && Notification.permission === 'granted') {
-    deviceStatus = 'On: you’ll get a notification for anything new each time you open the app.';
+    deviceStatus = 'Blocked for this site. Allow notifications in your browser’s site settings, then try again.';
+  } else if (!deviceStatus) {
+    deviceStatus = 'A notification for anything new each time you open the app.';
   }
-  const deviceToggle = toggle('alerts-device', 'Notify me on this device when I open the app and something new matches', settings.deviceOn && canNotify(), async (on) => {
+  const deviceToggle = toggle('alerts-device', 'Notify me on this device', settings.deviceOn && canNotify(), async (on) => {
     deviceMsg = '';
     if (on && canNotify() && Notification.permission === 'default') await Notification.requestPermission();
     const granted = on && canNotify() && Notification.permission === 'granted';
@@ -227,7 +302,7 @@ function render() {
       // Show something right away, so you know it works
       const sent = await notifyDevice();
       if (sent) {
-        deviceMsg = `On: we just sent ${Math.min(sent, 3)} notification${sent === 1 ? '' : 's'} for what matches now.`;
+        deviceMsg = `On: we just sent ${plural(Math.min(sent, 3), 'notification', 'notifications')} for what matches now.`;
       } else {
         const shown = await showNotification('Snow and Surf notifications are on', 'You’ll get a notification here when something new matches your alerts.', 'alerts', 'ssr-test');
         deviceMsg = shown ? 'On: we just sent a test notification.' : 'This browser blocked the notification. On a phone, try the Home Screen app.';
@@ -237,40 +312,34 @@ function render() {
   });
   if (!canNotify()) deviceToggle.querySelector('input').disabled = true;
 
+  const channel = (icon, title, ...body) => h('li', { class: 'channel' },
+    h('span', { class: 'rule-icon', 'aria-hidden': 'true' }, icon),
+    h('div', { class: 'channel-body' }, h('p', { class: 'channel-title' }, title), body));
+
   panel().replaceChildren(
     h('div', { class: 'section-head' },
       h('h2', {}, 'Notifications'),
-      h('p', { class: 'fine' }, 'A heads-up about snow coming to your mountains and waves that fit you.')),
+      h('p', { class: 'fine' }, 'What matches today, what to watch for, and how you’ll hear about it.')),
 
-    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-heads-up' },
-      h('h3', { id: 'h-heads-up' }, 'Heads up now'),
-      h('div', { id: 'heads-up-list' }, list)),
+    // 1. Today
+    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-today' },
+      h('div', { class: 'card-title-row' },
+        h('h3', { id: 'h-today' }, 'Today'),
+        h('span', { class: alerts.length ? 'count-pill has-alerts' : 'count-pill' }, alerts.length ? plural(alerts.length, 'match', 'matches') : 'All quiet')),
+      h('div', { id: 'heads-up-list' }, headsUpList(alerts))),
 
-    emailCard(),
+    // 2. What to alert me about
+    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-rules' },
+      h('h3', { id: 'h-rules' }, 'What to alert me about'),
+      h('div', { class: 'rules' }, snowRule, surfRule)),
 
-    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-snow-alerts' },
-      h('h3', { id: 'h-snow-alerts' }, 'Snow alerts'),
-      toggle('alerts-snow-on', 'Tell me when snow is coming', settings.snowOn, (on) => update({ snowOn: on })),
-      h('div', { class: 'list-controls' },
-        select('alerts-snow-inches', 'At least', [2, 4, 6, 10, 12].map((n) => [n, `${n}" in the next 3 days`]), settings.snowInches, (v) => update({ snowInches: Number(v) })),
-        select('alerts-snow-scope', 'For', scopes('mountains'), scopeValue(settings.snowScope), (v) => update({ snowScope: v }))),
-      nearNote(settings.snowScope, rider.ski.passes.length ? ` on the ${rider.ski.passes.join(' or ')} Pass` : ''),
-      settings.snowScope === 'chosen' ? chooser('snow') : null,
-      rider.ski.ride.length === 1 && rider.ski.ride[0] === 'snowboard' ? h('p', { class: 'fine' }, 'You snowboard, so skiers-only mountains are left out.') : null),
-
-    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-surf-alerts' },
-      h('h3', { id: 'h-surf-alerts' }, 'Surf alerts'),
-      toggle('alerts-surf-on', 'Tell me when waves fit my level and board', settings.surfOn, (on) => update({ surfOn: on })),
-      surfNote,
-      h('div', { class: 'list-controls' },
-        select('alerts-surf-scope', 'For', scopes('beaches'), scopeValue(settings.surfScope), (v) => update({ surfScope: v }))),
-      nearNote(settings.surfScope),
-      settings.surfScope === 'chosen' ? chooser('surf') : null),
-
-    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-device' },
-      h('h3', { id: 'h-device' }, 'On this device'),
-      deviceToggle,
-      deviceStatus ? h('p', { class: 'fine' }, deviceStatus) : null),
+    // 3. How you'll hear about it
+    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-channels' },
+      h('h3', { id: 'h-channels' }, 'How you’ll hear about it'),
+      h('ul', { class: 'channels' },
+        channel('●', 'In the app', h('p', { class: 'channel-note' }, 'Always on. Matches show under Today, with a count on the Notifications tab.')),
+        channel('✉', 'Email', emailChannel()),
+        channel('▣', 'This device', deviceToggle, h('p', { class: 'channel-note' }, deviceStatus)))),
   );
 }
 
@@ -436,12 +505,11 @@ function watchingList() {
       return h('li', {}, b);
     })),
   ] : null);
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const box = h('details', { class: 'watching' },
     h('summary', {}, `Watching ${plural(w.snow.length, 'mountain', 'mountains')} and ${plural(w.surf.length, 'beach', 'beaches')}`),
     group('snow', 'Mountains'),
     group('surf', 'Beaches'));
-  box.open = watchingOpen ?? total <= 10;
+  box.open = watchingOpen ?? false;
   box.addEventListener('toggle', () => { watchingOpen = box.open; });
   return box;
 }

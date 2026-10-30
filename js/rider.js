@@ -80,27 +80,46 @@ function picksList(kind, openDetail, count = 3) {
     ] : null);
 }
 
-function recsContent(kind, openDetail) {
+// Compact by default: your #1 pick and a "See all picks" button that opens the
+// full list (with reasons and "Worth a longer trip") right in the card.
+const recsOpen = { snow: false, surf: false };
+
+function recsContent(kind, openDetail, redraw) {
   const rider = loadRider();
-  const title = h('h3', { id: `${kind}-h-recs` }, 'Recommended for you');
+  const title = h('h3', { id: `${kind}-h-recs`, class: 'kicker' }, 'Recommended for you');
   const setUp = kind === 'snow' ? hasSkiRider(rider) : surfSetUp(rider);
-  const edit = h('button', { type: 'button', class: 'text-button' }, setUp ? 'Edit my Rider Profile' : 'Set up my Rider Profile');
+  const edit = h('button', { type: 'button', class: 'text-button' }, setUp ? 'Edit my Rider Profile' : 'Set up my profile →');
   edit.addEventListener('click', openProfile);
   if (!setUp) {
-    return [title, h('p', { class: 'fine' }, kind === 'snow'
-      ? 'Tell us if you ski or snowboard, your level, your pass and where you’re coming from, and we’ll pick mountains for you.'
-      : 'Tell us your level, your board and where you’re coming from, and we’ll pick beaches for you.'), edit];
+    return [title, h('p', { class: 'recs-setup' }, kind === 'snow' ? 'Mountain picks made for how you ride.' : 'Beach picks made for how you surf.'), edit];
+  }
+  const { picks, farther } = recommend(kind, state.report, rider, loadProfile(), 3);
+  const top = picks[0];
+  const topButton = top ? h('button', { type: 'button', class: 'recs-top' },
+    h('span', { class: 'best-bet-name' }, top.item.name),
+    h('span', { class: 'recs-top-why' }, `today ${top.item.rating.score ?? '–'}/5 · ${top.reasons.filter(Boolean)[0] ?? place(top.item)}`)) : null;
+  topButton?.addEventListener('click', () => openDetail(top.item.id));
+  const total = picks.length + farther.length;
+  const toggle = total > 1 ? h('button', { type: 'button', class: 'text-button recs-toggle', 'aria-expanded': String(recsOpen[kind]) },
+    recsOpen[kind] ? 'Hide picks' : `See all ${total} picks`) : null;
+  toggle?.addEventListener('click', () => { recsOpen[kind] = !recsOpen[kind]; redraw(); });
+  if (!recsOpen[kind]) {
+    return [title, topButton ?? h('p', { class: 'recs-setup' }, 'Nothing fits your profile today.'), toggle ?? edit];
   }
   const who = kind === 'snow'
     ? skiText(rider)
     : [hasProfile() ? profileText() : '', rider.surf.minWaterF ? `water ${rider.surf.minWaterF}°F+` : ''].filter(Boolean).join(' · ');
-  return [title, h('p', { class: 'fine' }, [who, homeText(rider)].filter(Boolean).join(' · ')), picksList(kind, openDetail), edit];
+  return [title, h('p', { class: 'fine' }, [who, homeText(rider)].filter(Boolean).join(' · ')), picksList(kind, openDetail), h('div', { class: 'recs-actions' }, toggle, edit)];
 }
 
-// A card that keeps itself up to date when your profile changes
+// A card that keeps itself up to date when your profile changes. Opened, it
+// widens to the full row (CSS: .recs.is-open).
 export function recommendCard(kind, openDetail) {
   const card = h('section', { class: 'card recs', 'aria-labelledby': `${kind}-h-recs` });
-  const draw = () => card.replaceChildren(...recsContent(kind, openDetail));
+  const draw = () => {
+    card.classList.toggle('is-open', recsOpen[kind]);
+    card.replaceChildren(...recsContent(kind, openDetail, draw));
+  };
   draw();
   onRiderChange(draw);
   if (kind === 'surf') onProfileChange(draw);

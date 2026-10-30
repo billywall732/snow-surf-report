@@ -7,8 +7,8 @@ import { loadRider, openProfile, recommendCard } from './rider.js';
 import { hasSkiRider, skiFit, skiText } from './recommend.js';
 import { layersFor } from './gear.js';
 import {
-  add, bestBetCard, chartSlot, dataTable, formatDay, formatShortDate,
-  h, num, ok, rating, sourceName, stat, unavailable,
+  bestBetCard, chartSlot, dataTable, formatDay, formatShortDate,
+  h, num, ok, sourceName, stat, unavailable,
 } from './ui.js';
 
 const AREAS = ['West', 'Pacific NW', 'Rockies', 'Midwest', 'East'];
@@ -83,7 +83,7 @@ export function renderSnow(section) {
       ` · Next 3 days ${num(ok(r.forecast) ? r.forecast.data.next72hIn : null, '"')}`,
       ok(r.forecast) ? ` · ${r.forecast.data.days[0].tempHigh}°/${r.forecast.data.days[0].tempLow}°F` : '',
     ].join(''),
-    card: resortCard,
+    tile: snowTile,
     detailPill: (r) => seasonPill(r.season),
     detailButtons: (r) => notifyButton('snow', r),
     detailBody,
@@ -144,38 +144,27 @@ function depthChart(r) {
   ];
 }
 
-// A pinned mountain's card
-function resortCard(r, ui) {
-  const obs = r.observed;
-  const fc = r.forecast;
-  const card = h('article', { class: `card ${passClass(r)}`, 'aria-labelledby': `h-${r.id}` },
-    h('header', { class: 'card-head' },
-      h('div', {},
-        h('h3', { id: `h-${r.id}` }, r.name),
-        h('p', { class: 'region' }, `${r.city ? `${r.city}, ` : ''}${r.region} · ${r.area ?? ''} `, passTags(r))),
-      seasonPill(r.season)),
-    rating(r.rating));
+// A pinned mountain's tile: two numbers and the one thing worth knowing today
+// (snow on the way, fresh snow, opening day, how cold it feels). Details has the rest.
+function snowTile(r) {
+  return {
+    stats: [
+      `48h ${num(ok(r.observed) ? r.observed.data.newSnow.h48 : null, '"')}`,
+      `Next 3d ${num(ok(r.forecast) ? r.forecast.data.next72hIn : null, '"')}`,
+    ],
+    insight: snowInsight(r),
+  };
+}
 
-  add(card, ok(obs) ? snowStats(obs) : unavailable('Snow depth', obs));
-
-  if (ok(fc)) {
-    add(card,
-      h('h4', {}, 'Forecast'),
-      h('ol', { class: 'forecast' }, fc.data.days.slice(0, 4).map((d, i) =>
-        h('li', {},
-          h('span', { class: 'fc-day' }, formatDay(d.date, i)),
-          h('span', { class: 'fc-snow' }, `${d.snowfall > 0 ? d.snowfall : 0}"`, h('span', { class: 'visually-hidden' }, ' snow')),
-          h('span', { class: 'fc-temp' }, `${d.tempHigh}° / ${d.tempLow}°`),
-          h('span', { class: 'fc-wind' }, h('span', { class: 'fc-wind-label' }, 'Wind '), `${d.windMax} mph`)))));
-  } else {
-    add(card, unavailable('Forecast', fc));
-  }
-
-  if (ok(fc)) add(card, wearSummary(fc.data.days[0]));
-  // (On phones the chart is left out of the card to keep it short; Details has it.)
-  if (ok(obs) && obs.data.depthHistory.length > 1) add(card, h('div', { class: 'card-extra' }, depthChart(r)));
-  add(card, h('div', { class: 'card-actions' }, ui.detailsButton(r), ui.pinButton(r, { withText: true })));
-  return card;
+function snowInsight(r) {
+  const parts = [];
+  if (coming(r) >= 4) parts.push(`❄ ${coming(r)}" on the way`);
+  else if (fresh(r) >= 4) parts.push(`Fresh: ${fresh(r)}" in 48 hours`);
+  else if (r.season.status === 'closed' && r.season.opensOn) parts.push(`Opens ${formatShortDate(r.season.opensOn)}`);
+  const w = ok(r.forecast) ? layersFor(r.forecast.data.days[0]) : null;
+  if (w) parts.push(`feels ${w.low}–${w.high}°F`);
+  const text = parts.join(' · ') || r.rating.reason;
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function detailBody(r) {
@@ -233,17 +222,6 @@ function forYou(r) {
       blockers.map((x) => row(false, x)),
       reasons.filter(Boolean).map((x) => row(!bad.test(x), x))),
   ];
-}
-
-// One line for a card: "What to wear: feels like 18–27°F on the hill · midweight base, fleece..., shell jacket"
-function wearSummary(day) {
-  const w = layersFor(day);
-  if (!w) return null;
-  const short = (x) => (x === 'No mid layer' ? '' : x.replace(/ layer$/, '').toLowerCase());
-  return h('p', { class: 'wear-line' },
-    h('strong', {}, 'What to wear: '),
-    `${w.feelsLike ? 'feels like ' : ''}${w.low}–${w.high}°F on the hill · `,
-    [w.layers.base, w.layers.mid, w.layers.outer].map(short).filter(Boolean).join(', '));
 }
 
 // The detail view's "What to wear today" section
