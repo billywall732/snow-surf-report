@@ -1491,3 +1491,21 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 .watching summary::-webkit-details-marker { display: none; }
 .watching summary::after { content: 'Show'; margin-left: auto; font-size: 13px; color: var(--accent); }
 .watching[open] summary::after { content: 'Hide'; }
+
+/* Where alert emails go, and the note after a confirmation link */
+.email-form { display: grid; gap: 6px; margin: 10px 0 4px; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.email-form label { font-size: 14px; font-weight: 650; }
+.email-row { display: flex; gap: 8px; }
+.email-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 16px; /* 16px stops iPhone zooming in on the field */
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: var(--radius-sm);
+}
+.confirm-msg { margin: 0 0 16px; font-weight: 600; border-left: 4px solid var(--accent); }

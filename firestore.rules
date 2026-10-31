@@ -3,8 +3,8 @@
 //
 // Each person's settings live at users/<their id>. Only that person, signed in,
 // can read, change or delete their own record, and the email saved must be their
-// real Google email. (The GitHub Action uses a service account, which is allowed
-// to read everyone's record to send emails; these rules don't apply to it.)
+// real Google email. verifiedEmails and lastSentDate are written only by the
+// GitHub Action, which uses a service account (these rules don't apply to it).
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -13,7 +13,18 @@ service cloud.firestore {
       allow create, update: if request.auth != null
         && request.auth.uid == uid
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.keys().hasOnly(['email', 'name', 'emailAlerts', 'settings', 'profile', 'pins', 'rider', 'updatedAt', 'lastSentDate']);
+        && request.resource.data.keys().hasOnly(['email', 'name', 'emailAlerts', 'alertEmail', 'pushSubs', 'settings', 'profile', 'pins', 'rider', 'updatedAt', 'verifiedEmails', 'lastSentDate'])
+        && !request.resource.data.diff(resource == null ? {} : resource.data).affectedKeys().hasAny(['verifiedEmails', 'lastSentDate'])
+        && (!('alertEmail' in request.resource.data) || (request.resource.data.alertEmail is string && request.resource.data.alertEmail.size() <= 254))
+        && (!('pushSubs' in request.resource.data) || request.resource.data.pushSubs.size() <= 10);
+    }
+    // A confirmation link was clicked. Anyone with the link may record its code (no
+    // sign-in needed); only the Action can read these. Codes are 48 random letters
+    // and numbers, so they can't be guessed.
+    match /confirmations/{code} {
+      allow create: if code.matches('[a-f0-9]{48}')
+        && request.resource.data.keys().hasOnly(['at'])
+        && request.resource.data.at == request.time;
     }
     // Everything else is closed
     match /{document=**} {

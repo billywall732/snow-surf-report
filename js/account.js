@@ -1,6 +1,6 @@
 // "Sign in with Google" + saving your alert preferences to your account, so the
-// morning email (sent by the GitHub Action) knows what to send you, and so your
-// settings follow you to other devices.
+// morning email and phone notifications (sent by the GitHub Action) know what to
+// send you, and so your settings follow you to other devices.
 //
 // Uses Firebase (Google's free app backend):
 //   - Firebase Authentication does the Google sign-in. We only learn your name and
@@ -20,6 +20,8 @@ export const isConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.proj
 export const account = {
   user: null, // { uid, email, name } when signed in
   emailAlerts: false, // "email me a morning summary"
+  alertEmail: '', // where emails go, if not your Google address
+  verifiedEmails: [], // other addresses you've confirmed (only the Action can add to this)
   busy: false, // signing in / loading
   error: '',
 };
@@ -104,6 +106,53 @@ export async function deleteMyData() {
   await signOut();
 }
 
+// Where alert emails go. Your Google address works right away; another address
+// gets a confirmation link first (sent by the hourly Action), so nobody can sign
+// up someone else. '' means "my Google address".
+export const emailTarget = () => account.alertEmail || account.user?.email || '';
+export const emailConfirmed = () => !account.alertEmail
+  || account.alertEmail === account.user?.email?.toLowerCase()
+  || account.verifiedEmails.includes(account.alertEmail);
+
+export async function setAlertEmail(address) {
+  if (!account.user || !fb) return;
+  const clean = address.trim().toLowerCase();
+  account.alertEmail = clean === account.user.email.toLowerCase() ? '' : clean;
+  changed();
+  await write({ alertEmail: account.alertEmail });
+}
+
+// This device's push subscription (morning notifications even when the app is
+// closed). Saved under pushSubs.<device id>; null removes it.
+export async function savePushSub(deviceId, sub) {
+  if (!account.user || !fb) return false;
+  return write({ pushSubs: { [deviceId]: sub ?? fb.store.deleteField() } });
+}
+
+// The link in a confirmation email opens #confirm/<code>. Recording the code is
+// all it takes: the next hourly run sees it and starts sending to that address.
+// Works without signing in (the email may open in a different browser).
+export async function confirmEmail(code) {
+  try {
+    const { store, db } = await loadFirebase();
+    await store.setDoc(store.doc(db, 'confirmations', code), { at: store.serverTimestamp() });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function write(fields) {
+  try {
+    await fb.store.setDoc(fb.store.doc(fb.db, 'users', account.user.uid), { email: account.user.email, ...fields }, { merge: true });
+    return true;
+  } catch {
+    account.error = 'Couldn’t save that to your account. Please try again.';
+    changed();
+    return false;
+  }
+}
+
 export function setEmailAlerts(on) {
   account.emailAlerts = on;
   changed();
@@ -144,7 +193,7 @@ async function handleUser(u) {
   } catch { /* ignore */ }
 
   if (!u) {
-    Object.assign(account, { user: null, emailAlerts: false, busy: false });
+    Object.assign(account, { user: null, emailAlerts: false, alertEmail: '', verifiedEmails: [], busy: false });
     changed();
     return;
   }
@@ -157,6 +206,8 @@ async function handleUser(u) {
       // Your account already has settings: use them on this device too
       const data = snap.data();
       account.emailAlerts = Boolean(data.emailAlerts);
+      account.alertEmail = data.alertEmail ?? '';
+      account.verifiedEmails = data.verifiedEmails ?? [];
       applying = true;
       hooks.applyPrefs({ settings: data.settings, profile: data.profile, pins: data.pins, rider: data.rider });
       applying = false;

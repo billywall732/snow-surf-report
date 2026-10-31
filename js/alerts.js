@@ -6,15 +6,19 @@
 //   - In the app: listed here, with a red badge on the Notifications tab.
 //   - On this device: optionally a notification for anything new when you open the
 //     app (browsers that support it; on iPhone only after "Add to Home Screen").
+//     Signed in, it also gets a morning "push" notification from the GitHub Action,
+//     even when the app is closed.
 //   - By email: sign in with Google; your settings save to your account and the
-//     morning GitHub Action emails you a summary when something matches.
+//     morning GitHub Action emails you a summary when something matches. You can
+//     send it to another address once you confirm it.
 // Without signing in, settings are saved in this browser only.
 import { h } from './ui.js';
 import { computeAlerts, DEFAULT_SETTINGS, watching } from './alert-rules.js';
 import { hasProfile, loadProfile, onProfileChange, profileText, saveProfile } from './skill.js';
 import { loadRider, onRiderChange, openProfile, saveRider } from './rider.js';
 import { distanceMi, normalizeRider, withinReach } from './recommend.js';
-import { account, deleteMyData, initAccount, isConfigured, onAccountChange, saveSoon, setEmailAlerts, signIn, signOut } from './account.js';
+import { account, confirmEmail, deleteMyData, emailConfirmed, emailTarget, initAccount, isConfigured, onAccountChange, savePushSub, saveSoon, setAlertEmail, setEmailAlerts, signIn, signOut } from './account.js';
+import { vapidPublicKey } from './firebase-config.js';
 
 const SETTINGS_KEY = 'ssr-alerts';
 const LOCAL_ONLY = { deviceOn: false, seen: [] }; // device notifications: never synced
@@ -57,7 +61,21 @@ export function renderAlerts(rep, tabs) {
   surfTab.onPinsChange = changedAndSave;
   onProfileChange(changedAndSave);
   onRiderChange(changedAndSave);
-  onAccountChange(refresh);
+  onAccountChange(() => { syncPush(); refresh(); });
+
+  // A link from a confirmation email: #confirm/<code>
+  const confirm = location.hash.match(/^#confirm\/([a-f0-9]{48})$/);
+  if (confirm) {
+    history.replaceState(null, '', '#alerts');
+    document.getElementById('tab-alerts').click();
+    confirmMsg = 'Confirming your email address…';
+    confirmEmail(confirm[1]).then((ok) => {
+      confirmMsg = ok
+        ? 'Thanks, your email address is confirmed. Alert emails will start going there within the hour.'
+        : 'That confirmation link didn’t work. Check your connection and open it again.';
+      refresh();
+    });
+  }
 
   initAccount({
     // What gets saved to your account
@@ -127,6 +145,57 @@ async function showNotification(title, body, hash, tag) {
   } catch {
     return false; // this browser only allows notifications from an installed app
   }
+}
+
+// ---------- Morning push notifications (signed in) ----------
+// The GitHub Action sends these through the browser's push service, so they arrive
+// even when the app is closed. Each device saves its own "subscription" (an address
+// only the push service can use) to your account.
+
+const canPush = () => isConfigured && Boolean(vapidPublicKey) && 'PushManager' in window && 'serviceWorker' in navigator;
+
+function deviceId() {
+  let id = null;
+  try { id = localStorage.getItem('ssr-device-id'); } catch { /* ignore */ }
+  if (!id) {
+    id = `d${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
+    try { localStorage.setItem('ssr-device-id', id); } catch { /* ignore */ }
+  }
+  return id;
+}
+
+// The push service wants the public key as bytes
+function keyBytes(base64url) {
+  const b64 = base64url.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (base64url.length % 4)) % 4);
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+}
+
+const deviceLabel = () => (/iPhone|iPad/.test(navigator.userAgent) ? 'iPhone' : /Android/.test(navigator.userAgent) ? 'Android' : 'Computer');
+
+async function setPush(on) {
+  const reg = await getWorker();
+  if (!reg?.pushManager) return false;
+  try {
+    let sub = await reg.pushManager.getSubscription();
+    if (!on) {
+      await sub?.unsubscribe();
+      return account.user ? savePushSub(deviceId(), null) : true;
+    }
+    sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(vapidPublicKey) });
+    return savePushSub(deviceId(), { ...sub.toJSON(), device: deviceLabel(), at: new Date().toISOString() });
+  } catch {
+    return false; // e.g. iPhone outside the Home Screen app
+  }
+}
+
+// After signing in (or loading the page signed in) with device notifications on,
+// make sure this device is registered for morning notifications.
+let pushSynced = false;
+async function syncPush() {
+  if (!account.user) { pushSynced = false; return; }
+  if (pushSynced || account.busy || !canPush() || !loadSettings().deviceOn || Notification.permission !== 'granted') return;
+  pushSynced = true;
+  await setPush(true);
 }
 
 // Show a device notification for alerts you haven't been notified about yet.
@@ -200,6 +269,26 @@ function ruleRow(kind, { icon, title, on, onToggle, summary, warn, editor }) {
     panel);
 }
 
+// Change where alert emails go
+let emailEditing = false;
+function emailForm(google) {
+  const input = h('input', { id: 'email-address', type: 'email', autocomplete: 'email', required: '', value: account.alertEmail || google });
+  const form = h('form', { class: 'email-form' },
+    h('label', { for: 'email-address' }, 'Send alert emails to'),
+    h('div', { class: 'email-row' }, input, h('button', { type: 'submit', class: 'action-button' }, 'Save')),
+    account.alertEmail
+      ? button('email-google', `Use ${google} instead`, async () => { emailEditing = false; await setAlertEmail(google); }, 'text-button')
+      : null,
+    h('p', { class: 'fine' }, 'A new address gets a confirmation link first, so nobody can sign up someone else.'));
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!input.checkValidity()) { input.reportValidity(); return; }
+    emailEditing = false;
+    await setAlertEmail(input.value);
+  });
+  return form;
+}
+
 // Email: not available yet / sign in / signed in
 function emailChannel() {
   const parts = [];
@@ -211,9 +300,20 @@ function emailChannel() {
       button('sign-in', account.busy ? 'Signing in…' : 'Sign in with Google', () => signIn(), 'action-button google'),
       h('p', { class: 'fine' }, 'We only use your name and email address. We never see your Gmail.'));
   } else {
+    const google = account.user.email;
     parts.push(
       toggle('email-on', 'Email me a morning summary', account.emailAlerts, (on) => setEmailAlerts(on)),
-      h('p', { class: 'channel-note' }, 'Around 5 AM Pacific, only on days something matches. Signed in as ', h('strong', {}, account.user.email), '.'),
+      h('p', { class: 'channel-note' }, 'Around 5 AM Pacific, only on days something matches. Sending to ',
+        h('strong', {}, emailConfirmed() ? emailTarget() : google), '. ',
+        button('email-change', emailEditing ? 'Cancel' : 'Change', () => {
+          emailEditing = !emailEditing;
+          refresh();
+          if (emailEditing) document.getElementById('email-address')?.focus();
+        }, 'text-button inline-link')),
+      emailConfirmed() ? null : h('p', { class: 'fine warn' },
+        `Waiting for you to confirm ${account.alertEmail}. Within the hour we’ll email it a link; until you tap it, emails go to ${google}.`),
+      emailEditing ? emailForm(google) : null,
+      h('p', { class: 'fine' }, 'Signed in as ', h('strong', {}, google), '. Your settings save to your account.'),
       h('div', { class: 'account-actions' },
         button('sign-out', 'Sign out', () => signOut(), 'text-button'),
         button('delete-data', 'Delete my saved data', async () => {
@@ -291,13 +391,16 @@ function render() {
   } else if (Notification.permission === 'denied') {
     deviceStatus = 'Blocked for this site. Allow notifications in your browser’s site settings, then try again.';
   } else if (!deviceStatus) {
-    deviceStatus = 'A notification for anything new each time you open the app.';
+    if (canPush() && account.user) deviceStatus = 'A morning notification when something matches, even when the app is closed.';
+    else if (canPush()) deviceStatus = 'A notification for anything new when you open the app. Sign in above to also get them in the morning when it’s closed.';
+    else deviceStatus = 'A notification for anything new each time you open the app.';
   }
   const deviceToggle = toggle('alerts-device', 'Notify me on this device', settings.deviceOn && canNotify(), async (on) => {
     deviceMsg = '';
     if (on && canNotify() && Notification.permission === 'default') await Notification.requestPermission();
     const granted = on && canNotify() && Notification.permission === 'granted';
     saveSettings({ ...loadSettings(), deviceOn: granted });
+    if (canPush()) await setPush(granted);
     if (granted) {
       // Show something right away, so you know it works
       const sent = await notifyDevice();
@@ -320,6 +423,7 @@ function render() {
     h('div', { class: 'section-head' },
       h('h2', {}, 'Notifications'),
       h('p', { class: 'fine' }, 'What matches today, what to watch for, and how you’ll hear about it.')),
+    confirmMsg ? h('p', { class: 'card confirm-msg', role: 'status' }, confirmMsg) : null,
 
     // 1. Today
     h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-today' },
@@ -354,6 +458,7 @@ function profileLink() {
 // ---------- Choosing places for alerts ----------
 
 let deviceMsg = ''; // what happened when you last switched device notifications on
+let confirmMsg = ''; // after opening a link from a confirmation email
 const pickerOpen = { snow: false, surf: false };
 const pickerQuery = { snow: '', surf: '' };
 // The picker's filters (kept while the page is open)

@@ -90,10 +90,12 @@ const FAQ = [
     ['Can I get alerts by email?', [
       'Yes. On the Notifications tab, tap Sign in with Google. Each morning (around 5 AM Pacific) you’ll get one email listing what matches, only on days something does.',
       'Your settings (alerts, Rider Profile, pinned spots) save to your account automatically, so you can change them in the app on any device. To stop emails, turn off “Email me a morning summary” or use the link at the bottom of any email.',
+      'Emails go to your Google address. To use a different one, tap Change next to “Sending to”. We’ll email that address a confirmation link within the hour; once you tap it, alerts go there.',
     ]],
     ['Can I get alerts on my phone when the app is closed?', [
-      'By email, yes (above). The app can also show a notification on this device for anything new each time you open it. Turn on “Notify me on this device” and allow notifications; you’ll get one right away so you know it works.',
+      'Yes. Sign in with Google, then turn on “Notify me on this device” and allow notifications. Each morning something matches, you’ll get one notification, even when the app is closed. Turn it on separately on each phone or computer you want them on.',
       'On iPhone, notifications only work in the Home Screen app: in Safari tap Share → Add to Home Screen, open Snow and Surf from your Home Screen, and turn it on there.',
+      'Not signed in, the app can still show a notification for anything new each time you open it.',
     ]],
     ['I chose mountains but they aren’t under “Today”', [
       '“Today” only lists places that match right now (for example, 4" or more of snow coming). Tap “Watching …” just below it to see every mountain and beach your alerts cover, with how each looks today.',
@@ -105,7 +107,7 @@ const FAQ = [
     ]],
     ['What do you store about me?', [
       'If you don’t sign in: nothing on a server. Your pins, filters, Rider Profile, alert settings, light/dark choice and animation setting are saved only in this browser.',
-      'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Google’s Firebase), so we can email your alerts. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” on the Notifications tab to remove everything.',
+      'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Google’s Firebase), so we can send your alerts. If you choose another email address or turn on phone notifications, that address and each device’s notification address are saved too. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” on the Notifications tab to remove everything.',
     ]],
     ['The page looks broken or old after an update', [
       'Close the tab and open the site again. The site updates every hour, and your browser may briefly hold on to the previous version.',
