@@ -310,7 +310,7 @@ function gearSection(s) {
 function windText(s) {
   const wind = s.wind;
   return ok(wind)
-    ? `${wind.data.speedMph} mph from ${compass(wind.data.directionDeg)}, gusts ${wind.data.gustMph} · ${wind.data.relative}`
+    ? `${wind.data.speedMph} mph from ${compass(wind.data.directionDeg)}, gusts ${wind.data.gustMph} mph · ${wind.data.relative}`
     : `Unavailable${wind.reason ? ` — ${wind.reason}` : ''}`;
 }
 

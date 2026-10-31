@@ -620,7 +620,7 @@ html, body { overflow-x: clip; }
   .row-main { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
   .row-name { display: block; }
   .row-region { display: block; margin-left: 0; white-space: normal; }
-  .row-region + .pass-tag { margin-left: 0; }
+  .row-region + .visually-hidden + .pass-tag { margin-left: 0; }
   .row-rating { gap: 6px; padding-top: 3px; }
   .row-rating .rating-bar { width: 56px; height: 7px; }
 

@@ -31,6 +31,18 @@ function save(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ }
 }
 
+// Tags after a place's name (passes, "Fits you"), each with a real separator in
+// the text, so screen readers and copied text read "Rockies · Ikon, Epic", not "RockiesIkonEpic".
+// visible: the first " · " shows on screen too (the detail view's header line)
+function extrasWithSeparators(nodes, { visible = false } = {}) {
+  const list = [nodes].flat(Infinity).filter(Boolean);
+  if (!list.length) return null;
+  return list.flatMap((n, i) => [
+    i === 0 && visible ? ' · ' : h('span', { class: 'visually-hidden' }, i === 0 ? ' · ' : ', '),
+    n,
+  ]);
+}
+
 // "Mammoth Lakes, CA"
 export const place = (item) => (item.city ? `${item.city}, ${item.region}` : item.region);
 
@@ -224,7 +236,10 @@ export function createPlacesTab(opts) {
     const shown = showAll || list.query ? rows : rows.slice(0, SHORT_LIST);
     els.list.replaceChildren(...shown.map(listRow));
     const total = section.items.length;
-    els.count.textContent = `Showing ${shown.length} of ${rows.length}${rows.length < total ? ` matches (${total} total)` : ''}`;
+    // Out of how many? The places your filters leave, before the search box narrows them
+    const filtered = list.query ? filteredSorted({ ignoreQuery: true }).length : rows.length;
+    els.count.textContent = `Showing ${shown.length} of ${filtered}${filtered < total ? ` matches (${total} total)` : ''}`;
+    if (list.query && !rows.length) els.count.textContent += `. No ${words.many} match “${list.query}”.`;
     els.more.hidden = rows.length <= SHORT_LIST || Boolean(list.query);
     els.more.textContent = showAll ? 'Show fewer' : `Show all ${rows.length}`;
 
@@ -420,11 +435,11 @@ export function createPlacesTab(opts) {
     ];
   }
 
-  function filteredSorted() {
+  function filteredSorted({ ignoreQuery = false } = {}) {
     const rows = section.items.filter((x) =>
       opts.filters.every((f) => list[f.id] === 'all' || f.test(x, list[f.id])) &&
       opts.extraFilter?.(x) !== false &&
-      (!list.query || opts.matches(x, list.query)));
+      (ignoreQuery || !list.query || opts.matches(x, list.query)));
     const sorter = opts.sorts.find((s) => s.value === list.sort) ?? opts.sorts[0];
     // Every sort ends with A–Z, so ties are in a predictable order.
     return rows.sort((a, b) => sorter.compare(a, b) || a.name.localeCompare(b.name));
@@ -439,8 +454,9 @@ export function createPlacesTab(opts) {
     },
       h('span', { class: 'row-title' },
         h('span', { class: 'row-name' }, item.name),
-        h('span', { class: 'row-region' }, `${place(item)} · ${item.area ?? ''}`),
-        opts.rowExtras?.(item)),
+        h('span', { class: 'visually-hidden' }, ', '),
+        h('span', { class: 'row-region' }, [place(item), item.area].filter(Boolean).join(' · ')),
+        extrasWithSeparators(opts.rowExtras?.(item))),
       h('span', { class: 'row-rating' }, ratingBar(score), h('span', { class: 'rating-score' }, score == null ? '–' : `${score}/5`)),
       h('span', { class: 'row-stats' }, opts.rowStats(item)));
     main.addEventListener('click', () => openDetail(item.id));
@@ -514,7 +530,7 @@ export function createPlacesTab(opts) {
     dialog.replaceChildren(
       h('div', { class: 'detail-head' },
         h('div', {},
-          h('p', { class: 'kicker' }, `${place(item)} · ${item.area ?? ''} `, opts.rowExtras?.(item)),
+          h('p', { class: 'kicker' }, [place(item), item.area].filter(Boolean).join(' · '), extrasWithSeparators(opts.rowExtras?.(item), { visible: true })),
           h('h2', { id: `${key}-detail-title` }, item.name)),
         close),
       h('div', { class: 'detail-body' },

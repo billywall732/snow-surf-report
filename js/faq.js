@@ -108,7 +108,7 @@ const FAQ = [
     ]],
     ['What do you store about me?', [
       'If you don’t sign in: nothing on a server. Your pins, filters, Rider Profile, alert settings, light/dark choice and animation setting are saved only in this browser.',
-      'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Google’s Firebase), so we can send your alerts. If you choose another email address or turn on phone notifications, that address and each device’s notification address are saved too. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” on the Notifications tab to remove everything.',
+      'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Google’s Firebase), so we can send your alerts. If you choose another email address or turn on phone notifications, that address and each device’s notification address are saved too. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” at the bottom of the Notifications tab (under “Your data”) to remove everything: it clears this device and, if you’re signed in, your account’s copy.',
     ]],
     ['The page looks broken or old after an update', [
       'Close the tab and open the site again. The site updates every hour, and your browser may briefly hold on to the previous version.',

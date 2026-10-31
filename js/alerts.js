@@ -315,10 +315,8 @@ function emailChannel() {
       emailEditing ? emailForm(google) : null,
       h('p', { class: 'fine' }, 'Signed in as ', h('strong', {}, google), '. Your settings save to your account.'),
       h('div', { class: 'account-actions' },
-        button('sign-out', 'Sign out', () => signOut(), 'text-button'),
-        button('delete-data', 'Delete my saved data', async () => {
-          if (confirm('Delete your saved settings and stop all emails? You can sign in again later.')) await deleteMyData();
-        }, 'text-button danger')));
+        button('sign-out', 'Sign out', () => signOut(), 'text-button')));
+    // (Deleting saved data is under "Your data", at the bottom of this tab.)
   }
   if (account.busy && account.user) parts.push(h('p', { class: 'fine' }, 'Loading your saved settings…'));
   if (account.error) parts.push(h('p', { class: 'fine warn', role: 'alert' }, account.error));
@@ -387,22 +385,44 @@ function render() {
   // ---------- 3. This device ----------
   let deviceStatus = deviceMsg;
   if (!canNotify()) {
-    deviceStatus = /iPhone|iPad/.test(navigator.userAgent)
-      ? 'On iPhone, this works in the Home Screen app: tap Share → Add to Home Screen, then turn it on there.'
-      : 'This browser can’t show notifications.';
-  } else if (Notification.permission === 'denied') {
+    deviceStatus = unsupportedText();
+  } else if (Notification.permission === 'denied' && !deviceMsg) {
     deviceStatus = 'Blocked for this site. Allow notifications in your browser’s site settings, then try again.';
   } else if (!deviceStatus) {
     if (canPush() && account.user) deviceStatus = 'A morning notification when something matches, even when the app is closed.';
     else if (canPush()) deviceStatus = 'A notification for anything new when you open the app. Sign in above to also get them in the morning when it’s closed.';
     else deviceStatus = 'A notification for anything new each time you open the app.';
   }
-  const deviceToggle = toggle('alerts-device', 'Notify me on this device', settings.deviceOn && canNotify(), async (on) => {
+  const deviceToggle = toggle('alerts-device', 'Notify me on this device', settings.deviceOn && canNotify() && Notification.permission === 'granted', async (on) => {
     deviceMsg = '';
-    if (on && canNotify() && Notification.permission === 'default') await Notification.requestPermission();
-    const granted = on && canNotify() && Notification.permission === 'granted';
+    deviceWarn = false;
+    if (!on) {
+      saveSettings({ ...loadSettings(), deviceOn: false });
+      deviceMsg = 'Off. You won’t get notifications on this device.';
+      refresh();
+      if (canPush()) withTimeout(setPush(false), 8000); // stop morning notifications too
+      return;
+    }
+    if (!canNotify()) {
+      deviceWarn = true;
+      deviceMsg = unsupportedText();
+      refresh();
+      return;
+    }
+    // Ask first, straight from the tap (browsers only show the prompt then)
+    const permission = await askPermission();
+    const granted = permission === 'granted';
     saveSettings({ ...loadSettings(), deviceOn: granted });
-    if (canPush()) await setPush(granted);
+    if (!granted) {
+      deviceWarn = true;
+      deviceMsg = permission === 'denied'
+        ? 'Notifications are blocked for this site. To allow them, click the icon at the left of the address bar, set Notifications to Allow, then turn this on again.'
+        : 'Your browser didn’t show the permission prompt, or it was closed. Try again; if nothing appears, allow notifications for this site in your browser’s settings (the icon at the left of the address bar).';
+      refresh();
+      return;
+    }
+    // Morning notifications when the app is closed (signed in). Never waits forever.
+    if (canPush()) withTimeout(setPush(true), 8000);
     if (granted) {
       // Show something right away, so you know it works
       const sent = await notifyDevice();
@@ -410,18 +430,19 @@ function render() {
         deviceMsg = `On: we just sent ${plural(Math.min(sent, 3), 'notification', 'notifications')} for what matches now.`;
       } else {
         const shown = await showNotification('Snow and Surf notifications are on', 'You’ll get a notification here when something new matches your alerts.', 'alerts', 'ssr-test');
-        deviceMsg = shown ? 'On: we just sent a test notification.' : 'This browser blocked the notification. On a phone, try the Home Screen app.';
+        deviceMsg = shown ? 'On: we just sent a test notification.' : 'On, but this browser didn’t show the test notification. On a phone, try the Home Screen app.';
       }
     }
     refresh();
   });
-  if (!canNotify()) deviceToggle.querySelector('input').disabled = true;
+  // (Left clickable even where notifications aren't supported, so a tap explains why.)
+  const deviceWarnNow = deviceWarn || !canNotify() || (canNotify() && Notification.permission === 'denied');
 
   const channel = (icon, title, ...body) => h('li', { class: 'channel' },
     h('span', { class: 'rule-icon', 'aria-hidden': 'true' }, icon),
     h('div', { class: 'channel-body' }, h('p', { class: 'channel-title' }, title), body));
 
-  panel().replaceChildren(
+  panel().replaceChildren(...[
     h('div', { class: 'section-head' },
       h('h2', {}, 'Notifications'),
       h('p', { class: 'fine' }, 'What matches today, what to watch for, and how you’ll hear about it.')),
@@ -447,8 +468,16 @@ function render() {
       h('ul', { class: 'channels' },
         channel('●', 'In the app', h('p', { class: 'channel-note' }, 'Always on. Matches show under Today, with a count on the Notifications tab.')),
         channel('✉', 'Email', emailChannel()),
-        channel('▣', 'This device', deviceToggle, h('p', { class: 'channel-note' }, deviceStatus)))),
-  );
+        channel('▣', 'This device', deviceToggle, h('p', { class: `channel-note${deviceWarnNow ? ' warn' : ''}`, id: 'alerts-device-status', role: 'status' }, deviceStatus)))),
+
+    // 4. Your data
+    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-data' },
+      h('h3', { id: 'h-data' }, 'Your data'),
+      h('p', { class: 'channel-note' }, account.user
+        ? 'Your profile, pins and alert settings are saved on this device and in your account.'
+        : 'Your profile, pins and alert settings are saved on this device only.'),
+      button('delete-all-data', 'Delete my saved data', deleteEverything, 'text-button danger')),
+  ].filter(Boolean)); // (a missing card is null; never print it)
 }
 
 const scopeValue = (scope) => (scope === 'chosen' || scope === 'nearby' ? scope : 'pinned');
@@ -462,6 +491,50 @@ function profileLink() {
 // ---------- Choosing places for alerts ----------
 
 let deviceMsg = ''; // what happened when you last switched device notifications on
+let deviceWarn = false; // ...and whether it's a problem (shown in warning color)
+
+const unsupportedText = () => (/iPhone|iPad/.test(navigator.userAgent)
+  ? 'On iPhone, notifications work in the Home Screen app: tap Share → Add to Home Screen, open it from there, then turn this on.'
+  : 'This browser can’t show notifications. Try Chrome, Edge, Firefox or Safari.');
+
+// Ask for permission to show notifications: 'granted', 'denied' or 'default' (no
+// answer: the prompt was closed, or the browser didn't show it). Works with older
+// Safari too, which answers through a callback instead of a promise.
+function askPermission() {
+  if (Notification.permission !== 'default') return Promise.resolve(Notification.permission);
+  return new Promise((resolve) => {
+    try {
+      const p = Notification.requestPermission((answer) => resolve(answer));
+      if (p?.then) p.then(resolve, () => resolve(Notification.permission));
+    } catch {
+      resolve(Notification.permission);
+    }
+  });
+}
+
+// Wait for a promise, but never longer than ms (some browsers never answer push requests)
+const withTimeout = (promise, ms) => Promise.race([promise, new Promise((r) => setTimeout(() => r(false), ms))]);
+
+// "Delete my saved data": everything this site saved on this device, and (signed in)
+// your account's copy, which also signs you out.
+async function deleteEverything() {
+  const where = account.user ? 'on this device and in your account (you’ll be signed out)' : 'on this device';
+  if (!confirm(`Delete your Rider Profile, pins and alert settings saved ${where}? This can’t be undone.`)) return;
+  try { await withTimeout(setPush(false), 5000); } catch { /* ignore */ }
+  if (account.user) {
+    try {
+      await deleteMyData();
+    } catch {
+      alert('Couldn’t delete your account’s saved data. Check your connection and try again. Nothing was deleted.');
+      return;
+    }
+  }
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith('ssr-') && k !== 'ssr-theme' && k !== 'ssr-motion') localStorage.removeItem(k);
+  } catch { /* private mode: nothing saved anyway */ }
+  location.hash = 'alerts';
+  location.reload();
+}
 let confirmMsg = ''; // after opening a link from a confirmation email
 const pickerOpen = { snow: false, surf: false };
 const pickerQuery = { snow: '', surf: '' };

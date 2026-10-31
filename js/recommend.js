@@ -147,12 +147,12 @@ export function skiFit(resort, rider) {
     reasons.push(`${t.advanced}% advanced terrain`);
   }
 
-  // Closer is a little better
+  // Closer is a little better. (Too far is already a blocker; say it once.)
   if (rider.home) {
     score += closePoints(rider, resort);
-    reasons.push(`${distanceMi(rider.home, resort)} mi away`);
+    if (!tooFar(rider, resort)) reasons.push(`${distanceMi(rider.home, resort)} mi away`);
   }
-  return { score, reasons: [...new Set(reasons)], blockers };
+  return { score, reasons: [...new Set(reasons)].filter((r) => !blockers.includes(r)), blockers };
 }
 
 // Is this beach ruled out for you? Returns the reasons (empty = it's fine).
@@ -180,9 +180,9 @@ export function surfFit(spot, rider, profile, skills) {
   if (ok(spot.waves)) reasons.push(`${spot.waves.data.heightFt} ft @ ${spot.waves.data.periodS} s`);
   if (rider.home) {
     score += closePoints(rider, spot);
-    reasons.push(`${distanceMi(rider.home, spot)} mi away`);
+    if (!tooFar(rider, spot)) reasons.push(`${distanceMi(rider.home, spot)} mi away`);
   }
-  return { score, reasons, blockers };
+  return { score, reasons: reasons.filter((r) => !blockers.includes(r)), blockers };
 }
 
 // Your top picks: { picks: [{ item, score, reasons }], farther: [...] }
@@ -199,6 +199,6 @@ export function recommend(kind, report, rider, profile, count = 3) {
   const farther = !rider.home || !rider.radiusMi ? [] : scored.filter((x) => {
     const onlyTooFar = x.blockers.length === 1 && x.blockers[0].includes(' mi away');
     return onlyTooFar && distanceMi(rider.home, x.item) <= rider.radiusMi * 1.5 && x.score > cutoff;
-  }).slice(0, 2);
+  }).slice(0, 2).map((x) => ({ ...x, reasons: [`${distanceMi(rider.home, x.item)} mi away`, ...x.reasons] }));
   return { picks, farther };
 }

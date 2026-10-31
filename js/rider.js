@@ -255,7 +255,7 @@ function render() {
     h('div', { class: 'section-head' },
       h('h2', {}, 'Rider Profile'),
       h('p', { class: 'fine' }, 'How you ride and where you’re coming from. Used for “Recommended for you” on Snow and Surf, the “For you” notes in each detail view, and your alerts.')),
-    signInCard(),
+    signInCard() ?? [], // (null would print as "null")
     homeCard(rider),
     skiCard(rider),
     surfCard(rider),
