@@ -13,7 +13,7 @@
 //     send it to another address once you confirm it.
 // Without signing in, settings are saved in this browser only.
 import { h } from './ui.js';
-import { computeAlerts, DEFAULT_SETTINGS, watching } from './alert-rules.js';
+import { computeAlerts, DEFAULT_SETTINGS, LOOK_AHEAD, watching } from './alert-rules.js';
 import { hasProfile, loadProfile, onProfileChange, profileText, saveProfile } from './skill.js';
 import { loadRider, onRiderChange, openProfile, saveRider } from './rider.js';
 import { distanceMi, normalizeRider, withinReach } from './recommend.js';
@@ -352,10 +352,11 @@ function render() {
     title: 'Snow alerts',
     on: settings.snowOn,
     onToggle: (on) => update({ snowOn: on }),
-    summary: `${settings.snowInches}"+ of snow in the next 3 days, at ${scopeText('snow', settings, rider)}`,
+    summary: `${settings.snowInches}"+ of snow in the next ${settings.snowDays ?? 3} days, at ${scopeText('snow', settings, rider)}`,
     editor: [
       h('div', { class: 'list-controls' },
-        select('alerts-snow-inches', 'At least', [2, 4, 6, 10, 12].map((n) => [n, `${n}" in the next 3 days`]), settings.snowInches, (v) => update({ snowInches: Number(v) })),
+        select('alerts-snow-inches', 'At least', [2, 4, 6, 10, 12].map((n) => [n, `${n}" of snow`]), settings.snowInches, (v) => update({ snowInches: Number(v) })),
+        select('alerts-snow-days', 'Look ahead', LOOK_AHEAD.map((n) => [n, `Next ${n} days`]), settings.snowDays ?? 3, (v) => update({ snowDays: Number(v) })),
         select('alerts-snow-scope', 'For', scopes('mountains'), scopeValue(settings.snowScope), (v) => update({ snowScope: v }))),
       nearNote(settings.snowScope, passNote),
       settings.snowScope === 'chosen' ? chooser('snow') : null,
@@ -369,13 +370,14 @@ function render() {
     onToggle: (on) => update({ surfOn: on }),
     warn: !hasProfile(),
     summary: hasProfile()
-      ? `Waves that fit you (${profileText()}), at ${scopeText('surf', settings, rider)}`
+      ? `Waves that fit you (${profileText()}) in the next ${settings.surfDays ?? 3} days, at ${scopeText('surf', settings, rider)}`
       : ['Pick your level and board to get surf alerts. ', profileLink()],
     editor: [
       h('p', { class: 'fine' }, hasProfile()
-        ? `Waves that fit ${article} ${profileText()} in the next 3 days (at ${report.sections.surf.sessionHour ?? 7} AM)${waterNote}.`
+        ? `Waves that fit ${article} ${profileText()} (at ${report.sections.surf.sessionHour ?? 7} AM each day)${waterNote}.`
         : 'Your level and board are set in your Rider Profile.'),
       h('div', { class: 'list-controls' },
+        select('alerts-surf-days', 'Look ahead', LOOK_AHEAD.map((n) => [n, `Next ${n} days`]), settings.surfDays ?? 3, (v) => update({ surfDays: Number(v) })),
         select('alerts-surf-scope', 'For', scopes('beaches'), scopeValue(settings.surfScope), (v) => update({ surfScope: v }))),
       nearNote(settings.surfScope),
       settings.surfScope === 'chosen' ? chooser('surf') : null,
@@ -425,11 +427,13 @@ function render() {
       h('p', { class: 'fine' }, 'What matches today, what to watch for, and how you’ll hear about it.')),
     confirmMsg ? h('p', { class: 'card confirm-msg', role: 'status' }, confirmMsg) : null,
 
-    // 1. Today
-    h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-today' },
-      h('div', { class: 'card-title-row' },
-        h('h3', { id: 'h-today' }, 'Today'),
-        h('span', { class: alerts.length ? 'count-pill has-alerts' : 'count-pill' }, alerts.length ? plural(alerts.length, 'match', 'matches') : 'All quiet')),
+    // 1. Your alerts today
+    h('section', { class: `card alerts-card today-card${alerts.length ? ' has-alerts' : ''}`, 'aria-labelledby': 'h-today' },
+      h('div', { class: 'today-head' },
+        h('span', { class: 'today-bell', 'aria-hidden': 'true' }, bellIcon(), alerts.length ? h('span', { class: 'today-bell-count' }, alerts.length > 9 ? '9+' : String(alerts.length)) : null),
+        h('div', { class: 'today-title' },
+          h('h3', { id: 'h-today' }, alerts.length ? `${plural(alerts.length, 'alert', 'alerts')} for you today` : 'No alerts today'),
+          h('p', { class: 'today-sub' }, alerts.length ? sentNote() : 'We check conditions every hour and will flag anything that matches.'))),
       h('div', { id: 'heads-up-list' }, headsUpList(alerts))),
 
     // 2. What to alert me about
@@ -619,19 +623,44 @@ function watchingList() {
   return box;
 }
 
+// A bell, drawn (so it matches the tab bar icon)
+const bellIcon = () => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  const path = document.createElementNS(NS, 'path');
+  path.setAttribute('d', 'M12 2a6 6 0 0 0-6 6v3.6L4.3 15A1 1 0 0 0 5.2 16.5h13.6a1 1 0 0 0 .9-1.5L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.8-2H9.2A3 3 0 0 0 12 22Z');
+  svg.append(path);
+  return svg;
+};
+
+// How these reach you, in one line
+function sentNote() {
+  const ways = [];
+  if (account.user && account.emailAlerts) ways.push('email');
+  if (loadSettings().deviceOn) ways.push('this device');
+  return ways.length
+    ? `Sent to your ${ways.join(' and ')} in the morning. Tap one for the details.`
+    : 'Tap one for the details. Turn on email or phone alerts below to get these each morning.';
+}
+
 function matchesList(alerts) {
   const settings = loadSettings();
   return alerts.length
     ? h('ul', { class: 'alert-list' }, alerts.map((a) => {
       const b = h('button', { type: 'button', class: `alert-item alert-${a.kind}` },
-        h('span', { class: 'alert-title' }, a.title),
-        h('span', { class: 'alert-detail' }, a.detail));
+        h('span', { class: 'alert-icon', 'aria-hidden': 'true' }, a.kind === 'snow' ? '❄' : '🌊'),
+        h('span', { class: 'alert-text' },
+          h('span', { class: 'alert-kind' }, a.kind === 'snow' ? 'Snow alert' : 'Surf alert'),
+          h('span', { class: 'alert-title' }, a.title),
+          h('span', { class: 'alert-detail' }, a.detail)),
+        h('span', { class: 'alert-go', 'aria-hidden': 'true' }, '›'));
       b.addEventListener('click', () => { location.hash = a.hash; });
       return h('li', {}, b);
     }))
-    : h('p', { class: 'empty' }, settings.snowOn || settings.surfOn
-      ? 'Nothing matches right now. Conditions are checked every hour.'
-      : 'Alerts are off. Turn on snow or surf alerts below.');
+    : (settings.snowOn || settings.surfOn
+      ? null
+      : h('p', { class: 'empty' }, 'Alerts are off. Turn on snow or surf alerts below.'));
 }
 
 // "🔔 Notify me" button for a mountain or beach detail view

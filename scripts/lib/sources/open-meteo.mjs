@@ -30,10 +30,12 @@ export async function mountainForecast(resort) {
   const now = Date.now() / 1000;
   const today = toLocalISO(Date.now(), tz).slice(0, 10);
 
-  // Daily rows: keep today and the 6 days after it.
+  // Daily rows: keep today and the 6 days after it. Each day's timestamp is its
+  // midnight at a fixed UTC offset, so on the day clocks change it can land an hour
+  // into the day before. Reading the date at midday avoids that.
   const days = j.daily.time
     .map((t, i) => ({
-      date: toLocalISO(t * 1000, tz).slice(0, 10),
+      date: toLocalISO((t + 12 * 3600) * 1000, tz).slice(0, 10),
       snowfall: round1(j.daily.snowfall_sum[i]),
       tempHigh: Math.round(j.daily.temperature_2m_max[i]),
       tempLow: Math.round(j.daily.temperature_2m_min[i]),
@@ -91,7 +93,7 @@ export async function surfWind(spot, sessionHour) {
     longitude: spot.lon,
     hourly: 'wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m',
     daily: 'uv_index_max,temperature_2m_max',
-    forecast_days: 3, // today + 2 more, for alerts about upcoming waves
+    forecast_days: 7, // today + 6 more, for "look ahead" lists and alerts
     wind_speed_unit: 'mph',
     temperature_unit: 'fahrenheit',
     timezone: spot.timezone,
@@ -111,7 +113,7 @@ export async function surfWind(spot, sessionHour) {
     hourly: j.hourly.time
       .map((t, k) => ({ t: toLocalISO(t * 1000, spot.timezone), mph: Math.round(j.hourly.wind_speed_10m[k]), gust: Math.round(j.hourly.wind_gusts_10m[k]), deg: j.hourly.wind_direction_10m[k] }))
       .filter((p) => p.t.slice(0, 10) === toLocalISO(j.hourly.time[i] * 1000, spot.timezone).slice(0, 10)),
-    // The session hour on each of the 3 days
+    // The session hour on each of the 7 days
     days: j.hourly.time
       .map((t, k) => ({ t, k }))
       .filter(({ t }) => Number(toLocalISO(t * 1000, spot.timezone).slice(11, 13)) === sessionHour)

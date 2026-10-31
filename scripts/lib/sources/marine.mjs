@@ -15,7 +15,7 @@ export async function waves(spot, sessionHour) {
       'swell_wave_height', 'swell_wave_period', 'swell_wave_direction',
       'sea_surface_temperature',
     ].join(','),
-    forecast_days: 3, // today + 2 more, for alerts about upcoming waves
+    forecast_days: 7, // today + 6 more, for "look ahead" lists and alerts
     length_unit: 'imperial', // wave heights in feet
     temperature_unit: 'fahrenheit',
     timezone: spot.timezone,
@@ -40,7 +40,7 @@ export async function waves(spot, sessionHour) {
     hourly: h.time
       .map((t, k) => ({ t: toLocalISO(t * 1000, spot.timezone), ft: round1(h.wave_height[k]), s: round1(h.wave_period[k]), deg: h.wave_direction[k] }))
       .filter((p) => p.t.slice(0, 10) === toLocalISO(h.time[i] * 1000, spot.timezone).slice(0, 10)),
-    // The session hour (e.g. 7 AM) on each of the 3 days, for "upcoming waves" alerts
+    // The session hour (e.g. 7 AM) on each of the 7 days, for "look ahead" and alerts
     days: h.time
       .map((t, k) => ({ t, k }))
       .filter(({ t }) => Number(toLocalISO(t * 1000, spot.timezone).slice(11, 13)) === sessionHour)

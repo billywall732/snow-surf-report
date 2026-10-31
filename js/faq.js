@@ -7,7 +7,7 @@ const FAQ = [
     ['What is this?', [
       'Up-to-date snow conditions at every US Ikon and Epic Pass mountain and surf at 52 US beaches, with a simple 1–5 “should I go?” rating for each.',
       'It updates every hour (GitHub sometimes runs a few minutes late). The time of the latest update is at the top of the page, and if you leave the app open, a “New conditions available” bar offers to refresh when there’s a newer report.',
-      'Ratings and “fits you” look at the morning session (7 AM) for today and the next two days. Email alerts go out once a day, in the morning.',
+      'Ratings look at today’s morning session (7 AM). Forecasts go 7 days out: use “Look ahead” in the All mountains / All beaches list, or in each alert, to look 3, 5 or 7 days ahead. Email alerts go out once a day, in the morning.',
     ]],
     ['How do I get around?', [
       'Use the bar at the bottom: Snow and Surf for conditions, Notifications for alerts, Profile for how you ride, and More for light/dark mode, animations and these FAQs.',
@@ -35,6 +35,7 @@ const FAQ = [
     ]],
     ['How do I use the map?', [
       'Tap an icon to open that place. Zoom with the + and − buttons, by pinching, or with a double-click (Ctrl + scroll on a computer). Once zoomed in, drag to move around; ⟲ resets the view.',
+      'Pick an Area or State above the map (New Jersey, say) and it zooms in to fit those places; the rest fade. The same filters apply to the list.',
       'Pinned places are larger and outlined; the one you have open is orange. On the Snow map, teal means Ikon and violet means Epic.',
     ]],
   ]],
@@ -65,7 +66,7 @@ const FAQ = [
   ]],
   ['Surf', [
     ['What do my level and board do?', [
-      'Tap one or more levels (Beginner, Intermediate, Advanced, Pro for 15+ ft waves) and boards on the Surf tab or in your Rider Profile; they stay in sync. The list then shows only beaches whose waves fit you today, a “✓ Fits you” tag marks them, and each beach’s detail view shows “For you” for today and the next two days.',
+      'Set your levels (Beginner, Intermediate, Advanced, Pro for 15+ ft waves) and boards on the Profile tab. On the Surf tab, “Only beaches that fit me” then shows just the beaches whose waves fit you in the “Look ahead” window, a “✓ Fits you” tag says when, and each beach’s detail view shows “For you” for each of the next 7 days.',
       'With several picked, a day fits if it suits at least one of your levels with at least one of your boards. Tap a chip again to un-pick it, or Clear to start over.',
       'A day fits when the wave height suits both your level and your board, the period is long enough for your board, and the wind isn’t too strong for your level (offshore wind is fine).',
       'Some beaches, like Pipeline, are marked for advanced surfers only, whatever the waves are doing.',

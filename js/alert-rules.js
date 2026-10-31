@@ -1,8 +1,9 @@
 // Which alerts match right now? Pure rules (no page, no storage), shared by the
 // Notifications tab in the browser and the morning email script in Node.
 //
-// computeAlerts(report, settings, profile, pins, rider) -> [{ id, kind, hash, title, detail }]
-//   settings: { snowOn, snowInches, snowScope, snowWatch, surfOn, surfScope, surfWatch }
+// computeAlerts(report, settings, profile, pins, rider) -> [{ id, kind, hash, itemId, title, detail, days }]
+//   settings: { snowOn, snowInches, snowDays, snowScope, snowWatch, surfOn, surfDays, surfScope, surfWatch }
+//             snowDays / surfDays: how far ahead to look (3, 5 or 7 days)
 //             scope: 'pinned' (your pinned spots), 'chosen' (the ids in snowWatch / surfWatch)
 //                    or 'nearby' (everywhere within your travel distance, from your Rider Profile)
 //   profile:  { levels: [...], boards: [...] }
@@ -15,9 +16,11 @@ import { EMPTY_RIDER, noSnowboards, normalizeRider, onYourPass, surfBlockers, wi
 export const DEFAULT_SETTINGS = {
   snowOn: true,
   snowInches: 4,
+  snowDays: 3, // look this many days ahead
   snowScope: 'pinned',
   snowWatch: [], // mountains you chose for alerts (when snowScope is 'chosen')
   surfOn: true,
+  surfDays: 3,
   surfScope: 'pinned',
   surfWatch: [],
 };
@@ -27,6 +30,17 @@ function covered(scope, item, pinned, watch, rider) {
   if (scope === 'all') return true;
   if (scope === 'nearby') return Boolean(rider.home) && withinReach(item, rider);
   return scope === 'chosen' ? watch.includes(item.id) : pinned.includes(item.id);
+}
+
+export const LOOK_AHEAD = [3, 5, 7];
+const lookAhead = (n) => (LOOK_AHEAD.includes(Number(n)) ? Number(n) : 3);
+
+// Inches of snow forecast at a mountain over the next `days` days. (For 3 days,
+// the report's own 72-hour total.)
+export function snowComing(r, days = 3) {
+  if (r.forecast?.status !== 'ok') return 0;
+  if (days === 3 && r.forecast.data.next72hIn != null) return r.forecast.data.next72hIn;
+  return Math.round(r.forecast.data.days.slice(0, days).reduce((t, d) => t + (d.snowfall ?? 0), 0) * 10) / 10;
 }
 
 const dayName = (date) => new Date(`${date}T12:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
@@ -43,14 +57,16 @@ export function computeAlerts(report, settings, profile, pins, riderIn = EMPTY_R
       if (!covered(s.snowScope, r, pins.snow ?? [], s.snowWatch ?? [], rider)) continue;
       if (noSnowboards(r, rider)) continue; // skiers only, and you snowboard
       if (s.snowScope === 'nearby' && !onYourPass(r, rider)) continue;
-      const coming = ok(r.forecast) ? r.forecast.data.next72hIn ?? 0 : 0;
+      const n = lookAhead(s.snowDays);
+      const coming = snowComing(r, n);
       const fresh = ok(r.observed) ? r.observed.data.newSnow.h48 ?? 0 : 0;
       if (coming >= s.snowInches) {
-        const snowyDays = r.forecast.data.days.slice(0, 3).filter((d) => d.snowfall > 0).map((d) => `${dayName(d.date)} ${d.snowfall}"`);
-        alerts.push({ id: `snow:${r.id}:${date}`, kind: 'snow', hash: `snow/${r.id}`, title: `${r.name}: ${coming}" of snow coming`, detail: `Next 3 days: ${snowyDays.join(' · ') || 'see forecast'}` });
+        const days = r.forecast.data.days.slice(0, n).map((d) => ({ date: d.date, inches: d.snowfall ?? 0 }));
+        const snowyDays = days.filter((d) => d.inches > 0).map((d) => `${dayName(d.date)} ${d.inches}"`);
+        alerts.push({ id: `snow:${r.id}:${date}`, kind: 'snow', hash: `snow/${r.id}`, itemId: r.id, title: `${r.name}: ${coming}" of snow coming`, detail: `Next ${n} days: ${snowyDays.join(' · ') || 'see forecast'}`, days });
       }
       if (fresh >= s.snowInches) {
-        alerts.push({ id: `fresh:${r.id}:${date}`, kind: 'snow', hash: `snow/${r.id}`, title: `${r.name}: ${fresh}" of fresh snow`, detail: 'Fell in the last 48 hours' });
+        alerts.push({ id: `fresh:${r.id}:${date}`, kind: 'snow', hash: `snow/${r.id}`, itemId: r.id, title: `${r.name}: ${fresh}" of fresh snow`, detail: 'Fell in the last 48 hours', days: [] });
       }
     }
   }
@@ -60,7 +76,7 @@ export function computeAlerts(report, settings, profile, pins, riderIn = EMPTY_R
     for (const spot of report.sections.surf.items) {
       if (!covered(s.surfScope, spot, pins.surf ?? [], s.surfWatch ?? [], rider)) continue;
       if (surfBlockers(spot, rider, { checkDistance: false }).length) continue; // water too cold for you
-      const days = fitDays(spot, profile, skills);
+      const days = fitDays(spot, profile, skills).slice(0, lookAhead(s.surfDays));
       const good = days.filter((d) => d.fits);
       if (!good.length) continue;
       const first = good[0];
@@ -72,6 +88,8 @@ export function computeAlerts(report, settings, profile, pins, riderIn = EMPTY_R
         id: `surf:${spot.id}:${good.map((d) => d.date).join(',')}`,
         kind: 'surf',
         hash: `surf/${spot.id}`,
+        itemId: spot.id,
+        days: good.map((d) => ({ date: d.date, ft: d.ft, s: d.s, wind: d.wind, when: when(d) })),
         title: `${spot.name}: waves fit you ${good.map(when).join(', ')}`,
         detail: `${first.date === localToday ? 'Today' : dayName(first.date)}: ${first.ft} ft @ ${first.s} s${first.wind ? `, ${first.wind.mph} mph ${first.wind.relative}` : ''}`,
       });
@@ -92,11 +110,12 @@ export function watching(report, settings, profile, pins, riderIn = EMPTY_RIDER)
     for (const r of report.sections.snow.items) {
       if (!covered(s.snowScope, r, pins.snow ?? [], s.snowWatch ?? [], rider)) continue;
       if (s.snowScope === 'nearby' && !onYourPass(r, rider)) continue;
-      const coming = ok(r.forecast) ? r.forecast.data.next72hIn ?? 0 : 0;
+      const n = lookAhead(s.snowDays);
+      const coming = snowComing(r, n);
       const fresh = ok(r.observed) ? r.observed.data.newSnow.h48 ?? 0 : 0;
       const status = noSnowboards(r, rider)
         ? 'Skiers only, so no alerts for you'
-        : `${coming}" in the next 3 days · ${fresh}" fresh (alerts at ${s.snowInches}")`;
+        : `${coming}" in the next ${n} days · ${fresh}" fresh (alerts at ${s.snowInches}")`;
       out.snow.push({ item: r, status, match: matched.has(`snow/${r.id}`) });
     }
   }
@@ -109,7 +128,7 @@ export function watching(report, settings, profile, pins, riderIn = EMPTY_RIDER)
       if (cold) status = cold;
       else if (!hasProfile(profile)) status = 'Set your level and board to get alerts';
       else {
-        const days = fitDays(spot, profile, skills);
+        const days = fitDays(spot, profile, skills).slice(0, lookAhead(s.surfDays));
         status = days.some((d) => d.fits) ? 'Waves fit you' : `Not for you yet: ${days[0]?.reasons[0] ?? 'no forecast'}`;
       }
       out.surf.push({ item: spot, status, match: matched.has(`surf/${spot.id}`) });

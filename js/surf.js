@@ -2,12 +2,12 @@
 // detail view, map) come from places.js.
 import { svg, timeChart } from './charts.js';
 import { setTideLevel } from './background.js';
-import { createPlacesTab } from './places.js';
+import { createPlacesTab, stateFilter } from './places.js';
 import { notifyButton } from './alerts.js';
 import { loadRider, openProfile, recommendCard } from './rider.js';
 import { distanceMi, surfBlockers } from './recommend.js';
 import { uvAdvice, wetsuitFor } from './gear.js';
-import { fitDays, fitToday, hasProfile, onProfileChange, profileChips, profileText, setSkills } from './skill.js';
+import { fitDays, fitToday, hasProfile, onProfileChange, profileText, setSkills } from './skill.js';
 import {
   add, bestBetCard, chartSlot, compass, dataTable, drawCharts, formatShortDate, formatTime,
   h, num, ok, stat, unavailable,
@@ -53,7 +53,9 @@ export function renderSurf(surfSection) {
     listKey: 'ssr-surf-list-v2', // (v2: the default sort became A–Z)
     filters: [
       { id: 'area', label: 'Area', allLabel: 'All areas', options: AREAS, test: (s, v) => s.area === v },
+      stateFilter(section.items),
     ],
+    lookAhead: true,
     sorts: [
       { value: 'name', label: 'A–Z', compare: () => 0 }, // (ties are always broken A–Z)
       { value: 'rating', label: 'Best rating', compare: (a, b) => (b.rating.score ?? 0) - (a.rating.score ?? 0) || (period(b) ?? 0) - (period(a) ?? 0) },
@@ -62,12 +64,15 @@ export function renderSurf(surfSection) {
     ],
     searchPlaceholder: 'Search by beach, town or state',
     matches,
-    // Your levels and boards (tap one or more): show only beaches whose waves fit
-    // you today. The same chips are on the Notifications page; they stay in sync.
-    extraControls: () => profileChips({ compact: true }),
-    extraFilter: (s) => !hasProfile() || fitToday(s).fits === true,
-    // A small "Fits you" tag on beaches that suit your level/board today
-    rowExtras: (s) => (hasProfile() && fitToday(s).fits ? h('span', { class: 'fit-tag' }, '✓ Fits you') : null),
+    // Your level and board come from your Rider Profile (changed only on the
+    // Profile tab). Here: just a switch to show only beaches that fit you.
+    extraControls: fitControls,
+    extraFilter: (s) => !fitOnly || !hasProfile() || Boolean(firstFit(s)),
+    // A small tag on beaches that suit your level/board in the look-ahead window
+    rowExtras: (s) => {
+      const d = hasProfile() ? firstFit(s) : null;
+      return d ? h('span', { class: 'fit-tag' }, `✓ Fits you ${d.label}`) : null;
+    },
     rowStats: (s) => {
       const w = ok(s.wind) ? ` · ${s.wind.data.speedMph} mph ${s.wind.data.relative}` : '';
       const t = waterTemp(s);
@@ -86,6 +91,45 @@ export function renderSurf(surfSection) {
   // When your levels/boards change (here or on the Notifications page), re-filter.
   onProfileChange(() => tab.refreshList());
   return tab;
+}
+
+// ---------- Fits you ----------
+
+// "Only beaches that fit me" (remembered on this device; on unless you turn it off)
+let fitOnly = (() => { try { return localStorage.getItem('ssr-surf-fitonly') !== '0'; } catch { return true; } })();
+
+// The first day in the "Look ahead" window when this beach fits you: { label: 'today' | 'Sat' }
+function firstFit(s) {
+  const days = fitDays(s).slice(0, tab?.days() ?? 3);
+  const i = days.findIndex((d) => d.fits);
+  if (i === -1) return null;
+  return { label: i === 0 ? 'today' : new Date(`${days[i].date}T12:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) };
+}
+
+// Under the list's dropdowns: your profile (read-only) and the switch
+function fitControls() {
+  const wrap = h('div', { class: 'fit-controls' });
+  const draw = () => {
+    const link = h('button', { type: 'button', class: 'text-button inline-link' }, hasProfile() ? 'Change in Profile' : 'Set it in your Profile');
+    link.addEventListener('click', openProfile);
+    if (!hasProfile()) {
+      wrap.replaceChildren(h('p', { class: 'fine' }, 'Add your level and board to see which beaches fit you. ', link));
+      return;
+    }
+    const box = h('input', { type: 'checkbox', id: 'surf-fit-only' });
+    box.checked = fitOnly;
+    box.addEventListener('change', () => {
+      fitOnly = box.checked;
+      try { localStorage.setItem('ssr-surf-fitonly', fitOnly ? '1' : '0'); } catch { /* ignore */ }
+      tab.refreshList();
+    });
+    wrap.replaceChildren(
+      h('label', { class: 'switch-row', for: 'surf-fit-only' }, box, h('span', {}, 'Only beaches that fit me')),
+      h('p', { class: 'fine' }, `For ${/^[aeiou]/i.test(profileText()) ? 'an' : 'a'} ${profileText()}, from your Rider Profile. `, link));
+  };
+  draw();
+  onProfileChange(draw);
+  return wrap;
 }
 
 // ---------- Tides ----------
@@ -409,7 +453,7 @@ function directionCompass(s) {
 
 const dayName = (date, i) => (i === 0 ? 'Today' : new Date(`${date}T12:00Z`).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }));
 
-// Does this beach suit your level and board today and over the next couple of days?
+// Does this beach suit your level and board today and over the next week?
 function forYou(s) {
   // Water temperature and distance, from your Rider Profile
   const rider = loadRider();
@@ -423,7 +467,7 @@ function forYou(s) {
     return [
       h('h4', {}, 'For you'),
       notes,
-      h('p', { class: 'fine' }, 'Set your level and board (in the Surf filters or your ', b, ') to see whether this beach suits you.'),
+      h('p', { class: 'fine' }, 'Set your level and board in your ', b, ' to see whether this beach suits you.'),
     ];
   }
   const days = fitDays(s);

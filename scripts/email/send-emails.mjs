@@ -10,8 +10,9 @@
 // Morning runs only (MORNING=1, set by the workflow 5-11 AM Pacific):
 //   - For each signed-in person, works out their alerts with the SAME rules the app
 //     uses (js/alert-rules.js) and, only on days something matches and at most once
-//     a day, emails them a short summary and/or sends a notification to each phone
-//     or computer they turned notifications on for.
+//     a day, emails them (one email for snow, a separate one for surf; designs in
+//     templates.mjs) and/or sends a notification to each phone or computer they
+//     turned notifications on for.
 //
 // Real runs need these GitHub secrets (see README "Email and phone alerts"):
 //   FIREBASE_SERVICE_ACCOUNT  the service-account key JSON from Firebase
@@ -22,8 +23,10 @@
 // Without the Gmail secrets it skips email; without VAPID_PRIVATE_KEY it skips push.
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
-import { computeAlerts } from '../../js/alert-rules.js';
+import { computeAlerts, DEFAULT_SETTINGS } from '../../js/alert-rules.js';
+import { hasProfile, profileText } from '../../js/fit.js';
 import { vapidPublicKey } from '../../js/firebase-config.js';
+import { confirmationEmail, snowEmail, surfEmail } from './templates.mjs';
 
 const SITE_URL = process.env.SITE_URL || 'https://billywall732.github.io/snow-surf-report/';
 const dryRunIndex = process.argv.indexOf('--dry-run');
@@ -59,12 +62,15 @@ const userDoc = (id) => db.collection('users').doc(id);
 
 // ---------- Sending ----------
 
-const escape = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-
 let transport = null;
 async function sendEmail(to, { subject, text, html }) {
   if (dryRun) {
     console.log(`\n=== Email to: ${to}\nSubject: ${subject}\n\n${text}`);
+    if (process.env.EMAIL_PREVIEW_DIR) {
+      // Save the HTML too, to look at in a browser
+      const file = `${process.env.EMAIL_PREVIEW_DIR}/${to.replace(/[^a-z0-9]+/gi, '_')}-${subject.split(':')[0].replace(/\W+/g, '_')}.html`;
+      await fs.writeFile(file, html);
+    }
     return;
   }
   if (!transport) {
@@ -114,19 +120,6 @@ const verified = (u) => {
   return !want || want === (u.email ?? '').toLowerCase() || (u.verifiedEmails ?? []).includes(want);
 };
 
-function confirmationEmail(user, link) {
-  return {
-    subject: 'Confirm your email for Snow & Surf alerts',
-    text: `Hi${user.name ? ` ${user.name.split(' ')[0]}` : ''}, tap this link to get Snow & Surf Report alerts at this address:\n\n${link}\n\nIf you didn't ask for this, ignore this email and nothing will be sent here.`,
-    html: `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:560px;margin:auto;color:#0b0b0b">
-  <h2 style="font-family:Georgia,serif;margin:0 0 12px">Snow &amp; Surf Report</h2>
-  <p>Tap the button to get alerts at this address.</p>
-  <p><a href="${escape(link)}" style="display:inline-block;background:#0f8a7e;color:#fff;text-decoration:none;font-weight:600;padding:12px 18px;border-radius:8px">Confirm my email</a></p>
-  <p style="color:#6b6a65;font-size:13px">If you didn't ask for this, ignore this email and nothing will be sent here.</p>
-</div>`,
-  };
-}
-
 let confirmed = 0;
 let confirmSent = 0;
 async function confirmAddresses() {
@@ -134,7 +127,7 @@ async function confirmAddresses() {
     if (verified(user)) continue;
     const want = user.alertEmail.toLowerCase();
     if (dryRun) {
-      await sendEmail(want, confirmationEmail(user, `${SITE_URL}#confirm/<code>`));
+      await sendEmail(want, confirmationEmail({ user, link: `${SITE_URL}#confirm/<code>` }));
       continue;
     }
     const pendingRef = db.collection('pending').doc(user.id);
@@ -154,7 +147,7 @@ async function confirmAddresses() {
     if (!canEmail) continue;
     const token = pending?.email === want ? pending.token : crypto.randomBytes(24).toString('hex');
     try {
-      await sendEmail(want, confirmationEmail(user, `${SITE_URL}#confirm/${token}`));
+      await sendEmail(want, confirmationEmail({ user, link: `${SITE_URL}#confirm/${token}` }));
       await pendingRef.set({ email: want, token, sentDate: now, sends: (pending?.email === want ? pending.sends ?? 0 : 0) + 1 });
       confirmSent++;
     } catch (err) {
@@ -172,25 +165,20 @@ async function confirmAddresses() {
 
 const dayLabel = new Date(`${today}T12:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
-function alertEmail(user, alerts) {
-  const subject = `Snow & Surf: ${alerts.length} alert${alerts.length === 1 ? '' : 's'} for ${dayLabel}`;
-  const manage = `${SITE_URL}#alerts`;
-  const text = [
-    `Good morning${user.name ? `, ${user.name.split(' ')[0]}` : ''}! Here's what matches your alerts today:`,
-    '',
-    ...alerts.map((a) => `- ${a.title}\n  ${a.detail}\n  ${SITE_URL}#${a.hash}`),
-    '',
-    `Change your alerts or turn off these emails: ${manage}`,
-  ].join('\n');
-  const html = `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:560px;margin:auto;color:#0b0b0b">
-  <h2 style="font-family:Georgia,serif;margin:0 0 4px">Snow &amp; Surf Report</h2>
-  <p style="color:#52514e;margin:0 0 16px">${escape(dayLabel)}: ${alerts.length} thing${alerts.length === 1 ? '' : 's'} match your alerts</p>
-  ${alerts.map((a) => `<a href="${escape(`${SITE_URL}#${a.hash}`)}" style="display:block;text-decoration:none;color:inherit;border:1px solid #e1e0d9;border-left:4px solid ${a.kind === 'snow' ? '#0f8a7e' : '#2a78d6'};border-radius:8px;padding:10px 12px;margin:0 0 8px">
-    <strong>${escape(a.title)}</strong><br><span style="color:#52514e;font-size:14px">${escape(a.detail)}</span></a>`).join('\n  ')}
-  <p style="color:#6b6a65;font-size:13px;margin-top:20px">You're getting this because you turned on email alerts in the Snow &amp; Surf Report.
-  <a href="${escape(manage)}">Change your alerts or turn off these emails</a>.</p>
-</div>`;
-  return { subject, text, html };
+// Every mountain and beach by id, for the email details
+const items = new Map([...report.sections.snow.items, ...report.sections.surf.items].map((x) => [x.id, x]));
+
+// The day's emails for one person: snow and surf separately (only the kinds that matched)
+function emailsFor(user, alerts) {
+  const settings = { ...DEFAULT_SETTINGS, ...user.settings };
+  const profile = user.profile ?? { levels: [], boards: [] };
+  const common = { user, items, siteUrl: SITE_URL, dateLabel: dayLabel };
+  const snow = alerts.filter((a) => a.kind === 'snow');
+  const surf = alerts.filter((a) => a.kind === 'surf');
+  return [
+    snow.length ? snowEmail({ ...common, alerts: snow, lookAhead: settings.snowDays ?? 3 }) : null,
+    surf.length ? surfEmail({ ...common, alerts: surf, lookAhead: settings.surfDays ?? 3, profileText: hasProfile(profile) ? profileText(profile, report.sections.surf.skills) : '' }) : null,
+  ].filter(Boolean);
 }
 
 // One notification per morning: the alert itself, or a count and the first few
@@ -215,12 +203,15 @@ async function morningAlerts() {
 
     let sent = false;
     if (wantsEmail) {
-      try {
-        await sendEmail(verified(user) && user.alertEmail ? user.alertEmail : user.email, alertEmail(user, alerts));
-        emailed++;
-        sent = true;
-      } catch (err) {
-        console.error(`Couldn't email user ${user.id}: ${err.message}`); // keep going for everyone else
+      const to = verified(user) && user.alertEmail ? user.alertEmail : user.email;
+      for (const email of emailsFor(user, alerts)) {
+        try {
+          await sendEmail(to, email);
+          emailed++;
+          sent = true;
+        } catch (err) {
+          console.error(`Couldn't email user ${user.id}: ${err.message}`); // keep going for everyone else
+        }
       }
     }
     for (const [deviceId, sub] of devices) {

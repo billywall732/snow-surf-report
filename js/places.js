@@ -34,6 +34,24 @@ function save(key, value) {
 // "Mammoth Lakes, CA"
 export const place = (item) => (item.city ? `${item.city}, ${item.region}` : item.region);
 
+const STATE_NAMES = {
+  AK: 'Alaska', AL: 'Alabama', AR: 'Arkansas', AZ: 'Arizona', CA: 'California', CO: 'Colorado', CT: 'Connecticut',
+  DE: 'Delaware', FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', IA: 'Iowa', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana',
+  KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', MA: 'Massachusetts', MD: 'Maryland', ME: 'Maine', MI: 'Michigan',
+  MN: 'Minnesota', MO: 'Missouri', MS: 'Mississippi', MT: 'Montana', NC: 'North Carolina', ND: 'North Dakota',
+  NE: 'Nebraska', NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NV: 'Nevada', NY: 'New York', OH: 'Ohio',
+  OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota',
+  TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VA: 'Virginia', VT: 'Vermont', WA: 'Washington', WI: 'Wisconsin',
+  WV: 'West Virginia', WY: 'Wyoming',
+};
+// A "State" filter for a tab: only the states that have places, A–Z by name.
+export function stateFilter(items) {
+  const codes = [...new Set(items.map((x) => x.region))];
+  const options = codes.map((c) => [c, STATE_NAMES[c] ?? c]).sort((a, b) => a[1].localeCompare(b[1]));
+  return { id: 'state', label: 'State', allLabel: 'All states', options, test: (x, v) => x.region === v };
+}
+export const stateName = (code) => STATE_NAMES[code] ?? code;
+
 /**
  * opts = {
  *   key:        'snow' | 'surf' (address prefix, element ids)
@@ -44,6 +62,10 @@ export const place = (item) => (item.city ? `${item.city}, ${item.region}` : ite
  *   filters:    [{ id, label, allLabel, options, test(item, value), initial?(), onChange?(value) }]
  *               options: ['West', ...] or [['beginner', 'Beginner'], ...] (value, label)
  *               initial/onChange: let a filter mirror a setting saved elsewhere
+ *               The same dropdowns sit above the map too; changing one zooms the
+ *               map to fit what's left.
+ *   lookAhead:  true adds a "Look ahead" choice (next 3, 5 or 7 days) to the list;
+ *               the tab reads it with tab.days()
  *   sorts:      [{ value, label, compare(a, b) }]   (first one is the default)
  *   searchPlaceholder, matches(item, query)
  *   rowExtras(item)   -> nodes after the place name (e.g. pass tags)
@@ -71,13 +93,13 @@ export function createPlacesTab(opts) {
 
   let pinned = load(opts.pinKey, section.defaultPinned ?? []).filter((id) => known.has(id)).slice(0, MAX_PINS);
   const defaults = Object.fromEntries(opts.filters.map((f) => [f.id, 'all']));
-  let list = { ...defaults, sort: opts.sorts[0].value, ...load(opts.listKey, {}), query: '' };
+  let list = { ...defaults, sort: opts.sorts[0].value, days: 3, ...load(opts.listKey, {}), query: '' };
   let showAll = false;
   let pendingPin = null; // a place waiting to replace a pin (when all 4 are taken)
   let selectedId = null; // the place open in the detail view
   let openedByUs = false; // did this page add the #key/<id> history entry?
   let visibleIds = new Set();
-  const filterSelects = {}; // filter id -> its <select>, so setFilter() can change it
+  const filterSelects = {}; // filter id -> its <select>s (list and map), kept in step
   let mapView = null; // built the first time the map scrolls near the screen
   let mapWanted = false;
   const isPinned = (id) => pinned.includes(id);
@@ -89,6 +111,7 @@ export function createPlacesTab(opts) {
     list: h('ul', { class: 'resort-list' }),
     more: h('button', { type: 'button', class: 'text-button show-all' }),
     map: h('div', { class: 'map-wrap' }),
+    mapNote: h('p', { class: 'fine map-note', 'aria-live': 'polite' }),
     afterMine: h('div'),
   };
   els.more.addEventListener('click', () => { showAll = !showAll; updateList(); });
@@ -133,6 +156,8 @@ export function createPlacesTab(opts) {
             ['is-selected', 'Open in details'],
           ]).map(([cls, text]) => h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon, cls), ` ${text}`)),
           h('span', { class: 'legend-item' }, 'Tap one for details · pinch or + to zoom.'))),
+      h('div', { class: 'map-filters' }, opts.filters.map((f) => filterControl(f, 'map'))),
+      els.mapNote,
       els.map),
   );
 
@@ -207,6 +232,9 @@ export function createPlacesTab(opts) {
     redrawMap();
   }
 
+  const filtering = () => opts.filters.some((f) => list[f.id] !== 'all');
+  let fitPending = filtering(); // zoom to the saved filters once the map is drawn
+
   function redrawMap() {
     if (!mapWanted || document.getElementById(opts.panelId).hidden) return; // drawn when shown
     // Build the map the first time, or again only if its width changed
@@ -214,8 +242,17 @@ export function createPlacesTab(opts) {
     const width = els.map.clientWidth;
     if (!mapView || Math.abs(mapView.width - width) > 1) {
       mapView = createMap(els.map, { items: section.items, icon: opts.mapIcon, label: opts.mapLabel, width, onSelect: openDetail, classFor: opts.itemClass });
+      fitPending ||= filtering();
     }
     mapView.update({ pinned: new Set(pinned), selected: selectedId, visible: visibleIds });
+    if (fitPending) {
+      fitPending = false;
+      mapView.fit(filtering() ? visibleIds : new Set());
+    }
+    const n = visibleIds.size;
+    els.mapNote.textContent = filtering()
+      ? (n ? `Showing ${n} ${n === 1 ? words.one : words.many}. The rest are faded.` : `No ${words.many} match these filters.`)
+      : '';
   }
 
   function refresh() {
@@ -313,38 +350,60 @@ export function createPlacesTab(opts) {
 
   // Change a filter from outside (e.g. the Notifications page changed your level).
   function setFilter(id, value) {
-    const sel = filterSelects[id];
-    if (!sel) return;
-    sel.value = [...sel.options].some((o) => o.value === value) ? value : 'all';
-    list[id] = sel.value;
+    const sels = filterSelects[id];
+    if (!sels) return;
+    const v = [...sels[0].options].some((o) => o.value === value) ? value : 'all';
+    for (const sel of sels) sel.value = v;
+    list[id] = v;
+    fitPending = true;
     updateList();
   }
 
+  const remember = () => {
+    const { query, ...choices } = list;
+    save(opts.listKey, choices);
+  };
+
+  // One filter dropdown. Each filter appears twice (in the list and above the
+  // map); both copies always show the same choice.
+  function filterControl(f, where) {
+    const choices = f.options.map((o) => (Array.isArray(o) ? o : [o, o])); // [value, label]
+    const sel = h('select', { id: where === 'map' ? `${key}-map-${f.id}` : `${key}-${f.id}` },
+      h('option', { value: 'all' }, f.allLabel),
+      choices.map(([value, label]) => h('option', { value }, label)));
+    if (!filterSelects[f.id]) {
+      // First copy: decide the starting value
+      const start = f.initial ? f.initial() ?? 'all' : list[f.id];
+      list[f.id] = choices.some(([value]) => value === start) ? start : 'all';
+    }
+    sel.value = list[f.id];
+    sel.addEventListener('change', () => {
+      for (const other of filterSelects[f.id]) other.value = sel.value;
+      list[f.id] = sel.value;
+      remember();
+      f.onChange?.(sel.value);
+      fitPending = true; // zoom the map to what's left
+      updateList();
+    });
+    (filterSelects[f.id] ??= []).push(sel);
+    return h('label', { class: 'control' }, h('span', {}, f.label), sel);
+  }
+
   function listControls() {
-    const remember = () => {
-      const { query, ...choices } = list;
-      save(opts.listKey, choices);
-    };
     const search = h('input', { type: 'search', id: `${key}-search`, placeholder: opts.searchPlaceholder, autocomplete: 'off' });
     search.addEventListener('input', () => { list.query = search.value.trim().toLowerCase(); updateList(); });
 
-    const selects = opts.filters.map((f) => {
-      const choices = f.options.map((o) => (Array.isArray(o) ? o : [o, o])); // [value, label]
-      const sel = h('select', { id: `${key}-${f.id}` },
-        h('option', { value: 'all' }, f.allLabel),
-        choices.map(([value, label]) => h('option', { value }, label)));
-      const start = f.initial ? f.initial() ?? 'all' : list[f.id];
-      sel.value = choices.some(([value]) => value === start) ? start : 'all';
-      list[f.id] = sel.value;
-      sel.addEventListener('change', () => {
-        list[f.id] = sel.value;
-        remember();
-        f.onChange?.(sel.value);
-        updateList();
-      });
-      filterSelects[f.id] = sel;
-      return h('label', { class: 'control' }, h('span', {}, f.label), sel);
-    });
+    const selects = opts.filters.map((f) => filterControl(f, 'list'));
+
+    // How far ahead the list looks (snow coming, waves that fit you)
+    let days = null;
+    if (opts.lookAhead) {
+      const sel = h('select', { id: `${key}-days` }, [3, 5, 7].map((n) => h('option', { value: n }, `Next ${n} days`)));
+      list.days = [3, 5, 7].includes(Number(list.days)) ? Number(list.days) : 3;
+      sel.value = String(list.days);
+      sel.addEventListener('change', () => { list.days = Number(sel.value); remember(); updateList(); });
+      days = h('label', { class: 'control' }, h('span', {}, 'Look ahead'), sel);
+    }
 
     const sort = h('select', { id: `${key}-sort` }, opts.sorts.map((s) => h('option', { value: s.value }, s.label)));
     sort.value = opts.sorts.some((s) => s.value === list.sort) ? list.sort : opts.sorts[0].value;
@@ -355,6 +414,7 @@ export function createPlacesTab(opts) {
       h('div', { class: 'list-controls' },
         h('label', { class: 'control grow' }, h('span', {}, 'Search'), search),
         selects,
+        days,
         h('label', { class: 'control' }, h('span', {}, 'Sort'), sort)),
       opts.extraControls?.(),
     ];
@@ -474,7 +534,7 @@ export function createPlacesTab(opts) {
   // the rest of the page (other tabs, Notifications) has finished setting up.
   setTimeout(syncDialogWithHash, 0);
 
-  const api = { redrawMap, openDetail, pinned: () => [...pinned], refresh, setFilter, refreshList: () => updateList(), setPinned, openList: () => setListOpen(true), onPinsChange: null };
+  const api = { redrawMap, openDetail, pinned: () => [...pinned], refresh, setFilter, days: () => list.days ?? 3, refreshList: () => updateList(), setPinned, openList: () => setListOpen(true), onPinsChange: null };
   instances.push(api);
   return api;
 }

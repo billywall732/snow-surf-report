@@ -824,24 +824,41 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
 .switch-row input { width: 22px; height: 22px; accent-color: var(--accent); flex-shrink: 0; }
 
 .alert-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+/* One alert: icon, "Snow alert", what matched, and an arrow to its details */
 .alert-item {
+  --kind: var(--accent);
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   text-align: left;
   font: inherit;
   color: var(--ink);
-  background: var(--surface-2);
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--accent);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--kind) 35%, var(--rule));
+  border-left: 5px solid var(--kind);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
-.alert-item.alert-snow { border-left-color: var(--ikon); }
+.alert-item.alert-snow { --kind: var(--ikon); }
+.alert-item:hover { border-color: var(--kind); }
+.alert-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  color: var(--kind);
+  background: color-mix(in srgb, var(--kind) 14%, transparent);
+  border-radius: 50%;
+}
+.alert-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.alert-kind { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kind); }
 .alert-title { font-weight: 650; }
 .alert-detail { font-size: 14px; color: var(--ink-2); }
+.alert-go { flex-shrink: 0; font-size: 26px; line-height: 1; color: var(--muted); }
 
 .delivery-list { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 10px; font-size: 15px; }
 .delivery-list .fine { margin: 2px 0 0 32px; }
@@ -1570,3 +1587,59 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 .intro-signin-button:hover { background: rgba(20, 10, 40, 0.75); }
 .intro-signin-button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
 .intro-signin-note { font-size: 13px; color: #ffe7cf; opacity: 0.85; }
+
+/* ---------- Notifications: "N alerts for you today" ---------- */
+
+.today-card.has-alerts {
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent), var(--shadow);
+}
+.today-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.today-bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 50%;
+}
+.today-bell svg { width: 24px; height: 24px; fill: currentColor; }
+.has-alerts .today-bell { color: #fff; background: var(--accent); animation: bell-ring 1.2s ease 0.3s 2; }
+@keyframes bell-ring { 0%, 100% { rotate: 0deg; } 15% { rotate: 14deg; } 30% { rotate: -12deg; } 45% { rotate: 8deg; } 60% { rotate: -4deg; } }
+.today-bell-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font: 700 12px/22px var(--sans);
+  text-align: center;
+  color: #fff;
+  background: #d93b3b;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+}
+.today-title h3 { margin: 0; font-size: 22px; }
+.today-sub { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
+@media (max-width: 600px) {
+  .today-title h3 { font-size: 19px; }
+  .alert-item { padding: 10px 12px; gap: 10px; }
+  .alert-icon { width: 32px; height: 32px; font-size: 16px; }
+}
+
+/* ---------- Map filters ---------- */
+
+.map-filters { display: flex; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; }
+.map-filters .control { flex: 1 1 140px; max-width: 240px; }
+.map-note { min-height: 0; margin: 0 0 8px; }
+.map-note:empty { display: none; }
+
+/* ---------- Surf list: "Only beaches that fit me" ---------- */
+
+.fit-controls { margin-top: 10px; }
+.fit-controls .fine { margin: 2px 0 0; }

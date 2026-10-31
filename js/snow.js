@@ -1,7 +1,8 @@
 // The Snow tab: everything specific to mountains. The shared parts (pins, list,
 // detail view, map) come from places.js.
 import { timeChart } from './charts.js';
-import { createPlacesTab } from './places.js';
+import { createPlacesTab, stateFilter } from './places.js';
+import { snowComing } from './alert-rules.js';
 import { notifyButton } from './alerts.js';
 import { loadRider, openProfile, recommendCard } from './rider.js';
 import { hasSkiRider, skiFit, skiText } from './recommend.js';
@@ -16,6 +17,7 @@ const PASSES = ['Ikon', 'Epic'];
 
 const fresh = (r) => (ok(r.observed) ? r.observed.data.newSnow.h48 ?? 0 : 0);
 const coming = (r) => (ok(r.forecast) ? r.forecast.data.next72hIn ?? 0 : 0);
+const days = () => tab?.days() ?? 3; // the list's "Look ahead" choice
 const base = (r) => (ok(r.observed) ? r.observed.data.depthNow ?? 0 : 0);
 const passNames = (r) => (r.passes ?? []).map((p) => p.pass);
 
@@ -59,12 +61,14 @@ export function renderSnow(section) {
     filters: [
       { id: 'pass', label: 'Pass', allLabel: 'All passes', options: PASSES, test: (r, v) => passNames(r).includes(v) },
       { id: 'area', label: 'Area', allLabel: 'All areas', options: AREAS, test: (r, v) => r.area === v },
+      stateFilter(section.items),
     ],
+    lookAhead: true,
     sorts: [
       { value: 'name', label: 'A–Z', compare: () => 0 }, // (ties are always broken A–Z)
       { value: 'rating', label: 'Best rating', compare: (a, b) => (b.rating.score ?? 0) - (a.rating.score ?? 0) || (fresh(b) + coming(b)) - (fresh(a) + coming(a)) },
       { value: 'new', label: 'Most new snow (48h)', compare: (a, b) => fresh(b) - fresh(a) },
-      { value: 'forecast', label: 'Most snow coming (72h)', compare: (a, b) => coming(b) - coming(a) },
+      { value: 'forecast', label: 'Most snow coming', compare: (a, b) => snowComing(b, days()) - snowComing(a, days()) },
       { value: 'base', label: 'Deepest base', compare: (a, b) => base(b) - base(a) },
     ],
     searchPlaceholder: 'Search by name, town, state or pass',
@@ -80,7 +84,7 @@ export function renderSnow(section) {
     rowStats: (r) => [
       `New 48h ${num(ok(r.observed) ? r.observed.data.newSnow.h48 : null, '"')}`,
       ` · Base ${num(ok(r.observed) ? r.observed.data.depthNow : null, '"')}`,
-      ` · Next 3 days ${num(ok(r.forecast) ? r.forecast.data.next72hIn : null, '"')}`,
+      ` · Next ${days()} days ${num(ok(r.forecast) ? snowComing(r, days()) : null, '"')}`,
       ok(r.forecast) ? ` · ${r.forecast.data.days[0].tempHigh}°/${r.forecast.data.days[0].tempLow}°F` : '',
     ].join(''),
     tile: snowTile,

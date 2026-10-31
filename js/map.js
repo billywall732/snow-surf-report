@@ -67,6 +67,7 @@ export function project(lat, lon) {
  * and crowded areas spread out as you zoom in.
  */
 const MAX_ZOOM = 8;
+const MAX_FIT_ZOOM = 6; // filtering to one place still shows the coast or range around it
 
 export function createMap(container, { items, icon = 'peak', label: mapLabel = 'places', width, onSelect, classFor }) {
   const [w, h] = VIEWBOX;
@@ -244,7 +245,33 @@ export function createMap(container, { items, icon = 'peak', label: mapLabel = '
     }
   }
 
-  return { update, width };
+  // Zoom so these places fill the map, with a little room around them. All of
+  // them (or none) shows the whole country.
+  function fit(ids) {
+    const pts = nodes.filter((n) => ids.has(n.r.id));
+    if (!pts.length || pts.length === nodes.length) {
+      setZoom(1, w / 2, h / 2);
+      return;
+    }
+    const xs = pts.map((n) => n.x);
+    const ys = pts.map((n) => n.y);
+    // Room around them: about 36 screen pixels, which is fewer map units the
+    // more we zoom, so work out the zoom, then the room, then the zoom again.
+    let z = MAX_FIT_ZOOM;
+    let box;
+    for (let pass = 0; pass < 3; pass++) {
+      const pad = (36 * k) / z;
+      box = { x0: Math.min(...xs) - pad, x1: Math.max(...xs) + pad, y0: Math.min(...ys) - pad * 1.5, y1: Math.max(...ys) + pad }; // icons stand above their spot
+      z = Math.max(1, Math.min(w / (box.x1 - box.x0), h / (box.y1 - box.y0), MAX_FIT_ZOOM));
+    }
+    const cx = (box.x0 + box.x1) / 2;
+    const cy = (box.y0 + box.y1) / 2;
+    setZoom(z, cx, cy);
+    setView(cx - view.w / 2, cy - view.h / 2, view.w, view.h); // centered on them
+    if (last) update(last);
+  }
+
+  return { update, fit, width };
 }
 
 // A name label beside an icon. Start on the side with more room on screen (so it
