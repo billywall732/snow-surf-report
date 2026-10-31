@@ -20,6 +20,11 @@ on:
     # for :00 can start very late; an off-minute starts more reliably.
     - cron: '17 * * * *'
   workflow_dispatch: # adds a "Run workflow" button on the Actions tab
+    inputs:
+      sample:
+        description: 'Only send example snow + surf emails to the GMAIL_USER inbox (no real alerts)'
+        type: boolean
+        default: false
   push:
     branches: [main] # redeploy when you push code changes
 
@@ -90,6 +95,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          SAMPLE: ${{ inputs.sample && '1' || '' }}
           SITE_URL: ${{ vars.SITE_URL }} # set this repo variable when the site moves to its own domain
         run: |
           if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then

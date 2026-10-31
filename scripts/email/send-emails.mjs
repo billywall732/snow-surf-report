@@ -2,6 +2,9 @@
 //   node scripts/email/send-emails.mjs              (real: reads Firestore, sends via Gmail + web push)
 //   node scripts/email/send-emails.mjs --dry-run sample-users.json
 //                                                   (test: prints what it would send, sends nothing)
+//   SAMPLE=1 node scripts/email/send-emails.mjs     (one example snow email and one example
+//                                                   surf email from today's report, sent to
+//                                                   GMAIL_USER; nobody else gets anything)
 //
 // Every run (hourly):
 //   - Confirms new email addresses. Someone who wants alerts at an address other
@@ -23,7 +26,7 @@
 // Without the Gmail secrets it skips email; without VAPID_PRIVATE_KEY it skips push.
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
-import { computeAlerts, DEFAULT_SETTINGS } from '../../js/alert-rules.js';
+import { computeAlerts, DEFAULT_SETTINGS, snowComing } from '../../js/alert-rules.js';
 import { hasProfile, profileText } from '../../js/fit.js';
 import { vapidPublicKey } from '../../js/firebase-config.js';
 import { confirmationEmail, snowEmail, surfEmail } from './templates.mjs';
@@ -31,6 +34,7 @@ import { confirmationEmail, snowEmail, surfEmail } from './templates.mjs';
 const SITE_URL = process.env.SITE_URL || 'https://billywall732.github.io/snow-surf-report/';
 const dryRunIndex = process.argv.indexOf('--dry-run');
 const dryRun = dryRunIndex !== -1;
+const sample = process.env.SAMPLE === '1';
 const morning = dryRun || process.env.MORNING === '1';
 const canEmail = dryRun || Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 const canPush = dryRun || Boolean(process.env.VAPID_PRIVATE_KEY);
@@ -49,6 +53,8 @@ let db = null;
 let FieldValue = null;
 if (dryRun) {
   users = JSON.parse(await fs.readFile(process.argv[dryRunIndex + 1], 'utf8'));
+} else if (sample) {
+  users = []; // examples only: the database isn't touched
 } else {
   const { initializeApp, cert } = await import('firebase-admin/app');
   const firestore = await import('firebase-admin/firestore');
@@ -228,6 +234,31 @@ async function morningAlerts() {
     }
     if (sent && !dryRun) await userDoc(user.id).update({ lastSentDate: today });
   }
+}
+
+// ---------- Example emails ----------
+// The snowiest mountains and the best-rated beaches that suit an intermediate
+// longboarder, as if someone had picked them, so both emails always have content.
+async function sendSamples() {
+  const to = process.env.GMAIL_USER;
+  if (!to && !dryRun) { console.log('No GMAIL_USER secret, so no example emails.'); return; }
+  const snowiest = [...report.sections.snow.items].sort((a, b) => snowComing(b, 7) - snowComing(a, 7)).slice(0, 3).map((r) => r.id);
+  const profile = { levels: ['intermediate'], boards: ['longboard'] };
+  const beaches = [...report.sections.surf.items].sort((a, b) => (b.rating.score ?? 0) - (a.rating.score ?? 0)).map((s) => s.id);
+  const settings = { snowScope: 'chosen', snowWatch: snowiest, snowInches: 1, snowDays: 7, surfScope: 'chosen', surfWatch: beaches, surfDays: 5 };
+  const alerts = computeAlerts(report, settings, profile, {}, undefined);
+  const surfIds = new Set(alerts.filter((a) => a.kind === 'surf').slice(0, 3).map((a) => a.itemId));
+  const picked = alerts.filter((a) => a.kind === 'snow' || surfIds.has(a.itemId));
+  const user = { name: '', settings, profile };
+  for (const email of emailsFor(user, picked)) {
+    await sendEmail(to ?? 'you@example.com', { ...email, subject: `[Example] ${email.subject}` });
+    console.log(`Sent an example: ${email.subject}`);
+  }
+}
+
+if (sample) {
+  await sendSamples();
+  process.exit(0);
 }
 
 await confirmAddresses();
