@@ -2500,21 +2500,9 @@
         "acres": 3081,
         "acresSource": "Resort figures (approx.)"
       }
-    ],
-    "defaultPinned": [
-      "mammoth",
-      "big-bear",
-      "snowbird",
-      "winter-park"
     ]
   },
   "surf": {
-    "defaultPinned": [
-      "el-porto",
-      "malibu",
-      "manasquan",
-      "jacksonville-beach"
-    ],
     "tideStations": [
       {
         "id": "9410840",

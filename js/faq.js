@@ -26,7 +26,7 @@ const FAQ = [
       'Beaches get extra points when the waves fit your level and board today, and for being closer. Places on another pass, farther than you’ll travel, closed to snowboards (if you only snowboard) or in water colder than you like are left out.',
     ]],
     ['How do I keep my favorite spots at the top?', [
-      'Open “All mountains” or “All beaches” (or tap an empty “+ Pin” tile) and tap the ☆ next to a place. You can pin up to 4 on each tab; they show as small tiles under “My mountains” or “My beaches”.',
+      'Nothing is pinned at first. Tap “☆ Pin favorite mountains” (or beaches), “☆ Pin favorites” next to the heading, or an empty “+ Pin” tile: the full list opens with search and filters, and you tap the ☆ next to a place. You can pin up to 4 on each tab; they show as small tiles under “My mountains” or “My beaches”.',
       'If all 4 are taken, you’ll be asked which one to replace. Your pins are saved on this device.',
     ]],
     ['How do I see more detail about a place?', [

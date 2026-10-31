@@ -103,7 +103,8 @@ export function createPlacesTab(opts) {
   const byId = (id) => section.items.find((x) => x.id === id);
   const known = new Set(section.items.map((x) => x.id));
 
-  let pinned = load(opts.pinKey, section.defaultPinned ?? []).filter((id) => known.has(id)).slice(0, MAX_PINS);
+  // Nothing is pinned until you pin it (first-time visitors get a "Pin favorite …" button)
+  let pinned = load(opts.pinKey, []).filter((id) => known.has(id)).slice(0, MAX_PINS);
   const defaults = Object.fromEntries(opts.filters.map((f) => [f.id, 'all']));
   let list = { ...defaults, sort: opts.sorts[0].value, days: 3, ...load(opts.listKey, {}), query: '' };
   let showAll = false;
@@ -119,6 +120,8 @@ export function createPlacesTab(opts) {
   const els = {
     pinned: h('div', { class: 'tiles' }),
     pinMsg: h('p', { class: 'pin-msg', role: 'status' }),
+    pinHeadButton: h('button', { type: 'button', class: 'text-button pin-favorites-link' }),
+    pinHint: h('p', { class: 'pin-hint' }),
     count: h('p', { class: 'fine list-count', 'aria-live': 'polite' }),
     list: h('ul', { class: 'resort-list' }),
     more: h('button', { type: 'button', class: 'text-button show-all' }),
@@ -130,7 +133,7 @@ export function createPlacesTab(opts) {
 
   // "All mountains" starts closed (one tappable row) so the page stays short;
   // tapping it opens the search, filters and list.
-  const allBody = h('div', { id: `${key}-all-body`, class: 'all-body' }, listControls(), els.count, els.list, els.more);
+  const allBody = h('div', { id: `${key}-all-body`, class: 'all-body' }, els.pinHint, listControls(), els.count, els.list, els.more);
   allBody.hidden = true;
   const allToggle = h('button', { type: 'button', class: 'section-toggle', 'aria-expanded': 'false', 'aria-controls': allBody.id },
     h('span', { class: 'section-toggle-text' },
@@ -143,6 +146,20 @@ export function createPlacesTab(opts) {
     allToggle.setAttribute('aria-expanded', String(on));
   }
 
+  // "Pin favorite mountains": open the full list (search, filters, ☆ buttons),
+  // bring it into view and put the cursor in the search box.
+  function startPinning() {
+    setListOpen(true);
+    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    allSection.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    document.getElementById(`${key}-search`)?.focus({ preventScroll: true });
+  }
+  els.pinHeadButton.addEventListener('click', startPinning);
+
+  const allSection = h('section', { class: 'all-mountains card', id: `${key}-all` },
+    h('h2', { class: 'section-toggle-h' }, allToggle),
+    allBody);
+
   const dialog = h('dialog', { id: `${key}-detail`, class: 'detail', 'aria-labelledby': `${key}-detail-title` });
   document.body.append(dialog);
 
@@ -151,13 +168,11 @@ export function createPlacesTab(opts) {
     h('section', { 'aria-labelledby': `${key}-h-mine` },
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-mine` }, words.mine),
-        h('p', { class: 'fine' }, 'Tap one for the full details.')),
+        els.pinHeadButton),
       els.pinMsg,
       els.pinned),
     els.afterMine,
-    h('section', { class: 'all-mountains card' },
-      h('h2', { class: 'section-toggle-h' }, allToggle),
-      allBody),
+    allSection,
     h('section', { 'aria-labelledby': `${key}-h-map`, class: 'map-section' },
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-map` }, 'Map'),
@@ -199,12 +214,28 @@ export function createPlacesTab(opts) {
   }
 
   function updatePins() {
+    // Next to the heading: "Pin favorites" (or "Change pins" once all 4 are set)
+    els.pinHeadButton.hidden = pinned.length === 0; // (the big button below does it then)
+    els.pinHeadButton.textContent = pinned.length < MAX_PINS ? '☆ Pin favorites' : 'Change pins';
+    // In the list: how pinning works, and how many are left
+    els.pinHint.textContent = `Tap ☆ next to a ${words.one} to pin it, ★ to unpin. ${pinned.length} of ${MAX_PINS} pinned.`;
+
+    if (!pinned.length) {
+      // Nothing pinned yet: one clear button instead of four empty tiles
+      const go = h('button', { type: 'button', class: 'action-button pin-start', id: `${key}-pin-start` }, `☆ Pin favorite ${words.many}`);
+      go.addEventListener('click', startPinning);
+      els.pinned.replaceChildren(h('div', { class: 'card pin-empty' },
+        h('p', { class: 'pin-empty-title' }, `Pick up to ${MAX_PINS} favorite ${words.many}`),
+        h('p', { class: 'fine' }, `They’ll show here with today’s conditions at a glance, and your alerts watch them.`),
+        go));
+      els.afterMine.replaceChildren(...(opts.afterMine?.(pinned) ?? []));
+      return;
+    }
     const empty = Array.from({ length: MAX_PINS - pinned.length }, () => {
       const b = h('button', { type: 'button', class: 'tile tile-empty' },
         h('span', { class: 'tile-plus', 'aria-hidden': 'true' }, '+'),
         h('span', {}, `Pin a ${words.one}`));
-      // Opens the full list with the search box ready
-      b.addEventListener('click', () => { setListOpen(true); document.getElementById(`${key}-search`)?.focus(); });
+      b.addEventListener('click', startPinning); // the full list, search box ready
       return b;
     });
     els.pinned.replaceChildren(...pinned.map((id) => tile(byId(id))), ...empty);

@@ -1648,3 +1648,13 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 .map-leader { stroke: var(--ink-2); stroke-width: 1.2px; vector-effect: non-scaling-stroke; stroke-dasharray: 2 2; opacity: 0.7; }
 
 .map-hint { flex-basis: 100%; margin: 2px 0 0; }
+
+/* ---------- Pinning favorites ---------- */
+
+.pin-favorites-link { padding: 0; min-height: 36px; font-weight: 650; white-space: nowrap; }
+.tiles:has(.pin-empty) { display: block; }
+.pin-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 20px; }
+.pin-empty-title { margin: 0; font: 600 20px/1.25 var(--serif); }
+.pin-empty .fine { margin: 0 0 6px; }
+.pin-start { margin: 6px 0 0; }
+.pin-hint { margin: 0 0 10px; padding: 8px 12px; font-size: 14px; color: var(--ink-2); background: var(--surface-2); border-radius: var(--radius-sm); }

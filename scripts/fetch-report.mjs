@@ -169,14 +169,12 @@ async function main() {
     sections: {
       snow: {
         label: 'Snow',
-        defaultPinned: locations.snow.defaultPinned ?? [],
         verdict: null,
         bestBet: bestBet(resorts, (r) => (r.observed.data?.newSnow.h48 ?? 0) + (r.forecast.data?.next72hIn ?? 0)),
         items: resorts,
       },
       surf: {
         label: 'Surf',
-        defaultPinned: locations.surf.defaultPinned ?? [],
         verdict: null,
         sessionHour: ratings.surf.sessionHour,
         skills: ratings.surf.skills, // levels + boards, used by the page for "fits you"

@@ -250,7 +250,8 @@ function scopeText(kind, settings, rider) {
     if (!rider.home) return `${many} near you (set your home in your Rider Profile)`;
     return `${many} ${rider.radiusMi ? `within ${rider.radiusMi} mi of` : 'from'} ${rider.home.label}`;
   }
-  return `your ${plural(pins()[kind].length, `pinned ${one}`, `pinned ${many}`)}`;
+  const n = pins()[kind].length;
+  return n ? `your ${plural(n, `pinned ${one}`, `pinned ${many}`)}` : `your pinned ${many} (none yet: pin some on the ${kind === 'snow' ? 'Snow' : 'Surf'} tab)`;
 }
 
 // One alert rule: on/off, a one-line summary, and a "Change" panel with the details
