@@ -69,6 +69,21 @@ const userDoc = (id) => db.collection('users').doc(id);
 // ---------- Sending ----------
 
 let transport = null;
+
+// Gmail said no to the login: describe the two secrets without showing them,
+// so a typo is easy to spot in the Action's log.
+function explainLoginFailure() {
+  const user = process.env.GMAIL_USER ?? '';
+  const pass = process.env.GMAIL_APP_PASSWORD ?? '';
+  const letters = pass.replace(/\s/g, '');
+  console.error([
+    'Gmail rejected the login. What the secrets look like (values hidden):',
+    `  GMAIL_USER: ${user.length} characters, ${/^[^@\s]+@gmail\.com$/i.test(user.trim()) ? 'looks like a Gmail address' : 'does NOT look like name@gmail.com'}${user !== user.trim() ? ', has spaces at the start or end' : ''}`,
+    `  GMAIL_APP_PASSWORD: ${letters.length} letters${letters.length === 16 ? ' (right length)' : ' (an app password has 16)'}${pass !== letters ? ', contains spaces' : ''}${/^[a-z]{16}$/.test(letters) ? '' : ', not all lowercase letters'}`,
+    'Make a new app password at https://myaccount.google.com/apppasswords while signed in as the GMAIL_USER account.',
+  ].join('\n'));
+}
+
 async function sendEmail(to, { subject, text, html }) {
   if (dryRun) {
     console.log(`\n=== Email to: ${to}\nSubject: ${subject}\n\n${text}`);
@@ -83,8 +98,16 @@ async function sendEmail(to, { subject, text, html }) {
     const nodemailer = (await import('nodemailer')).default;
     transport = nodemailer.createTransport({
       service: 'gmail',
-      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+      // (spaces in an app password, as Google shows it, are fine: they're removed)
+      auth: { user: process.env.GMAIL_USER.trim(), pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, '') },
     });
+    try {
+      await transport.verify();
+    } catch (err) {
+      transport = null; // try again for the next email
+      if (err.code === 'EAUTH') explainLoginFailure();
+      throw err;
+    }
   }
   await transport.sendMail({
     from: `"Snow & Surf Report" <${process.env.GMAIL_USER}>`,
