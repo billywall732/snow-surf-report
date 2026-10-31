@@ -1643,3 +1643,8 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 
 .fit-controls { margin-top: 10px; }
 .fit-controls .fine { margin: 2px 0 0; }
+
+/* Map: a place moved aside so it doesn't sit on its neighbor, and its real spot */
+.map-leader { stroke: var(--ink-2); stroke-width: 1.2px; vector-effect: non-scaling-stroke; stroke-dasharray: 2 2; opacity: 0.7; }
+
+.map-hint { flex-basis: 100%; margin: 2px 0 0; }

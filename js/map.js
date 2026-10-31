@@ -66,8 +66,10 @@ export function project(lat, lon) {
  * group that's scaled down by the same amount, so they stay the same size on screen
  * and crowded areas spread out as you zoom in.
  */
-const MAX_ZOOM = 8;
-const MAX_FIT_ZOOM = 6; // filtering to one place still shows the coast or range around it
+const MAX_ZOOM = 40; // deep enough to separate beaches a few miles apart
+const MAX_FIT_ZOOM = 16; // a filter zooms in only as far as it needs to fit its places
+const FAN_ZOOM = 2.5; // zoomed in this far, crowded places fan out so each can be tapped
+const LABEL_ALL_ZOOM = 2.5; // zoomed in this far, every place in view gets a name (where there's room) // filtering to one place still shows the coast or range around it
 
 export function createMap(container, { items, icon = 'peak', label: mapLabel = 'places', width, onSelect, classFor }) {
   const [w, h] = VIEWBOX;
@@ -110,7 +112,7 @@ export function createMap(container, { items, icon = 'peak', label: mapLabel = '
       }
     });
     root.append(g);
-    return { r, g, marker, x, y, where, score, extra: classFor?.(r) ?? '', big: null, iconEl: null, labelEl: null };
+    return { r, g, marker, x, y, px: x, py: y, where, score, extra: classFor?.(r) ?? '', big: null, iconEl: null, labelEl: null, leaderEl: null };
   });
 
   // Zoom buttons, laid over the map's top-right corner
@@ -238,10 +240,76 @@ export function createMap(container, { items, icon = 'peak', label: mapLabel = '
     // Pinned and selected icons go last, so they're drawn on top...
     const top = nodes.filter((n) => n.big).sort((a, b) => Number(a.r.id === selected) - Number(b.r.id === selected));
     for (const n of top) root.append(n.g);
-    // ...and get name labels, placed so they don't overlap each other.
-    for (const n of top) {
-      n.labelEl = placeLabel(n.r.name, n.x, n.y, k, zoom, view, placed);
-      n.marker.append(n.labelEl);
+
+    const inView = (n) => n.x >= view.x && n.x <= view.x + view.w && n.y >= view.y && n.y <= view.y + view.h;
+    const s = k / zoom; // marker units -> map units
+    fanOut(nodes.filter((n) => inView(n) && (n.big || visible.has(n.r.id))), s);
+
+    // ...and get name labels first. Labels never cover an icon (every icon on
+    // screen is an obstacle) or another label; a label with no free spot is left
+    // off (the name still shows on hover, and in the detail view on tap).
+    for (const n of nodes) {
+      if (!inView(n)) continue;
+      const f = n.big ? 1.45 : 1;
+      placed.push({ id: n.r.id, left: n.px - 10 * f * s, right: n.px + 10 * f * s, top: n.py - 16 * f * s, bottom: n.py + 2 * s });
+    }
+    const label = (n) => {
+      n.labelEl = placeLabel(n.r.name, n.r.id, n.px, n.py, k, zoom, view, placed);
+      if (n.labelEl) n.marker.append(n.labelEl);
+    };
+    for (const n of [...top].reverse()) label(n); // the open one first, then pinned
+    // Zoomed in (e.g. filtered to one state), there's room to name the rest too
+    if (zoom >= LABEL_ALL_ZOOM) {
+      for (const n of nodes) {
+        if (!n.big && inView(n) && visible.has(n.r.id)) label(n);
+      }
+    }
+  }
+
+  // Places too close together to tell apart are nudged apart, each in its own
+  // direction and only as far as needed, with a thin line back to its real spot,
+  // so every one can be seen and tapped and the map keeps its real north/south
+  // order. Only when zoomed in: at the whole-country view, crowded areas stay as
+  // they are (zoom in, or pick a State, to spread them out).
+  function fanOut(shown, s) {
+    for (const n of nodes) { n.px = n.x; n.py = n.y; }
+    if (zoom >= FAN_ZOOM) {
+      const gap = 22 * s; // about an icon's width on screen
+      for (let round = 0; round < 40; round++) {
+        let moved = false;
+        for (let i = 0; i < shown.length; i++) {
+          for (let j = i + 1; j < shown.length; j++) {
+            const p = shown[i];
+            const q = shown[j];
+            let dx = q.px - p.px;
+            let dy = q.py - p.py;
+            let d = Math.hypot(dx, dy);
+            if (d >= gap) continue;
+            if (d < 1e-6) { dx = 0; dy = 1; d = 1; } // exactly the same spot: one above the other
+            const push = (gap - d) / 2 + 0.01;
+            p.px -= (dx / d) * push;
+            p.py -= (dy / d) * push;
+            q.px += (dx / d) * push;
+            q.py += (dy / d) * push;
+            moved = true;
+          }
+        }
+        if (!moved) break;
+      }
+    }
+    for (const n of nodes) {
+      const moved = n.px !== n.x || n.py !== n.y;
+      n.g.setAttribute('transform', `translate(${n.px.toFixed(2)} ${n.py.toFixed(2)})`);
+      if (moved) {
+        n.leaderEl ??= svg('line', { class: 'map-leader' });
+        n.leaderEl.setAttribute('x1', (n.x - n.px).toFixed(2));
+        n.leaderEl.setAttribute('y1', (n.y - n.py).toFixed(2));
+        n.leaderEl.setAttribute('x2', '0');
+        n.leaderEl.setAttribute('y2', '0');
+        if (!n.leaderEl.isConnected) n.g.prepend(n.leaderEl);
+      } else {
+        n.leaderEl?.remove();
+      }
     }
   }
 
@@ -274,34 +342,45 @@ export function createMap(container, { items, icon = 'peak', label: mapLabel = '
   return { update, fit, width };
 }
 
-// A name label beside an icon. Start on the side with more room on screen (so it
-// never runs off the edge), then if it would overlap a label already on the map,
-// try a line lower, a line higher, and the other side, keeping the first free spot.
+// A name label next to an icon. Tries the side with more room on screen first,
+// then a line lower or higher, the other side, and finally centered above or
+// below the icon. The first spot that stays on screen and doesn't touch another
+// icon or label wins; with no free spot, there's no label (returns null).
 // Positions are in the marker's own units (k); overlap is checked in map units,
 // where everything is 1/zoom as big.
-function placeLabel(text, x, y, k, zoom, view, placed) {
+function placeLabel(text, id, x, y, k, zoom, view, placed) {
   const s = k / zoom; // marker units -> map units
   const width = text.length * 7.2 * s; // rough width of 12px bold text
   const height = 14 * s;
   const preferRight = x - view.x < view.w * 0.6;
   const tries = [];
-  for (const right of [preferRight, !preferRight]) {
-    for (const dy of [0, 1, -1, 2, -2]) tries.push({ right, dy });
+  for (const side of [preferRight ? 'right' : 'left', preferRight ? 'left' : 'right']) {
+    for (const dy of [0, 1, -1]) tries.push({ side, dy });
   }
-  const box = ({ right, dy }) => {
-    const left = right ? x + 11 * s : x - 11 * s - width;
-    const base = y - 5 * s + dy * height;
+  tries.push({ side: 'above', dy: 0 }, { side: 'below', dy: 0 });
+  // Where the text would sit, in marker units (x, baseline y, anchor)
+  const spot = ({ side, dy }) => {
+    if (side === 'right') return { tx: 11, ty: -5 + dy * 14, anchor: 'start' };
+    if (side === 'left') return { tx: -11, ty: -5 + dy * 14, anchor: 'end' };
+    if (side === 'above') return { tx: 0, ty: -22, anchor: 'middle' };
+    return { tx: 0, ty: 16, anchor: 'middle' };
+  };
+  const box = (t) => {
+    const { tx, ty, anchor } = spot(t);
+    const left = x + tx * s - (anchor === 'end' ? width : anchor === 'middle' ? width / 2 : 0);
+    const base = y + ty * s;
     return { left, right: left + width, top: base - height * 0.8, bottom: base + height * 0.2 };
   };
   const overlaps = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-  const choice = tries.find((t) => !placed.some((p) => overlaps(p, box(t)))) ?? tries[0];
+  const onScreen = (b) => b.left >= view.x && b.right <= view.x + view.w && b.top >= view.y && b.bottom <= view.y + view.h;
+  const choice = tries.find((t) => {
+    const b = box(t);
+    return onScreen(b) && !placed.some((p) => p.id !== id && overlaps(p, b));
+  });
+  if (!choice) return null;
   placed.push(box(choice));
-  return svg('text', {
-    x: (choice.right ? 11 : -11) * k,
-    y: -5 * k + choice.dy * 14 * k,
-    'text-anchor': choice.right ? 'start' : 'end',
-    class: 'map-label',
-  }, text);
+  const { tx, ty, anchor } = spot(choice);
+  return svg('text', { x: tx * k, y: ty * k, 'text-anchor': anchor, class: 'map-label' }, text);
 }
 
 // Map icons. Each stands on the place's location (the point is the middle of the
