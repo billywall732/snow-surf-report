@@ -7,10 +7,10 @@
 // While apiKey is empty, the app shows email alerts as "not set up yet" and
 // everything else works normally.
 export const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  appId: '',
+  apiKey: 'AIzaSyDNFMYL3nzefCkGRuQZJqsRxTABd2nMow8',
+  authDomain: 'snow-surf-report.firebaseapp.com',
+  projectId: 'snow-surf-report',
+  appId: '1:836838846679:web:003dbd871495745b888092',
 };
 
 // Public half of the key that signs morning phone notifications ("web push").
