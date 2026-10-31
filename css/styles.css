@@ -140,6 +140,7 @@ a { color: inherit; text-underline-offset: 2px; }
   align-items: center;
   gap: 12px;
 }
+.masthead-top .kicker { margin: 0; }
 .kicker {
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -1509,3 +1510,63 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
   border-radius: var(--radius-sm);
 }
 .confirm-msg { margin: 0 0 16px; font-weight: 600; border-left: 4px solid var(--accent); }
+
+/* ---------- Sign in with Google, up front ---------- */
+
+/* Header: "Sign in", or your initial once signed in */
+.account-slot { flex-shrink: 0; }
+.header-sign-in, .avatar-button {
+  min-height: 36px;
+  font: 600 14px var(--sans);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.header-sign-in { padding: 6px 16px; color: var(--bg); background: var(--ink); border: 0; }
+.avatar-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  padding: 0;
+  color: #fff;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
+/* Profile tab: the first card */
+.signin-card { border-left: 4px solid var(--accent); }
+.signin-card h3 { margin-bottom: 4px; }
+.signin-card p { margin: 0 0 4px; color: var(--ink-2); }
+.signed-in-note { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-size: 14px; color: var(--ink-2); }
+.signed-in-check { display: grid; place-items: center; width: 22px; height: 22px; flex-shrink: 0; font-size: 13px; font-weight: 700; color: #fff; background: var(--r5); border-radius: 50%; }
+
+/* Intro screen: under Start Shredding, only once it shows */
+.intro-signin { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 16px; }
+.intro-start[hidden] + .intro-signin { display: none; }
+.intro-signin-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 18px;
+  font: 600 15px var(--sans);
+  color: #fff;
+  background: rgba(20, 10, 40, 0.55);
+  border: 2px solid rgba(255, 243, 214, 0.75);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.intro-signin-button::before {
+  content: 'G';
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font: 700 14px var(--sans);
+  color: #2a78d6;
+  background: #fff;
+  border-radius: 50%;
+}
+.intro-signin-button:hover { background: rgba(20, 10, 40, 0.75); }
+.intro-signin-button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.intro-signin-note { font-size: 13px; color: #ffe7cf; opacity: 0.85; }

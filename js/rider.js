@@ -12,6 +12,8 @@ import {
   distanceMi, EMPTY_RIDER, hasSkiRider, normalizeRider, recommend, RIDE_TYPES, SKI_LEVELS, SKI_WANTS, skiText,
 } from './recommend.js';
 import { hasProfile, loadProfile, onProfileChange, profileChips, profileText } from './skill.js';
+import { onAccountChange } from './account.js';
+import { signInCard } from './signin.js';
 
 const RIDER_KEY = 'ssr-rider';
 const listeners = new Set();
@@ -253,6 +255,7 @@ function render() {
     h('div', { class: 'section-head' },
       h('h2', {}, 'Rider Profile'),
       h('p', { class: 'fine' }, 'How you ride and where you’re coming from. Used for “Recommended for you” on Snow and Surf, the “For you” notes in each detail view, and your alerts.')),
+    signInCard(),
     homeCard(rider),
     skiCard(rider),
     surfCard(rider),
@@ -263,6 +266,7 @@ function render() {
 export function renderProfile() {
   render();
   onRiderChange(render);
+  onAccountChange(render); // signing in or out changes the card at the top
   // The surf chips update themselves, but "Your picks" depends on them too
   onProfileChange(() => {
     const old = document.querySelector('#panel-profile [aria-labelledby="h-picks"]');

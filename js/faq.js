@@ -88,7 +88,7 @@ const FAQ = [
       'Anything that matches is listed there, and the Notifications tab shows a red badge with the count.',
     ]],
     ['Can I get alerts by email?', [
-      'Yes. On the Notifications tab, tap Sign in with Google. Each morning (around 5 AM Pacific) you’ll get one email listing what matches, only on days something does.',
+      'Yes. Tap Sign in (top right, or on the opening screen) and sign in with Google. Each morning (around 5 AM Pacific) you’ll get one email listing what matches, only on days something does.',
       'Your settings (alerts, Rider Profile, pinned spots) save to your account automatically, so you can change them in the app on any device. To stop emails, turn off “Email me a morning summary” or use the link at the bottom of any email.',
       'Emails go to your Google address. To use a different one, tap Change next to “Sending to”. We’ll email that address a confirmation link within the hour; once you tap it, alerts go there.',
     ]],

@@ -68,6 +68,12 @@ export async function initAccount(h) {
   }
 }
 
+// Start loading Firebase early (e.g. when a finger touches a sign-in button), so
+// the Google pop-up can open as soon as the tap lands.
+export function warmUp() {
+  if (isConfigured) loadFirebase().catch(() => {});
+}
+
 export async function signIn() {
   account.busy = true;
   account.error = '';

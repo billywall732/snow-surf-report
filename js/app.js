@@ -9,6 +9,7 @@ import { renderAlerts } from './alerts.js';
 import { renderFaq } from './faq.js';
 import { renderProfile, setNavigate } from './rider.js';
 import { introReady, startIntro } from './intro.js';
+import { mountSignIn } from './signin.js';
 import { refreshBackground, setMotion, setScene, startBackground } from './background.js';
 
 const TAB_KEY = 'ssr-tab';
@@ -248,6 +249,7 @@ async function main() {
   const surfTab = renderSurf(report.sections.surf);
   renderAlerts(report, { snow: snowTab, surf: surfTab });
   renderProfile();
+  mountSignIn(); // "Sign in" in the header and on the intro screen
   renderFaq();
   renderSources();
   drawCharts();

@@ -62,6 +62,7 @@
   <link rel="modulepreload" href="js/cities.js">
   <link rel="modulepreload" href="js/gear.js">
   <link rel="modulepreload" href="js/intro.js">
+  <link rel="modulepreload" href="js/signin.js">
   <!-- type="module" lets app.js use `import`. Modules only load over http(s),
        which is why you need a local server instead of double-clicking this file. -->
   <script type="module" src="js/app.js"></script>
@@ -104,12 +105,16 @@
       </div>
 
       <button type="button" class="intro-start" id="intro-start" hidden>Start Shredding</button>
+      <div class="intro-signin" id="intro-signin"></div>
       <p class="intro-tip" id="intro-tip"></p>
     </div>
   </div>
 
   <header class="masthead">
-    <p class="kicker">Snow &amp; surf conditions · updated hourly</p>
+    <div class="masthead-top">
+      <p class="kicker">Snow &amp; surf conditions · updated hourly</p>
+      <div class="account-slot" id="account-slot"></div>
+    </div>
     <h1>Snow and Surf Report</h1>
     <p class="updated" id="updated">Loading the latest report…</p>
   </header>
