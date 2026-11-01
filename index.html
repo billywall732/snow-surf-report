@@ -27,11 +27,15 @@
 
     // The landing screen: show it on the first visit of a browser session, but not
     // on links straight to a place (like #surf/pipeline from an alert email).
+    // A link ending in ?cover (the portfolio's "Open App") always shows it; the
+    // ?cover is then dropped so a reload goes back to the usual rule.
     // Decided here, before the page draws, so it never flashes. js/intro.js runs it.
     (function () {
       let seen = false;
       try { seen = sessionStorage.getItem('ssr-intro-seen') === '1'; } catch { /* show it */ }
-      document.documentElement.classList.add(seen || location.hash.includes('/') ? 'no-intro' : 'intro-open');
+      const wantCover = /(^|[?&])cover\b/.test(location.search.slice(1));
+      if (wantCover) history.replaceState(null, '', location.pathname + location.hash);
+      document.documentElement.classList.add(!wantCover && (seen || location.hash.includes('/')) ? 'no-intro' : 'intro-open');
     })();
 
     // Start downloading the report now, at the same time as the JavaScript files,
