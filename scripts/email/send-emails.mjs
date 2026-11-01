@@ -31,7 +31,7 @@ import { hasProfile, profileText } from '../../js/fit.js';
 import { vapidPublicKey } from '../../js/firebase-config.js';
 import { confirmationEmail, snowEmail, surfEmail } from './templates.mjs';
 
-const SITE_URL = process.env.SITE_URL || 'https://billywall732.github.io/snow-surf-report/';
+const SITE_URL = process.env.SITE_URL || 'https://offthewall.dev/snow-surf-report/';
 const dryRunIndex = process.argv.indexOf('--dry-run');
 const dryRun = dryRunIndex !== -1;
 const sample = process.env.SAMPLE === '1';

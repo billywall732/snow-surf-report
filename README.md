@@ -2,7 +2,7 @@
 
 Hourly snow conditions at every US Ikon and Epic Pass mountain (76 of them) and surf conditions at 52 US surf spots, with a simple 1–5 "should I go?" rating for each.
 
-**Live site:** https://billywall732.github.io/snow-surf-report/
+**Live site:** https://offthewall.dev/snow-surf-report/
 
 ![Screenshot of the Snow and Surf Report](docs/screenshot.png)
 <!-- TODO: add a screenshot at docs/screenshot.png -->
