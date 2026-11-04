@@ -9,6 +9,7 @@ import { renderAlerts } from './alerts.js';
 import { renderFaq } from './faq.js';
 import { renderProfile, setNavigate } from './rider.js';
 import { introReady, startIntro } from './intro.js';
+import { maybeStartWalkthrough } from './welcome.js';
 import { mountSignIn } from './signin.js';
 import { refreshBackground, setMotion, setScene, startBackground } from './background.js';
 
@@ -255,6 +256,7 @@ async function main() {
   drawCharts();
   redrawMaps();
   introReady(report); // everything's drawn: fill the bar, show Start Shredding
+  maybeStartWalkthrough(); // first visit only: the walkthrough, once the intro is closed
 
   // Redraw charts and maps when the WIDTH changes. On phones, scrolling shows and
   // hides the address bar, which fires "resize" with only the height changed;

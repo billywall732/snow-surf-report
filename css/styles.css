@@ -980,6 +980,38 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
 .account-actions { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 .text-button.danger { color: #d03b3b; }
 
+/* The first-visit walkthrough (welcome.js): a dialog with a header (progress, step, Skip),
+   a scrolling middle and Back / Next at the bottom. Full screen on phones, like the detail view. */
+dialog.detail.walkthrough { width: min(620px, calc(100% - 32px)); display: flex; flex-direction: column; }
+dialog.detail.walkthrough:not([open]) { display: none; }
+.walk-head { position: relative; padding: 18px 22px 10px; border-bottom: 1px solid var(--rule); }
+.walk-head h2 { margin: 2px 0 0; font-size: 26px; outline: none; }
+.walk-step { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+.walk-progress { display: flex; gap: 6px; padding-right: 64px; }
+.walk-progress span { flex: 1; height: 4px; border-radius: 2px; background: var(--rule); }
+.walk-progress span.on { background: var(--accent); }
+.walk-skip { position: absolute; top: 10px; right: 14px; }
+.walk-body { flex: 1; overflow-y: auto; padding: 16px 22px; display: grid; gap: 14px; align-content: start; }
+.walk-lede { margin: 0; font-size: 17px; line-height: 1.5; }
+.walk-points { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; font-size: 16px; }
+.walk-set { margin: 0; padding: 12px 14px 14px; border: 1px solid var(--rule); border-radius: 12px; display: grid; gap: 12px; min-width: 0; }
+.walk-set legend { padding: 0 6px; font-weight: 700; }
+.walk-card { padding: 14px 16px; border: 1px solid var(--rule); border-radius: 12px; }
+.walk-card h3 { margin: 0 0 6px; }
+.walk-card p { margin: 0 0 8px; line-height: 1.5; }
+.walk-summary { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; }
+.walk-summary dt { color: var(--muted); }
+.walk-summary dd { margin: 0; font-weight: 600; }
+.walk-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 22px 16px; border-top: 1px solid var(--rule); }
+.walk-foot .action-button { margin: 0; }
+@media (max-width: 640px) {
+  dialog.detail.walkthrough { width: 100%; }
+  .walk-head, .walk-body, .walk-foot { padding-inline: 16px; }
+  .walk-foot { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .walk-summary { grid-template-columns: 1fr; gap: 2px; }
+  .walk-summary dd { margin-bottom: 8px; }
+}
+
 /* "Delete my saved data?": a small dialog on the page (shares the detail view's frame) */
 dialog.confirm-delete,
 dialog.detail.confirm-delete { width: min(520px, calc(100% - 32px)); max-width: calc(100% - 32px); height: fit-content; max-height: calc(100% - 48px); margin: auto; border: 1px solid var(--rule); border-radius: 18px; }

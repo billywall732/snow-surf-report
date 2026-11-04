@@ -201,7 +201,8 @@ const items = new Map([...report.sections.snow.items, ...report.sections.surf.it
 function emailsFor(user, alerts) {
   const settings = { ...DEFAULT_SETTINGS, ...user.settings };
   const profile = user.profile ?? { levels: [], boards: [] };
-  const common = { user, items, siteUrl: SITE_URL, dateLabel: dayLabel };
+  // tides: each tide station's high/low times from the report, shown on surf cards
+  const common = { user, items, siteUrl: SITE_URL, dateLabel: dayLabel, tides: report.sections.surf.tideStations ?? {} };
   const snow = alerts.filter((a) => a.kind === 'snow');
   const surf = alerts.filter((a) => a.kind === 'surf');
   return [
@@ -274,7 +275,7 @@ async function sendSamples() {
   const picked = alerts.filter((a) => a.kind === 'snow' || surfIds.has(a.itemId));
   const user = { name: '', settings, profile };
   for (const email of emailsFor(user, picked)) {
-    await sendEmail(to ?? 'you@example.com', { ...email, subject: `[Example] ${email.subject}` });
+    await sendEmail(to ?? 'you@example.com', { ...email, subject: `[SAMPLE] ${email.subject}` });
     console.log(`Sent an example: ${email.subject}`);
   }
 }

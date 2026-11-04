@@ -42,6 +42,7 @@ export function onRiderChange(fn) {
 let navigate = () => {};
 export const setNavigate = (fn) => { navigate = fn; };
 export const openProfile = () => navigate('profile');
+export const goToPage = (name) => navigate(name); // e.g. 'snow' or 'surf' (the walkthrough's last step)
 
 const place = (item) => (item.city ? `${item.city}, ${item.region}` : item.region);
 

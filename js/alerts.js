@@ -35,6 +35,10 @@ function loadSettings() {
     return { ...DEFAULT_SETTINGS, ...LOCAL_ONLY };
   }
 }
+// For the first-visit walkthrough (welcome.js): read and change alert settings the same
+// way this page does (saved here, the page redrawn, and saved to your account if signed in)
+export const alertSettings = () => loadSettings();
+export function updateAlertSettings(changes) { saveSettings({ ...loadSettings(), ...changes }); if (report) refresh(); saveSoon(); }
 function saveSettings(settings) {
   try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* private mode */ }
 }
@@ -539,7 +543,7 @@ function deleteEverything() {
         li('Your name, email address and any other alert email address'),
         li('Your Rider Profile, pins and alert settings'),
         li('Every device’s notification sign-up')) : null,
-      h('p', { class: 'fine' }, `It keeps your light/dark and animation settings on this device.${signedIn ? ' You’ll be signed out. Your Google account isn’t touched, and Google’s Firebase keeps its basic sign-in record (your email and an ID). Alert emails already sent stay in your inbox.' : ''} This can’t be undone.`),
+      h('p', { class: 'fine' }, `It keeps your light/dark and animation settings on this device (and doesn’t show the welcome walkthrough again).${signedIn ? ' You’ll be signed out. Your Google account isn’t touched, and Google’s Firebase keeps its basic sign-in record (your email and an ID). Alert emails already sent stay in your inbox.' : ''} This can’t be undone.`),
       msg,
       h('div', { class: 'confirm-actions' }, cancel, go)));
   const close = () => { dialog.close(); dialog.remove(); };
@@ -562,7 +566,7 @@ function deleteEverything() {
     }
     try { await withTimeout(setPush(false), 5000); } catch { /* ignore */ }
     try {
-      for (const k of Object.keys(localStorage)) if (k.startsWith('ssr-') && k !== 'ssr-theme' && k !== 'ssr-motion') localStorage.removeItem(k);
+      for (const k of Object.keys(localStorage)) if (k.startsWith('ssr-') && !['ssr-theme', 'ssr-motion', 'ssr-welcome'].includes(k)) localStorage.removeItem(k);
     } catch { /* private mode: nothing saved anyway */ }
     location.hash = 'alerts';
     location.reload();
