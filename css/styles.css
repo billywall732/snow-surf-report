@@ -980,6 +980,18 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
 .account-actions { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 .text-button.danger { color: #d03b3b; }
 
+/* "Delete my saved data?": a small dialog on the page (shares the detail view's frame) */
+dialog.confirm-delete,
+dialog.detail.confirm-delete { width: min(520px, calc(100% - 32px)); max-width: calc(100% - 32px); height: fit-content; max-height: calc(100% - 48px); margin: auto; border: 1px solid var(--rule); border-radius: 18px; }
+.confirm-body { padding: 20px 22px 16px; }
+.confirm-body h2 { margin: 0 0 10px; }
+.confirm-body p { margin: 8px 0 4px; }
+.confirm-body ul { margin: 0 0 6px; padding-left: 20px; display: grid; gap: 4px; }
+.confirm-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 10px; margin-top: 10px; }
+.confirm-actions .action-button:first-child { color: var(--ink); background: transparent; box-shadow: inset 0 0 0 1px var(--rule); }
+.action-button.danger-button { color: #fff; background: #c43030; }
+.action-button:disabled { opacity: 0.6; cursor: default; }
+
 /* ---------- Choosing places for alerts, Notify me ---------- */
 
 .detail-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }

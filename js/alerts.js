@@ -517,24 +517,59 @@ function askPermission() {
 const withTimeout = (promise, ms) => Promise.race([promise, new Promise((r) => setTimeout(() => r(false), ms))]);
 
 // "Delete my saved data": everything this site saved on this device, and (signed in)
-// your account's copy, which also signs you out.
-async function deleteEverything() {
-  const where = account.user ? 'on this device and in your account (you’ll be signed out)' : 'on this device';
-  if (!confirm(`Delete your Rider Profile, pins and alert settings saved ${where}? This can’t be undone.`)) return;
-  try { await withTimeout(setPush(false), 5000); } catch { /* ignore */ }
-  if (account.user) {
-    try {
-      await deleteMyData();
-    } catch {
-      alert('Couldn’t delete your account’s saved data. Check your connection and try again. Nothing was deleted.');
-      return;
+// your account's copy, which also signs you out. It asks first in a dialog on the page
+// (a browser confirm() box can be silently blocked, e.g. in the Home Screen app), and
+// the dialog says exactly what goes and what stays.
+function deleteEverything() {
+  const signedIn = Boolean(account.user);
+  const li = (text) => h('li', {}, text);
+  const cancel = h('button', { type: 'button', class: 'action-button' }, 'Cancel');
+  const go = h('button', { type: 'button', class: 'action-button danger-button' }, 'Delete my data');
+  const msg = h('p', { class: 'channel-note warn', role: 'alert', hidden: true });
+  const dialog = h('dialog', { class: 'detail confirm-delete', 'aria-labelledby': 'confirm-delete-title' },
+    h('div', { class: 'confirm-body' },
+      h('h2', { id: 'confirm-delete-title' }, 'Delete my saved data?'),
+      h('p', {}, 'This deletes, on this device:'),
+      h('ul', {},
+        li('Your Rider Profile (skill, home area and how far you’ll go)'),
+        li('Your pinned mountains and beaches'),
+        li('Your alert settings (what to alert you about, where, by email and on this device), and this device’s morning notifications')),
+      signedIn ? h('p', {}, `And in your account (${account.user.email}), the whole saved copy:`) : null,
+      signedIn ? h('ul', {},
+        li('Your name, email address and any other alert email address'),
+        li('Your Rider Profile, pins and alert settings'),
+        li('Every device’s notification sign-up')) : null,
+      h('p', { class: 'fine' }, `It keeps your light/dark and animation settings on this device.${signedIn ? ' You’ll be signed out. Your Google account isn’t touched, and Google’s Firebase keeps its basic sign-in record (your email and an ID). Alert emails already sent stay in your inbox.' : ''} This can’t be undone.`),
+      msg,
+      h('div', { class: 'confirm-actions' }, cancel, go)));
+  const close = () => { dialog.close(); dialog.remove(); };
+  cancel.addEventListener('click', close);
+  dialog.addEventListener('cancel', (e) => { e.preventDefault(); if (!go.disabled) close(); }); // Esc
+  go.addEventListener('click', async () => {
+    go.disabled = cancel.disabled = true;
+    go.textContent = 'Deleting…';
+    // The account's copy first: if that fails, nothing at all has been deleted
+    if (account.user) {
+      try {
+        await deleteMyData();
+      } catch {
+        msg.textContent = 'Couldn’t delete your account’s saved data. Check your connection and try again. Nothing was deleted.';
+        msg.hidden = false;
+        go.disabled = cancel.disabled = false;
+        go.textContent = 'Try again';
+        return;
+      }
     }
-  }
-  try {
-    for (const k of Object.keys(localStorage)) if (k.startsWith('ssr-') && k !== 'ssr-theme' && k !== 'ssr-motion') localStorage.removeItem(k);
-  } catch { /* private mode: nothing saved anyway */ }
-  location.hash = 'alerts';
-  location.reload();
+    try { await withTimeout(setPush(false), 5000); } catch { /* ignore */ }
+    try {
+      for (const k of Object.keys(localStorage)) if (k.startsWith('ssr-') && k !== 'ssr-theme' && k !== 'ssr-motion') localStorage.removeItem(k);
+    } catch { /* private mode: nothing saved anyway */ }
+    location.hash = 'alerts';
+    location.reload();
+  });
+  document.body.append(dialog);
+  dialog.showModal();
+  cancel.focus();
 }
 let confirmMsg = ''; // after opening a link from a confirmation email
 const pickerOpen = { snow: false, surf: false };
