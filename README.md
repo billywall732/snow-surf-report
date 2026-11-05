@@ -88,7 +88,7 @@ People sign in with Google on the Notifications tab. Their alert settings, Rider
 - **an email** to their Google address, or another address they chose and confirmed (the Action emails a confirmation link within the hour), and
 - **a phone or computer notification**, on each device where they turned on "Notify me on this device", even when the app is closed. On iPhone this needs the Home Screen app (iOS 16.4 or later).
 
-Until the steps below are done, the app shows email alerts as "coming soon" and the Action skips this step.
+The steps below set this up for a fork of the repo. Until they are done, the Action skips this step.
 
 **1. Create a Firebase project** (free): go to https://console.firebase.google.com → **Add project** (Google Analytics can be off).
 
@@ -155,10 +155,9 @@ scripts/serve.mjs      tiny local web server
 .github/workflows/     the hourly GitHub Action (fetch, alerts, publish)
 ```
 
-## Planned
+## Roadmap
 
-- A mountain-bike **trail conditions** tab (Laguna, Pasadena, Santa Monica, Simi Valley) based on recent rainfall — it becomes `sections.trails` in the report.
-- An optional one-sentence **AI morning verdict** written by the Action via the Claude API, with the key stored as a GitHub Actions secret — it fills the `verdict` fields already in the report.
+Ideas for what's next are tracked in [GitHub Issues](https://github.com/billywall732/snow-surf-report/issues).
 
 ## License
 
