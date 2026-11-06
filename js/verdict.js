@@ -18,9 +18,12 @@ export function verdictOf(score, notYet = false) {
 }
 
 // A mountain you can't ride: before opening day, or a 0" base. (Beaches have no season.)
+// A mountain that's open counts as rideable even on a 0" base: snow models only see
+// natural snow, so a resort open early on machine-made snow can read 0".
 export function notRideable(item) {
   if (!item?.season) return false;
   if (item.season.status === 'closed') return true;
+  if (item.season.status === 'open') return false;
   return item.observed?.status === 'ok' && item.observed.data?.depthNow === 0;
 }
 
