@@ -1702,3 +1702,54 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 .pin-empty .fine { margin: 0 0 6px; }
 .pin-start { margin: 6px 0 0; }
 .pin-hint { margin: 0 0 10px; padding: 8px 12px; font-size: 14px; color: var(--ink-2); background: var(--surface-2); border-radius: var(--radius-sm); }
+
+/* ---------- Plain content (Nov 2026) ----------
+   The same rules as the alert emails: content, not banners. No ALL CAPS labels, no
+   border around every section, no pill tags; one verdict word per rating, the same
+   words as the emails (js/verdict.js). The bottom tab bar and the arcade cover keep
+   their own style on purpose. */
+
+.kicker, h4, .pass-tag, .alert-kind { text-transform: none; letter-spacing: 0; }
+.kicker { font-size: 13px; }
+h4 { font-size: 14px; font-weight: 650; }
+/* Ikon / Epic: a plain word, not a boxed tag */
+.pass-tag { border: 0; padding: 0; margin-left: 4px; font: 600 12px/1.5 var(--sans); }
+
+/* "Updated …" and "this report is 5 hours old": a line of text, not a pill or a banner */
+.updated { padding: 0; background: none; border: 0; border-radius: 0; }
+.stale { padding: 0; background: none; border: 0; }
+
+/* Sections sit on the page: no outline or drop shadow, just their own surface */
+.card, .best-bet { border: 0; box-shadow: none; }
+.best-bet::before { content: none; }
+.pill { border: 0; padding: 0; }
+/* Reasons as a sentence, not a row of pills */
+.rec-reason { padding: 0; background: none; border: 0; border-radius: 0; }
+.rec-reason + .rec-reason::before { content: '· '; color: var(--muted); }
+
+/* The verdict word, colored once, never on its own (the score is right after it) */
+.rating-score { white-space: nowrap; }
+.verdict-go { color: #0b7a5a; font-weight: 700; }
+.verdict-maybe { color: #a35f00; font-weight: 700; }
+.verdict-skip, .verdict-closed { color: var(--muted); font-weight: 700; }
+
+/* Top 6 today: swipe sideways; the next card peeks in about a third, so it's clear
+   there's more (on wide screens, three and a bit) */
+.top-six { margin: 4px 0 28px; }
+.top-six-row {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 68%; gap: 12px;
+  overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: thin;
+}
+@media (min-width: 720px) { .top-six-row { grid-auto-columns: calc((100% - 36px) / 3.3); } }
+.top-six-card {
+  scroll-snap-align: start; display: grid; align-content: start; gap: 4px;
+  padding: 14px 16px; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: var(--surface); border: 0; border-radius: var(--radius);
+}
+.top-six-card:hover .top-six-name { text-decoration: underline; text-underline-offset: 3px; }
+.top-six-name { font: 600 18px/1.2 var(--serif); }
+.top-six-where, .top-six-why { font-size: 13px; color: var(--muted); }
+
+/* Search → filters → list → details: one flow, joined by a single line down the left
+   instead of three boxed sections */
+.all-body { border-left: 2px solid var(--rule); margin-left: 2px; padding-left: 14px; }

@@ -1,5 +1,12 @@
 // Small building blocks shared by the Snow and Surf tabs.
 import { ratingBar } from './charts.js';
+import { verdictFor, verdictText } from './verdict.js';
+
+// "GO · 5/5" next to a rating bar: the same words the alert emails use
+export function scoreLabel(item, score = item?.rating?.score) {
+  const v = verdictFor(item ?? { rating: { score } });
+  return h('span', { class: `rating-score verdict-${v.key}` }, item ? verdictText(item) : score == null ? '–' : `${v.label} · ${score}/5`);
+}
 
 // The loaded report, set once by app.js. (An object, so other files see updates.)
 export const state = { report: null };
@@ -56,12 +63,12 @@ export function unavailable(label, block) {
   return h('p', { class: 'unavailable' }, `${label} unavailable`, block?.reason ? ` — ${block.reason}` : '');
 }
 
-export function rating(r) {
-  const label = r.score == null ? 'Not rated' : `Rating ${r.score} out of 5`;
+export function rating(r, item) {
+  const label = r.score == null ? 'Not rated' : `${verdictFor(item ?? { rating: r }).label}: rating ${r.score} out of 5`;
   return h('div', { class: 'rating', role: 'img', 'aria-label': `${label}. ${r.reason}` },
     h('div', { class: 'rating-top' },
       ratingBar(r.score),
-      h('span', { class: 'rating-score' }, r.score == null ? '–' : `${r.score}/5`)),
+      scoreLabel(item ?? { rating: r })),
     h('p', { class: 'rating-reason' }, r.reason));
 }
 
@@ -88,9 +95,9 @@ export function bestBetCard(section, kind, onDetails) {
   const score = item?.rating.score ?? b.score;
   const reason = item?.rating.reason ?? '';
   const card = h('button', { type: 'button', class: 'best-bet', 'aria-label': `${title}: ${b.name}, ${score} of 5. ${reason}. Open details.` },
-    h('span', { class: 'kicker' }, b.score <= 2 ? `${title} · slim pickings` : title),
+    h('span', { class: 'kicker' }, title),
     h('span', { class: 'best-bet-name' }, b.name),
-    h('span', { class: 'tile-rating' }, ratingBar(score), h('span', { class: 'rating-score' }, `${score}/5`)),
+    h('span', { class: 'tile-rating' }, ratingBar(score), scoreLabel(item ?? null, score)),
     h('span', { class: 'best-bet-reason' }, reason),
     section.verdict?.text ? h('span', { class: 'verdict' }, section.verdict.text) : null,
     h('span', { class: 'tile-more', 'aria-hidden': 'true' }, 'Details →'));

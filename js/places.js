@@ -9,7 +9,8 @@
 // Pins and dropdown choices are saved in this browser (localStorage).
 import { ratingBar } from './charts.js';
 import { createMap, legendIcon } from './map.js';
-import { drawCharts, h, rating } from './ui.js';
+import { drawCharts, h, rating, scoreLabel } from './ui.js';
+import { verdictFor } from './verdict.js';
 
 const MAX_PINS = 4;
 const SHORT_LIST = 10; // rows shown before "Show all"
@@ -163,8 +164,34 @@ export function createPlacesTab(opts) {
   const dialog = h('dialog', { id: `${key}-detail`, class: 'detail', 'aria-labelledby': `${key}-detail-title` });
   document.body.append(dialog);
 
+  // Top 6 today: the best-rated places as a row you swipe, the next card peeking in at
+  // the edge so it's clear there's more. All 76 / 52 stay behind the search below.
+  // Places you can't ride yet (a closed mountain) never make the six.
+  function topSix() {
+    const six = [...section.items]
+      .filter((x) => x.rating.score != null && verdictFor(x).key !== 'closed')
+      // Ties: the day's best bet first (it already broke the tie), then A–Z
+      .sort((a, b) => b.rating.score - a.rating.score || (b.id === section.bestBet?.id) - (a.id === section.bestBet?.id) || a.name.localeCompare(b.name))
+      .slice(0, 6);
+    if (!six.length) return null;
+    return h('section', { class: 'top-six', 'aria-labelledby': `${key}-h-top` },
+      h('div', { class: 'section-head' },
+        h('h2', { id: `${key}-h-top` }, 'Top 6 today'),
+        h('p', { class: 'fine' }, `Best rated right now · all ${section.items.length} are in the search below`)),
+      h('div', { class: 'top-six-row' }, six.map((item) => {
+        const b = h('button', { type: 'button', class: 'top-six-card', 'aria-label': `${item.name}, ${place(item)}. ${verdictFor(item).label}, ${item.rating.score} of 5. ${item.rating.reason}. Open details.` },
+          h('span', { class: 'top-six-name' }, item.name),
+          h('span', { class: 'top-six-where' }, place(item)),
+          h('span', { class: 'tile-rating' }, ratingBar(item.rating.score), scoreLabel(item)),
+          h('span', { class: 'top-six-why' }, item.rating.reason));
+        b.addEventListener('click', () => openDetail(item.id));
+        return b;
+      })));
+  }
+
   document.getElementById(opts.panelId).replaceChildren(
     h('div', { class: 'top-grid' }, opts.top?.() ?? []), // side by side on wide screens
+    topSix() ?? '',
     h('section', { 'aria-labelledby': `${key}-h-mine` },
       h('div', { class: 'section-head' },
         h('h2', { id: `${key}-h-mine` }, words.mine),
@@ -254,7 +281,7 @@ export function createPlacesTab(opts) {
     },
       h('span', { class: 'tile-name' }, item.name),
       h('span', { class: 'tile-where' }, place(item)),
-      h('span', { class: 'tile-rating' }, ratingBar(score), h('span', { class: 'rating-score' }, score == null ? '–' : `${score}/5`)),
+      h('span', { class: 'tile-rating' }, ratingBar(score), scoreLabel(item)),
       h('span', { class: 'tile-stats' }, stats.map((s) => h('span', { class: 'tile-stat' }, s))),
       insight ? h('span', { class: 'tile-insight' }, insight) : null,
       h('span', { class: 'tile-more', 'aria-hidden': 'true' }, 'Details →'));
@@ -488,7 +515,7 @@ export function createPlacesTab(opts) {
         h('span', { class: 'visually-hidden' }, ', '),
         h('span', { class: 'row-region' }, [place(item), item.area].filter(Boolean).join(' · ')),
         extrasWithSeparators(opts.rowExtras?.(item))),
-      h('span', { class: 'row-rating' }, ratingBar(score), h('span', { class: 'rating-score' }, score == null ? '–' : `${score}/5`)),
+      h('span', { class: 'row-rating' }, ratingBar(score), scoreLabel(item)),
       h('span', { class: 'row-stats' }, opts.rowStats(item)));
     main.addEventListener('click', () => openDetail(item.id));
     return h('li', { class: `resort-row ${opts.itemClass?.(item) ?? ''}${isPinned(item.id) ? ' is-pinned' : ''}` },
@@ -568,7 +595,7 @@ export function createPlacesTab(opts) {
         h('div', { class: 'detail-actions' }, opts.detailPill?.(item) ?? h('span'),
           h('div', { class: 'detail-buttons' }, opts.detailButtons?.(item), pinButton(item, { withText: true }))),
         pendingPin === id ? replacePrompt(id) : null,
-        rating(item.rating),
+        rating(item.rating, item),
         h('h4', {}, 'Why this rating'),
         why,
         opts.detailBody(item)),

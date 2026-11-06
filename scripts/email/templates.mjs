@@ -15,6 +15,10 @@
 // (max-width 480px: Gmail and Apple Mail on iOS/Android honor it) and dark-mode colors.
 // Every icon is an emoji with a text label. No images, no tracking pixels.
 import { withinReach, normalizeRider } from '../../js/recommend.js';
+// The verdict words (GO / WORTH A LOOK / SKIP / NOT OPEN YET), shared with the website
+import { VERDICT, verdictOf, notRideable } from '../../js/verdict.js';
+
+export { VERDICT, verdictOf };
 
 const BRAND = 'Snow & Surf Report';
 const ACCENT = { snow: '#0f6f86', surf: '#1f63c6', plain: '#1d2733' };
@@ -29,21 +33,6 @@ const ICON = {
   buoy: '🛟', board: '🏄', base: '🏔️', season: '🗓️', pass: '🎟️', fresh: '❄️', quiet: '🌤️', ok: '✅',
 };
 
-// ---------- The verdict ----------
-// One label per rating band, the same word everywhere it appears (email and site):
-// 4-5 GO, 3 WORTH A LOOK, 1-2 SKIP. A place that can't be ridden yet is NOT OPEN YET.
-export const VERDICT = {
-  go: { label: 'GO', color: '#0b7a5a' },
-  maybe: { label: 'WORTH A LOOK', color: '#a35f00' },
-  skip: { label: 'SKIP', color: '#5f6b78' },
-  closed: { label: 'NOT OPEN YET', color: '#5f6b78' },
-};
-export function verdictOf(score, notYet = false) {
-  if (notYet) return { key: 'closed', ...VERDICT.closed };
-  if (score == null) return { key: 'skip', ...VERDICT.skip };
-  const key = score >= 4 ? 'go' : score === 3 ? 'maybe' : 'skip';
-  return { key, ...VERDICT[key] };
-}
 
 export const escape = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const firstName = (user) => (user.name ? user.name.trim().split(/\s+/)[0] : '');
@@ -171,7 +160,7 @@ function boardLine(day, profile, skills) {
 const isClosed = (r) => r.season?.status === 'closed';
 const baseOf = (r) => (ok(r.observed) ? r.observed.data.depthNow : null);
 // Can you ride it at all? Not before opening day, and not on a 0" base.
-const rideable = (r) => !isClosed(r) && baseOf(r) !== 0;
+const rideable = (r) => !notRideable(r); // the same rule the website uses (js/verdict.js)
 export function seasonText(r) {
   const s = r.season ?? {};
   if (s.status === 'open') return 'Open';
@@ -520,7 +509,7 @@ export function surfEmail({ user, alerts, items, siteUrl, dateLabel, lookAhead, 
       const windBit = x.windDay?.relative === 'offshore' ? 'offshore' : 'light wind';
       x.verdict = `Best window: ${x.day} ${hourRange(w.from, w.to)}, ${windBit}${swellBit}.${w.badFrom != null ? ` ${cap(w.badRel ?? 'windy')} after ${hourText(w.badFrom)}.` : ''}`;
     } else {
-      x.verdict = `Best bet: ${x.day}${swellBit}. ${cap(windowText(w) || 'check the wind before you go')}.`;
+      x.verdict = `Best bet: ${x.day}${swellBit}.${windowText(w) ? ` ${cap(windowText(w))}.` : ''}`;
     }
   }
   const top = spots[0];
