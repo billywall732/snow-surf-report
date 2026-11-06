@@ -642,7 +642,7 @@ export function digestEmail({ user, watched, siteUrl, dateLabel, firstOne = fals
     : `This is the weekly note from ${BRAND}: nothing matched your alert thresholds in the past week, so here's the week ahead instead.`;
   const html = shell({
     kind: 'plain',
-    preheader: firstOne ? 'Alerts are on. Here is what you are watching.' : `Quiet week. ${lead ? `Best ahead: ${lead.name}, ${lead.line.toLowerCase()}.` : 'Nothing big in the forecast.'}`,
+    preheader: firstOne ? 'Alerts are on. Here is what you are watching.' : `Quiet week. ${lead ? `Best ahead: ${lead.name}, ${lead.line.charAt(0).toLowerCase()}${lead.line.slice(1)}.` : 'Nothing big in the forecast.'}`,
     kicker: firstOne ? 'Alerts are on' : 'Weekly check-in',
     title: firstOne ? `Watching ${plural(snow.length + surf.length, 'place')} for you` : 'Nothing hit your thresholds this week',
     dateLabel,
