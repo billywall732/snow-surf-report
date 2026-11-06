@@ -12,7 +12,7 @@ export async function mountainForecast(resort) {
   const params = new URLSearchParams({
     latitude: resort.lat,
     longitude: resort.lon,
-    daily: 'snowfall_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max',
+    daily: 'snowfall_sum,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant',
     hourly: 'snowfall,snow_depth,apparent_temperature',
     past_days: 10,
     forecast_days: 7,
@@ -41,10 +41,24 @@ export async function mountainForecast(resort) {
       tempLow: Math.round(j.daily.temperature_2m_min[i]),
       windMax: Math.round(j.daily.wind_speed_10m_max[i]),
       gustMax: Math.round(j.daily.wind_gusts_10m_max[i]),
+      windDeg: j.daily.wind_direction_10m_dominant[i] ?? null, // where the day's wind mostly comes from
     }))
     .filter((d) => d.date >= today);
 
   const h = j.hourly;
+  // When each day's snow falls: [overnight (midnight-9 AM), lift hours (9 AM-5 PM), evening
+  // (5 PM-midnight)], local time. "7 inches overnight" means fresh tracks that morning;
+  // snow in the evening is the next morning's powder.
+  const localTimes = h.time.map((t) => toLocalISO(t * 1000, tz));
+  for (const d of days) {
+    const parts = [0, 0, 0];
+    localTimes.forEach((local, i) => {
+      if (local.slice(0, 10) !== d.date) return;
+      const hour = Number(local.slice(11, 13));
+      parts[hour < 9 ? 0 : hour < 17 ? 1 : 2] += h.snowfall[i] ?? 0;
+    });
+    if (d.snowfall > 0) d.snowParts = parts.map(round1); // only on snowy days (keeps the file small)
+  }
   // "Feels like" (wind chill) on the slopes: the coldest and warmest hour between
   // 9 AM and 4 PM local time, for each day. Used for what to wear.
   for (const d of days) {
@@ -113,11 +127,27 @@ export async function surfWind(spot, sessionHour) {
     hourly: j.hourly.time
       .map((t, k) => ({ t: toLocalISO(t * 1000, spot.timezone), mph: Math.round(j.hourly.wind_speed_10m[k]), gust: Math.round(j.hourly.wind_gusts_10m[k]), deg: j.hourly.wind_direction_10m[k] }))
       .filter((p) => p.t.slice(0, 10) === toLocalISO(j.hourly.time[i] * 1000, spot.timezone).slice(0, 10)),
-    // The session hour on each of the 7 days
+    // The session hour on each of the 7 days, with that day's gust and high temperature
     days: j.hourly.time
       .map((t, k) => ({ t, k }))
       .filter(({ t }) => Number(toLocalISO(t * 1000, spot.timezone).slice(11, 13)) === sessionHour)
-      .map(({ t, k }) => ({ date: toLocalISO(t * 1000, spot.timezone).slice(0, 10), mph: Math.round(j.hourly.wind_speed_10m[k]), deg: j.hourly.wind_direction_10m[k] })),
+      .map(({ t, k }) => {
+        const date = toLocalISO(t * 1000, spot.timezone).slice(0, 10);
+        const di = j.daily.time.findIndex((dt) => toLocalISO((dt + 12 * 3600) * 1000, spot.timezone).slice(0, 10) === date);
+        return {
+          date,
+          mph: Math.round(j.hourly.wind_speed_10m[k]),
+          gust: Math.round(j.hourly.wind_gusts_10m[k]),
+          deg: j.hourly.wind_direction_10m[k],
+          airHigh: di === -1 ? null : Math.round(j.daily.temperature_2m_max[di]),
+        };
+      }),
+    // Daylight hours (5 AM-6 PM) of every day, for the "cleanest window" worked out in
+    // fetch-report.mjs (it needs the beach's direction). Removed before the report is saved.
+    _hours: j.hourly.time
+      .map((t, k) => ({ local: toLocalISO(t * 1000, spot.timezone), k }))
+      .filter(({ local }) => { const hr = Number(local.slice(11, 13)); return hr >= 5 && hr <= 18; })
+      .map(({ local, k }) => ({ date: local.slice(0, 10), h: Number(local.slice(11, 13)), mph: Math.round(j.hourly.wind_speed_10m[k]), deg: j.hourly.wind_direction_10m[k] })),
   };
 }
 

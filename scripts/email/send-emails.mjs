@@ -26,10 +26,10 @@
 // Without the Gmail secrets it skips email; without VAPID_PRIVATE_KEY it skips push.
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
-import { computeAlerts, DEFAULT_SETTINGS, snowComing } from '../../js/alert-rules.js';
-import { hasProfile, profileText } from '../../js/fit.js';
+import { computeAlerts, DEFAULT_SETTINGS, snowComing, watching } from '../../js/alert-rules.js';
+import { fitDays, hasProfile, profileText } from '../../js/fit.js';
 import { vapidPublicKey } from '../../js/firebase-config.js';
-import { confirmationEmail, snowEmail, surfEmail } from './templates.mjs';
+import { confirmationEmail, digestEmail, snowEmail, surfEmail } from './templates.mjs';
 
 const SITE_URL = process.env.SITE_URL || 'https://offthewall.dev/snow-surf-report/';
 const dryRunIndex = process.argv.indexOf('--dry-run');
@@ -115,8 +115,9 @@ async function sendEmail(to, { subject, text, html }) {
     subject,
     text,
     html,
-    // Lets mail apps show an "Unsubscribe" button that opens the alerts page
-    headers: { 'List-Unsubscribe': `<${SITE_URL}#alerts>` },
+    // No List-Unsubscribe header: mail apps show it as a one-tap "Unsubscribe" button,
+    // and the only page we could point it at (#alerts) needs signing in first. Add it
+    // back once there's a real one-tap unsubscribe link.
   });
   await new Promise((r) => setTimeout(r, 1000)); // gentle on Gmail's limits (~500/day)
 }
@@ -201,8 +202,8 @@ const items = new Map([...report.sections.snow.items, ...report.sections.surf.it
 function emailsFor(user, alerts) {
   const settings = { ...DEFAULT_SETTINGS, ...user.settings };
   const profile = user.profile ?? { levels: [], boards: [] };
-  // tides: each tide station's high/low times from the report, shown on surf cards
-  const common = { user, items, siteUrl: SITE_URL, dateLabel: dayLabel, tides: report.sections.surf.tideStations ?? {} };
+  // tides: each tide station's highs and lows; skills: the board/level ranges, for "which board"
+  const common = { user, items, siteUrl: SITE_URL, dateLabel: dayLabel, tides: report.sections.surf.tideStations ?? {}, skills: report.sections.surf.skills };
   const snow = alerts.filter((a) => a.kind === 'snow');
   const surf = alerts.filter((a) => a.kind === 'surf');
   return [
@@ -219,6 +220,45 @@ function notification(alerts) {
   return { title: `${alerts.length} alerts for today`, body: shown.join('\n'), hash: 'alerts', tag: `ssr-${today}` };
 }
 
+// ---------- The weekly heartbeat ----------
+// So silence is never a mystery: when nothing has matched for a week, a short Friday
+// note with the best of the week ahead; and a new subscriber who hasn't had any email
+// yet gets a "you're set up, here's what you're watching" note on their first morning.
+// Both count as that day's one email (lastSentDate), and look 7 days ahead (the alerts
+// themselves keep the 3/5/7 days the person chose).
+const daysSince = (date) => (date ? Math.round((Date.parse(`${today}T12:00Z`) - Date.parse(`${date}T12:00Z`)) / 86400e3) : Infinity);
+const isFriday = new Date().toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Los_Angeles' }) === 'Fri';
+
+function watchedFor(user) {
+  const profile = user.profile ?? { levels: [], boards: [] };
+  const w = watching(report, user.settings ?? {}, profile, user.pins ?? {}, user.rider);
+  const skills = report.sections.surf.skills;
+  return {
+    snow: w.snow,
+    surf: w.surf.map(({ item }) => {
+      const fits = hasProfile(profile) ? fitDays(item, profile, skills).slice(0, 7).filter((d) => d.fits) : [];
+      return { item, best: fits.reduce((m, d) => (d.ft > (m?.ft ?? -1) ? d : m), null) };
+    }),
+  };
+}
+
+async function maybeDigest(user) {
+  const firstOne = !user.lastSentDate && !user.lastDigestDate;
+  const quietWeek = isFriday && daysSince(user.lastSentDate) >= 7 && daysSince(user.lastDigestDate) >= 6;
+  if (!firstOne && !quietWeek) return false;
+  const watched = watchedFor(user);
+  if (!watched.snow.length && !watched.surf.length) return false; // watching nothing: nothing to say
+  const to = verified(user) && user.alertEmail ? user.alertEmail : user.email;
+  try {
+    await sendEmail(to, digestEmail({ user, watched, siteUrl: SITE_URL, dateLabel: dayLabel, firstOne }));
+  } catch (err) {
+    console.error(`Couldn't send the weekly note to user ${user.id}: ${err.message}`);
+    return false;
+  }
+  if (!dryRun) await userDoc(user.id).update({ lastSentDate: today, lastDigestDate: today });
+  return true;
+}
+
 let emailed = 0;
 let pushed = 0;
 let skipped = 0;
@@ -229,7 +269,12 @@ async function morningAlerts() {
     const devices = canPush ? Object.entries(user.pushSubs ?? {}) : [];
     if (!wantsEmail && !devices.length) { skipped++; continue; }
     const alerts = computeAlerts(report, user.settings ?? {}, user.profile ?? { levels: [], boards: [] }, user.pins ?? {}, user.rider);
-    if (!alerts.length) { skipped++; continue; } // nothing matches: nothing sent
+    if (!alerts.length) {
+      // Nothing matches. Usually nothing is sent, except the weekly heartbeat (email only)
+      if (wantsEmail && await maybeDigest(user)) emailed++;
+      else skipped++;
+      continue;
+    }
 
     let sent = false;
     if (wantsEmail) {
@@ -264,7 +309,8 @@ async function morningAlerts() {
 // The snowiest mountains and the best-rated beaches that suit an intermediate
 // longboarder, as if someone had picked them, so both emails always have content.
 async function sendSamples() {
-  const to = process.env.GMAIL_USER;
+  // SAMPLE_TO: where the examples go (defaults to the sending inbox itself)
+  const to = process.env.SAMPLE_TO || process.env.GMAIL_USER;
   if (!to && !dryRun) { console.log('No GMAIL_USER secret, so no example emails.'); return; }
   const snowiest = [...report.sections.snow.items].sort((a, b) => snowComing(b, 7) - snowComing(a, 7)).slice(0, 3).map((r) => r.id);
   const profile = { levels: ['intermediate'], boards: ['longboard'] };
@@ -273,8 +319,11 @@ async function sendSamples() {
   const alerts = computeAlerts(report, settings, profile, {}, undefined);
   const surfIds = new Set(alerts.filter((a) => a.kind === 'surf').slice(0, 3).map((a) => a.itemId));
   const picked = alerts.filter((a) => a.kind === 'snow' || surfIds.has(a.itemId));
-  const user = { name: '', settings, profile };
-  for (const email of emailsFor(user, picked)) {
+  // A rider based in Los Angeles, so the examples show "Near you" and "Worth the trip"
+  const rider = { home: { label: 'Los Angeles', lat: 34.05, lon: -118.24 }, radiusMi: 300 };
+  const user = { name: '', settings, profile, rider };
+  const examples = [...emailsFor(user, picked), digestEmail({ user, watched: watchedFor(user), siteUrl: SITE_URL, dateLabel: dayLabel, firstOne: false })];
+  for (const email of examples) {
     await sendEmail(to ?? 'you@example.com', { ...email, subject: `[SAMPLE] ${email.subject}` });
     console.log(`Sent an example: ${email.subject}`);
   }

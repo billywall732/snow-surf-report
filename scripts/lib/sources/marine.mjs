@@ -5,6 +5,8 @@ import { toLocalISO } from '../time.mjs';
 import { pickHour } from './open-meteo.mjs';
 
 const round1 = (x) => (x == null ? null : Math.round(x * 10) / 10);
+// [height ft, period s, direction deg], or null when the model has no value
+const part = (ft, s, deg) => (ft == null || s == null ? null : [round1(ft), round1(s), deg == null ? null : Math.round(deg)]);
 
 export async function waves(spot, sessionHour) {
   const params = new URLSearchParams({
@@ -13,6 +15,8 @@ export async function waves(spot, sessionHour) {
     hourly: [
       'wave_height', 'wave_period', 'wave_direction',
       'swell_wave_height', 'swell_wave_period', 'swell_wave_direction',
+      'secondary_swell_wave_height', 'secondary_swell_wave_period', 'secondary_swell_wave_direction',
+      'wind_wave_height', 'wind_wave_period', 'wind_wave_direction',
       'sea_surface_temperature',
     ].join(','),
     forecast_days: 7, // today + 6 more, for "look ahead" lists and alerts
@@ -44,6 +48,17 @@ export async function waves(spot, sessionHour) {
     days: h.time
       .map((t, k) => ({ t, k }))
       .filter(({ t }) => Number(toLocalISO(t * 1000, spot.timezone).slice(11, 13)) === sessionHour)
-      .map(({ t, k }) => ({ date: toLocalISO(t * 1000, spot.timezone).slice(0, 10), ft: round1(h.wave_height[k]), s: round1(h.wave_period[k]), deg: h.wave_direction[k] })),
+      .map(({ t, k }) => ({
+        date: toLocalISO(t * 1000, spot.timezone).slice(0, 10),
+        ft: round1(h.wave_height[k]),
+        s: round1(h.wave_period[k]),
+        deg: h.wave_direction[k],
+        // The parts of the waves: sw / sw2 = the main and second swell (from storms far away,
+        // usually longer period and cleaner), ww = wind waves (made by local wind: short
+        // period, choppier). Each [ft, s, deg].
+        sw: part(h.swell_wave_height[k], h.swell_wave_period[k], h.swell_wave_direction[k]),
+        sw2: part(h.secondary_swell_wave_height?.[k], h.secondary_swell_wave_period?.[k], h.secondary_swell_wave_direction?.[k]),
+        ww: part(h.wind_wave_height[k], h.wind_wave_period[k], h.wind_wave_direction[k]),
+      })),
   };
 }

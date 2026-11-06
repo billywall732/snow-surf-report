@@ -90,6 +90,31 @@ export function windRelative(windFromDeg, beachFacingDeg, toleranceDeg) {
   return 'cross-shore';
 }
 
+// The cleanest stretch of one day, from its daylight hours [{ h, mph, deg }] (local hours):
+// clean = offshore, or light enough (6 mph or less) not to matter. Returns the longest
+// clean run (2+ hours, the earliest if tied) and when the wind turns bad after it
+// (onshore or cross-shore at 10+ mph):
+//   { from: 7, to: 10, badFrom: 11 }   -> "Cleanest 7-10 AM, onshore after 11 AM"
+//   { from: null, badFrom: 5 }         -> no clean stretch at all
+export function cleanWindow(hours, beachFacingDeg, toleranceDeg) {
+  if (!hours?.length) return null;
+  const tagged = hours.map((x) => {
+    const rel = x.deg == null ? null : windRelative(x.deg, beachFacingDeg, toleranceDeg);
+    return { ...x, rel, clean: rel === 'offshore' || x.mph <= 6, bad: rel !== 'offshore' && x.mph >= 10 };
+  });
+  let best = null;
+  for (let i = 0; i < tagged.length; i++) {
+    if (!tagged[i].clean) continue;
+    let j = i;
+    while (j + 1 < tagged.length && tagged[j + 1].clean && tagged[j + 1].h === tagged[j].h + 1) j++;
+    if (j - i + 1 >= 2 && (!best || j - i > best.to - best.from - 1)) best = { from: tagged[i].h, to: tagged[j].h + 1 };
+    i = j;
+  }
+  const after = best ? best.to : tagged[0].h;
+  const turn = tagged.find((x) => x.h >= after && x.bad);
+  return { from: best?.from ?? null, to: best?.to ?? null, badFrom: turn?.h ?? null, badRel: turn?.rel ?? null };
+}
+
 // Highest score wins; ties go to the place with the bigger tiebreak number.
 export function bestBet(items, tiebreak) {
   const rated = items.filter((x) => x.rating.score != null);

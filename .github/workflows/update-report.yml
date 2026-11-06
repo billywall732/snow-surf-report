@@ -19,12 +19,25 @@ on:
     # Every hour at 17 minutes past. GitHub is busiest on the hour, and runs set
     # for :00 can start very late; an off-minute starts more reliably.
     - cron: '17 * * * *'
+    # Extra runs aimed at just after 5 AM Pacific, so the morning alerts go out early.
+    # GitHub skips many scheduled runs when it's busy (in Nov 2026 this workflow ran
+    # only 3-5 times a day, not 24), so there are several shots at it: 12:05 and 12:35
+    # UTC are 5:05 / 5:35 AM in summer (PDT), 13:05 and 13:35 UTC the same in winter
+    # (PST). Whichever lands first after 5 AM sends; the rest find nothing to do.
+    - cron: '5 12 * * *'
+    - cron: '35 12 * * *'
+    - cron: '5 13 * * *'
+    - cron: '35 13 * * *'
   workflow_dispatch: # adds a "Run workflow" button on the Actions tab
     inputs:
       sample:
-        description: 'Only send example snow + surf emails to the GMAIL_USER inbox (no real alerts)'
+        description: 'Only send example snow + surf emails (and a weekly-note example) - no real alerts'
         type: boolean
         default: false
+      sample_to:
+        description: 'Send the examples to this address instead of the GMAIL_USER inbox (optional)'
+        type: string
+        default: ''
   push:
     branches: [main] # redeploy when you push code changes
 
@@ -82,9 +95,11 @@ jobs:
       # Email and phone alerts for people who signed in with Google.
       #   - Every run: email a confirmation link to anyone who chose a new address.
       #   - Mornings only (5-11 AM Pacific): the alerts themselves. The first run after
-      #     5 AM sends, and the script never sends anyone two in a day, so later
-      #     morning runs (which cover for a late start) skip them. "Run workflow" by
-      #     hand always counts as morning.
+      #     5 AM sends (the extra 5:05 / 5:35 AM schedules above aim for that), and the
+      #     script never sends anyone two in a day, so later morning runs skip them.
+      #     The window stays open until 11 AM on purpose: when GitHub skips the early
+      #     runs, a late alert beats no alert. "Run workflow" by hand always counts as
+      #     morning.
       # Skipped (without failing) until FIREBASE_SERVICE_ACCOUNT is added; see the
       # README. A problem here never stops the site from publishing.
       - name: Email and phone alerts
@@ -96,6 +111,7 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           SAMPLE: ${{ inputs.sample && '1' || '' }}
+          SAMPLE_TO: ${{ inputs.sample_to }}
           SITE_URL: ${{ vars.SITE_URL }} # set this repo variable when the site moves to its own domain
         run: |
           if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
@@ -113,7 +129,8 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp -r index.html manifest.webmanifest icon.svg css js data _site/
+          # icon-email.png: the logo in the alert emails (they load it from the site)
+          cp -r index.html manifest.webmanifest icon.svg icon-email.png css js data _site/
 
       # Cache-busting: GitHub Pages lets browsers keep files for 10 minutes, so right
       # after a publish a phone could mix the old CSS with the new JavaScript (broken

@@ -12,7 +12,7 @@ import { waves } from './lib/sources/marine.mjs';
 import { tides } from './lib/sources/coops.mjs';
 import { buoy } from './lib/sources/ndbc.mjs';
 import { snowDepth } from './lib/sources/snotel.mjs';
-import { bestBet, rateResort, rateSpot, ratingPeriod, windRelative } from './lib/ratings.mjs';
+import { bestBet, cleanWindow, rateResort, rateSpot, ratingPeriod, windRelative } from './lib/ratings.mjs';
 
 const root = new URL('..', import.meta.url);
 const readJSON = async (path) => JSON.parse(await fs.readFile(new URL(path, root), 'utf8'));
@@ -90,8 +90,13 @@ async function buildSpot(spot, cfg) {
   ]);
   if (wind.status === 'ok') {
     wind.data.relative = windRelative(wind.data.directionDeg, spot.beachFacingDeg, cfg.offshoreToleranceDeg);
-    for (const d of wind.data.days ?? []) d.relative = windRelative(d.deg, spot.beachFacingDeg, cfg.offshoreToleranceDeg);
+    for (const d of wind.data.days ?? []) {
+      d.relative = windRelative(d.deg, spot.beachFacingDeg, cfg.offshoreToleranceDeg);
+      // The day's cleanest stretch, for the emails' "best window" line
+      d.window = cleanWindow(wind.data._hours.filter((x) => x.date === d.date), spot.beachFacingDeg, cfg.offshoreToleranceDeg);
+    }
   }
+  if (wind.data) delete wind.data._hours; // only needed for the windows (keeps report.json small)
   const item = {
     id: spot.id,
     name: spot.name,
