@@ -250,7 +250,8 @@ async function maybeDigest(user) {
   if (!watched.snow.length && !watched.surf.length) return false; // watching nothing: nothing to say
   const to = verified(user) && user.alertEmail ? user.alertEmail : user.email;
   try {
-    await sendEmail(to, digestEmail({ user, watched, siteUrl: SITE_URL, dateLabel: dayLabel, firstOne }));
+    const surfDays = { ...DEFAULT_SETTINGS, ...user.settings }.surfDays ?? 3;
+    await sendEmail(to, digestEmail({ user, watched, siteUrl: SITE_URL, dateLabel: dayLabel, firstOne, surfDays }));
   } catch (err) {
     console.error(`Couldn't send the weekly note to user ${user.id}: ${err.message}`);
     return false;
@@ -315,14 +316,14 @@ async function sendSamples() {
   const snowiest = [...report.sections.snow.items].sort((a, b) => snowComing(b, 7) - snowComing(a, 7)).slice(0, 3).map((r) => r.id);
   const profile = { levels: ['intermediate'], boards: ['longboard'] };
   const beaches = [...report.sections.surf.items].sort((a, b) => (b.rating.score ?? 0) - (a.rating.score ?? 0)).map((s) => s.id);
-  const settings = { snowScope: 'chosen', snowWatch: snowiest, snowInches: 1, snowDays: 7, surfScope: 'chosen', surfWatch: beaches, surfDays: 5 };
+  const settings = { snowScope: 'chosen', snowWatch: snowiest, snowInches: 1, snowDays: 7, surfScope: 'chosen', surfWatch: beaches, surfDays: 3 };
   const alerts = computeAlerts(report, settings, profile, {}, undefined);
   const surfIds = new Set(alerts.filter((a) => a.kind === 'surf').slice(0, 3).map((a) => a.itemId));
   const picked = alerts.filter((a) => a.kind === 'snow' || surfIds.has(a.itemId));
   // A rider based in Los Angeles, so the examples show "Near you" and "Worth the trip"
   const rider = { home: { label: 'Los Angeles', lat: 34.05, lon: -118.24 }, radiusMi: 300 };
   const user = { name: '', settings, profile, rider };
-  const examples = [...emailsFor(user, picked), digestEmail({ user, watched: watchedFor(user), siteUrl: SITE_URL, dateLabel: dayLabel, firstOne: false })];
+  const examples = [...emailsFor(user, picked), digestEmail({ user, watched: watchedFor(user), siteUrl: SITE_URL, dateLabel: dayLabel, firstOne: false, surfDays: settings.surfDays })];
   for (const email of examples) {
     await sendEmail(to ?? 'you@example.com', { ...email, subject: `[SAMPLE] ${email.subject}` });
     console.log(`Sent an example: ${email.subject}`);
