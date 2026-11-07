@@ -2738,7 +2738,8 @@
           "id": "46221",
           "name": "Santa Monica Bay"
         },
-        "coordSource": "Wikipedia"
+        "coordSource": "Wikipedia",
+        "cam_url": "https://thesurfersview.com/live-cams/california/el-porto-beach-cam-and-surf-report/"
       },
       {
         "id": "redondo",
@@ -2772,7 +2773,8 @@
           "id": "46268",
           "name": "Topanga Nearshore"
         },
-        "coordSource": "Wikipedia"
+        "coordSource": "Wikipedia",
+        "cam_url": "https://webcamexpo.com/malibu-surf-cam/"
       },
       {
         "id": "manasquan",
@@ -2809,7 +2811,9 @@
           "distanceKm": 9
         },
         "minLevel": "intermediate",
-        "minLevelNote": "Crowded cobblestone point"
+        "minLevelNote": "Crowded cobblestone point",
+        "cam_url": "https://www.surf-forecast.com/breaks/Trestles_Lowers/webcams/latest",
+        "cam_label": "Watch the Trestles cams (via Surf-Forecast) →"
       },
       {
         "id": "oceanside",

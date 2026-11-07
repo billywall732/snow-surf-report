@@ -113,6 +113,9 @@ async function buildSpot(spot, cfg) {
     waves: wv,
     wind,
     buoy: by,
+    // A live surf cam, only where one was checked to exist (config: cam_url, cam_label)
+    camUrl: spot.cam_url ?? null,
+    camLabel: spot.cam_label ?? null,
   };
   item.rating = rateSpot(item, surfProfile(cfg, spot.area));
   return item;
