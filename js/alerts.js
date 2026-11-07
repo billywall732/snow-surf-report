@@ -754,7 +754,7 @@ function sentNote() {
   if (loadSettings().deviceOn) ways.push('this device');
   return ways.length
     ? `Sent to your ${ways.join(' and ')} in the morning. Tap one for the details.`
-    : 'Tap one for the details. Turn on email or phone alerts below to get these each morning.';
+    : 'Tap one for the details.';
 }
 
 function matchesList(alerts) {

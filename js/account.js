@@ -14,7 +14,13 @@ import { firebaseConfig } from './firebase-config.js';
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.2'; // pinned version
 const SIGNED_IN_KEY = 'ssr-signed-in';
 
-export const isConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+// Sign-in is switched off until offthewall.dev is an authorized domain in Firebase
+// (Authentication → Settings → Authorized domains). Google refuses sign-in from an
+// unlisted domain, so the buttons would only fail. With this false, every sign-in
+// button is hidden and the Notifications tab says email alerts are coming soon.
+// Set it back to true once the domain is added.
+const SIGN_IN_OPEN = false;
+export const isConfigured = SIGN_IN_OPEN && Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 
 // What the rest of the app sees
 export const account = {

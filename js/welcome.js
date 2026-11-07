@@ -154,7 +154,7 @@ function welcomeStep() {
     h('ul', { class: 'walk-points' },
       h('li', {}, h('span', { 'aria-hidden': 'true' }, '❄️ '), 'Mountains rated for fresh snow, base, wind and temperature'),
       h('li', {}, h('span', { 'aria-hidden': 'true' }, '🏄 '), 'Surf spots rated for waves, wind and tides, and for your level and board'),
-      h('li', {}, h('span', { 'aria-hidden': 'true' }, '🔔 '), 'Alerts on this device or by email when your spots look good')),
+      h('li', {}, h('span', { 'aria-hidden': 'true' }, '🔔 '), 'Alerts on this device when your spots look good (email alerts are coming soon)')),
     h('p', { class: 'fine' }, 'Two minutes to set up. Skip any time; everything can be changed later under Profile and Notifications.'),
   ];
 }
@@ -221,11 +221,13 @@ function notifyStep() {
         : 'This browser can’t show notifications.')),
     h('section', { class: 'walk-card' },
       h('h3', {}, h('span', { 'aria-hidden': 'true' }, '✉️ '), 'Email alerts'),
-      h('p', {}, 'A morning email when your mountains or beaches match, even when the app is closed. ', h('b', {}, 'Email alerts need you to sign in with Google'), ' (we only use your name and email address, never your Gmail).'),
+      isConfigured
+        ? h('p', {}, 'A morning email when your mountains or beaches match, even when the app is closed. ', h('b', {}, 'Email alerts need you to sign in with Google'), ' (we only use your name and email address, never your Gmail).')
+        : h('p', {}, 'Coming soon: a morning email when your mountains or beaches match. Sign-in is switched off for now, so your setup stays on this device.'),
       signedIn
         ? h('p', { class: 'fine' }, `Signed in as ${account.user.email}. Email alerts are set up on the Notifications tab.`)
         : isConfigured ? [btn(account.busy ? 'Signing in…' : 'Sign in with Google', () => signIn(), 'action-button google'), account.error ? h('p', { class: 'fine warn', role: 'status' }, account.error) : null] : null,
-      h('p', { class: 'fine' }, 'Not now? Carry on: you can finish setting up and add email alerts any time.')),
+      isConfigured ? h('p', { class: 'fine' }, 'Not now? Carry on: you can finish setting up and add email alerts any time.') : null),
   ];
 }
 

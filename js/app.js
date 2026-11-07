@@ -76,7 +76,8 @@ function renderSources() {
   document.getElementById('sources').replaceChildren(
     h('h2', {}, 'Sources'),
     h('ul', {}, items),
-    h('p', { class: 'fine' }, 'Season dates and beach directions come from the config file. Ratings are simple rules, not advice — check the resort and the beach before you go.'));
+    h('p', { class: 'fine' }, 'Season dates and beach directions come from the config file. Ratings are simple rules, not advice — check the resort and the beach before you go.'),
+    h('p', { class: 'fine' }, 'Anonymous visit counts, no cookies. · ', h('a', { href: '/privacy/' }, 'Privacy')));
 }
 
 // ---------- Pages and the bottom bar ----------

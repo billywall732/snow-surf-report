@@ -7,7 +7,7 @@ const FAQ = [
     ['What is this?', [
       'Up-to-date snow conditions at every US Ikon and Epic Pass mountain and surf at 52 US beaches, with a simple 1–5 “should I go?” rating for each.',
       'It updates every hour (GitHub sometimes runs a few minutes late). The time of the latest update is at the top of the page, and if you leave the app open, a “New conditions available” bar offers to refresh when there’s a newer report.',
-      'Ratings look at today’s morning session (7 AM). Forecasts go 7 days out: use “Look ahead” in the All mountains / All beaches list, or in each alert, to look 3, 5 or 7 days ahead. Email alerts go out once a day, in the morning.',
+      'Ratings look at today’s morning session (7 AM). Forecasts go 7 days out: use “Look ahead” in the All mountains / All beaches list, or in each alert, to look 3, 5 or 7 days ahead.',
     ]],
     ['How do I get around?', [
       'Use the bar at the bottom: Snow and Surf for conditions, Notifications for alerts, Profile for how you ride, and More for light/dark mode, animations and these FAQs.',
@@ -89,14 +89,11 @@ const FAQ = [
       'Anything that matches is listed there, and the Notifications tab shows a red badge with the count.',
     ]],
     ['Can I get alerts by email?', [
-      'Yes. Tap Sign in (top right, or on the opening screen) and sign in with Google. Each morning (around 5 AM Pacific) you’ll get one email listing what matches, only on days something does.',
-      'Your settings (alerts, Rider Profile, pinned spots) save to your account automatically, so you can change them in the app on any device. To stop emails, turn off “Email me a morning summary” or use the link at the bottom of any email.',
-      'Emails go to your Google address. To use a different one, tap Change next to “Sending to”. We’ll email that address a confirmation link within the hour; once you tap it, alerts go there.',
+      'Not yet. Email alerts need Google sign-in, which is switched off for now (it’s coming soon). Until then your settings stay on this device, and the Notifications tab shows what matches whenever you open the app.',
     ]],
     ['Can I get alerts on my phone when the app is closed?', [
-      'Yes. Sign in with Google, then turn on “Notify me on this device” and allow notifications. Each morning something matches, you’ll get one notification, even when the app is closed. Turn it on separately on each phone or computer you want them on.',
+      'Not yet: notifications while the app is closed need Google sign-in, which is coming soon. For now, turn on “Notify me on this device” and the app shows a notification for anything new each time you open it.',
       'On iPhone, notifications only work in the Home Screen app: in Safari tap Share → Add to Home Screen, open Snow and Surf from your Home Screen, and turn it on there.',
-      'Not signed in, the app can still show a notification for anything new each time you open it.',
     ]],
     ['I chose mountains but they aren’t under “Today”', [
       '“Today” only lists places that match right now (for example, 4" or more of snow coming). Tap “Watching …” just below it to see every mountain and beach your alerts cover, with how each looks today.',
