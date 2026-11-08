@@ -89,10 +89,13 @@ const FAQ = [
       'Anything that matches is listed there, and the Notifications tab shows a red badge with the count.',
     ]],
     ['Can I get alerts by email?', [
-      'Not yet. Email alerts need Google sign-in, which is switched off for now (it’s coming soon). Until then your settings stay on this device, and the Notifications tab shows what matches whenever you open the app.',
+      'Yes. Tap Sign in (top right, or on the opening screen) and sign in with Google. Each morning (around 5 AM Pacific) you’ll get one email listing what matches, only on days something does.',
+      'Your settings (alerts, Rider Profile, pinned spots) save to your account automatically, so you can change them in the app on any device. To stop emails, turn off “Email me a morning summary” on the Notifications tab.',
+      'Emails go to your Google address. To use a different one, tap Change next to “Sending to”. We’ll email that address a confirmation link within the hour; once you tap it, alerts go there.',
     ]],
     ['Can I get alerts on my phone when the app is closed?', [
-      'Not yet: notifications while the app is closed need Google sign-in, which is coming soon. For now, turn on “Notify me on this device” and the app shows a notification for anything new each time you open it.',
+      'Yes. Sign in with Google, then turn on “Notify me on this device” and allow notifications. Each morning something matches, you’ll get one notification, even when the app is closed. Turn it on separately on each phone or computer you want them on.',
+      'Not signed in, the app can still show a notification for anything new each time you open it.',
       'On iPhone, notifications only work in the Home Screen app: in Safari tap Share → Add to Home Screen, open Snow and Surf from your Home Screen, and turn it on there.',
     ]],
     ['I chose mountains but they aren’t under “Today”', [
@@ -105,7 +108,7 @@ const FAQ = [
     ]],
     ['What do you store about me?', [
       'If you don’t sign in: nothing on a server. Your pins, filters, Rider Profile, alert settings, light/dark choice and animation setting are saved only in this browser.',
-      'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Google’s Firebase), so we can send your alerts. If you choose another email address or turn on phone notifications, that address and each device’s notification address are saved too. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” at the bottom of the Notifications tab (under “Your data”) to remove everything: it clears this device and, if you’re signed in, your account’s copy.',
+      'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Supabase, the sign-in service every app on offthewall.dev shares), so we can send your alerts. If you choose another email address or turn on phone notifications, that address and each device’s notification address are saved too. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” at the bottom of the Notifications tab (under “Your data”) to remove everything: it clears this device and, if you’re signed in, your account’s copy.',
     ]],
     ['The page looks broken or old after an update', [
       'Close the tab and open the site again. The site updates every hour, and your browser may briefly hold on to the previous version.',

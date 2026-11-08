@@ -9,8 +9,7 @@ import { loadRider, openProfile } from './rider.js';
 import { hasRider } from './recommend.js';
 
 // Start downloading the sign-in code the moment a finger or mouse lands on a
-// sign-in button, so the Google window can open right on the tap (phones block
-// windows that open too long after one).
+// sign-in button, so the trip to Google starts right on the tap.
 function signInButton(id, label, cls = 'action-button google') {
   const b = h('button', { type: 'button', id, class: cls }, account.busy ? 'Signing in…' : label);
   b.addEventListener('pointerdown', warmUp, { once: true });

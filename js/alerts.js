@@ -18,7 +18,7 @@ import { hasProfile, loadProfile, onProfileChange, profileText, saveProfile } fr
 import { loadRider, onRiderChange, openProfile, saveRider } from './rider.js';
 import { distanceMi, normalizeRider, withinReach } from './recommend.js';
 import { account, confirmEmail, deleteMyData, emailConfirmed, emailTarget, initAccount, isConfigured, onAccountChange, savePushSub, saveSoon, setAlertEmail, setEmailAlerts, signIn, signOut } from './account.js';
-import { vapidPublicKey } from './firebase-config.js';
+import { vapidPublicKey } from './push-config.js';
 
 const SETTINGS_KEY = 'ssr-alerts';
 const LOCAL_ONLY = { deviceOn: false, seen: [] }; // device notifications: never synced
@@ -543,7 +543,7 @@ function deleteEverything() {
         li('Your name, email address and any other alert email address'),
         li('Your Rider Profile, pins and alert settings'),
         li('Every device’s notification sign-up')) : null,
-      h('p', { class: 'fine' }, `It keeps your light/dark and animation settings on this device (and doesn’t show the welcome walkthrough again).${signedIn ? ' You’ll be signed out. Your Google account isn’t touched, and Google’s Firebase keeps its basic sign-in record (your email and an ID). Alert emails already sent stay in your inbox.' : ''} This can’t be undone.`),
+      h('p', { class: 'fine' }, `It keeps your light/dark and animation settings on this device (and doesn’t show the welcome walkthrough again).${signedIn ? ' You’ll be signed out. Your Google account isn’t touched, and the site’s sign-in service keeps its basic sign-in record (your email and an ID), which other apps on the site use too. Alert emails already sent stay in your inbox.' : ''} This can’t be undone.`),
       msg,
       h('div', { class: 'confirm-actions' }, cancel, go)));
   const close = () => { dialog.close(); dialog.remove(); };
@@ -754,7 +754,7 @@ function sentNote() {
   if (loadSettings().deviceOn) ways.push('this device');
   return ways.length
     ? `Sent to your ${ways.join(' and ')} in the morning. Tap one for the details.`
-    : 'Tap one for the details.';
+    : 'Tap one for the details. Turn on email or phone alerts below to get these each morning.';
 }
 
 function matchesList(alerts) {

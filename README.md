@@ -83,30 +83,26 @@ You can't just double-click `index.html`: browsers block `fetch()` and JavaScrip
 
 ## Email and phone alerts (Sign in with Google)
 
-People sign in with Google on the Notifications tab. Their alert settings, Rider Profile and pins save to their account (Firebase). Each morning, the GitHub Action sends anyone with a match:
+People sign in with Google on the Notifications tab, using the sign-in shared by every app on offthewall.dev ([Supabase](https://supabase.com/), `/shared/auth.js` in the main site repo). Their alert settings, Rider Profile and pins save to their account. Each morning, the GitHub Action sends anyone with a match:
 
 - **an email** to their Google address, or another address they chose and confirmed (the Action emails a confirmation link within the hour), and
 - **a phone or computer notification**, on each device where they turned on "Notify me on this device", even when the app is closed. On iPhone this needs the Home Screen app (iOS 16.4 or later).
 
-The steps below set this up for a fork of the repo. Until they are done, the Action skips this step.
+**Where it's stored:** the `ssr_users`, `ssr_email_pending` and `ssr_email_confirmations` tables in the site's Supabase project. Their structure, row-level security (each person reaches only their own row; the job-only fields can't be written from a browser) and tests live in the private `offthewall-db` repo, as numbered migrations.
 
-**1. Create a Firebase project** (free): go to https://console.firebase.google.com → **Add project** (Google Analytics can be off).
+**What the Action needs** (repo **Settings → Secrets and variables → Actions**):
 
-**2. Add a web app:** in the project, click the **</>** (Web) icon → give it a name → **Register app**. Copy `apiKey`, `authDomain`, `projectId` and `appId` into `js/firebase-config.js`. (These aren't secrets; every Firebase web app ships them.)
+| Name | Kind | What it is |
+|---|---|---|
+| `SUPABASE_URL` | variable | the Supabase project's address |
+| `SUPABASE_SECRET_KEY` | secret | its secret key (Supabase → Project Settings → API Keys); reads everyone's alert settings |
+| `GMAIL_USER` | secret | the Gmail address emails are sent from |
+| `GMAIL_APP_PASSWORD` | secret | an App Password for it (2-Step Verification on, then https://myaccount.google.com/apppasswords); Gmail allows about 500 recipients a day |
+| `VAPID_PRIVATE_KEY` | secret | the private half of the phone-notification key whose public half is `vapidPublicKey` in `js/push-config.js`. New pair: `npx web-push generate-vapid-keys` (changing it means everyone turns notifications on again) |
 
-**3. Turn on Google sign-in:** **Build → Authentication → Get started → Sign-in method → Google → Enable**, pick a support email, **Save**. Then **Settings → Authorized domains → Add domain** → `billywall732.github.io` (and later your own domain).
+**Try it:** open the site, Notifications → **Sign in with Google**, and turn on **Notify me on this device**. Then on GitHub, **Actions → Update report → Run workflow** (a manual run always counts as morning); the **Email and phone alerts** step's log says what went out.
 
-**4. Create the database:** **Build → Firestore Database → Create database** → production mode → a US location → **Create**. Open the **Rules** tab, replace everything with the contents of `firestore.rules` from this repo, and **Publish**. (Each person can read and change only their own record; confirmation links can only be recorded, never read.)
-
-**5. Let the Action read the database:** **Project settings (gear) → Service accounts → Generate new private key**. On GitHub: repo **Settings → Secrets and variables → Actions → New repository secret** named `FIREBASE_SERVICE_ACCOUNT`, and paste the whole downloaded JSON file. Then delete the file from your computer.
-
-**6. A Gmail account to send from** (a new one just for this is best): turn on **2-Step Verification**, then create an **App Password** at https://myaccount.google.com/apppasswords. Add two more secrets: `GMAIL_USER` (the address) and `GMAIL_APP_PASSWORD` (the 16-character password). Gmail allows about 500 recipients a day.
-
-**7. The phone-notification key:** add a secret `VAPID_PRIVATE_KEY` with the private half of the key whose public half is `vapidPublicKey` in `js/firebase-config.js`. To make a new pair: `npx web-push generate-vapid-keys`, put the public key in `firebase-config.js` and the private key in the secret. (Changing the key later means everyone turns notifications on again.)
-
-**8. Try it:** commit and push, open the site, Notifications → **Sign in with Google**, and turn on **Notify me on this device**. Then on GitHub, **Actions → Update report → Run workflow** (a manual run always counts as morning); the **Email and phone alerts** step's log says what went out.
-
-To test the script without sending anything: `node scripts/email/send-emails.mjs --dry-run sample-users.json` (a JSON list of users like the ones stored in Firestore).
+To test the script without sending anything: `node scripts/email/send-emails.mjs --dry-run sample-users.json` (a JSON list of users: `{ id, email, name, emailAlerts, alertEmail, verifiedEmails, pushSubs, settings, profile, pins, rider }`).
 
 ## Moving to your own domain
 
@@ -115,7 +111,7 @@ This site is a subpage of the main projects site (the `billywall732.github.io` r
 After the domain is live, two settings here:
 
 1. **Emails:** this repo's **Settings → Secrets and variables → Actions → Variables → New repository variable** `SITE_URL` = `https://example.com/snow-surf-report/`, so links in emails and notifications use the new address.
-2. **Firebase:** **Authentication → Settings → Authorized domains → Add domain** → `example.com`.
+2. **Sign-in:** in Supabase, **Authentication → URL Configuration → Redirect URLs**, add `https://example.com/**`; in Google Cloud, add `https://example.com` to the OAuth client's authorized JavaScript origins.
 
 The old github.io address redirects to the new one. Things saved in the browser (pins, settings, Home Screen app) belong to the old address, so people re-add the Home Screen app, and signed-in people get their settings back by signing in again. Phone notifications need turning on again at the new address.
 
@@ -135,8 +131,8 @@ js/cities.js           cities to choose "where you ride from"
 js/alerts.js           Notifications tab: settings, Heads up list, chosen places, Notify me
 js/alert-rules.js      which alerts match (shared with the email script)
 js/fit.js              "does this surf fit you?" rules (shared with the email script)
-js/account.js          Sign in with Google + saving settings to your account
-js/firebase-config.js  Firebase web settings (fill in during setup) + the public push key
+js/account.js          Sign in with Google (the site's shared Supabase sign-in) + saving settings to your account
+js/push-config.js      the public key for phone notifications
 js/faq.js              FAQs page (plain text, easy to edit)
 js/ui.js               shared helpers (building elements, formatting)
 js/charts.js           inline-SVG charts and the rating bar
@@ -150,7 +146,6 @@ scripts/lib/           http helpers, time zones, ratings, one file per data sour
 scripts/find-snotel.mjs  picks SNOTEL stations for new resorts
 scripts/find-surf-stations.mjs  facing, tide station and buoy for new beaches
 scripts/email/send-emails.mjs   email confirmations + the morning email and phone alerts
-firestore.rules        who can read/write saved settings (paste into Firebase)
 scripts/serve.mjs      tiny local web server
 .github/workflows/     the hourly GitHub Action (fetch, alerts, publish)
 ```

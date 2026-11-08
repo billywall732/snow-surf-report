@@ -100,13 +100,14 @@ jobs:
       #     The window stays open until 11 AM on purpose: when GitHub skips the early
       #     runs, a late alert beats no alert. "Run workflow" by hand always counts as
       #     morning.
-      # Skipped (without failing) until FIREBASE_SERVICE_ACCOUNT is added; see the
+      # Skipped (without failing) until SUPABASE_SECRET_KEY is added; see the
       # README. A problem here never stops the site from publishing.
       - name: Email and phone alerts
         if: github.event_name != 'push'
         continue-on-error: true
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
@@ -114,15 +115,15 @@ jobs:
           SAMPLE_TO: ${{ inputs.sample_to }}
           SITE_URL: ${{ vars.SITE_URL }} # set this repo variable when the site moves to its own domain
         run: |
-          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "Alerts aren't set up yet (no FIREBASE_SERVICE_ACCOUNT secret), skipping."
+          if [ -z "$SUPABASE_SECRET_KEY" ] || [ -z "$SUPABASE_URL" ]; then
+            echo "Alerts aren't set up yet (no SUPABASE_SECRET_KEY secret or SUPABASE_URL variable), skipping."
             exit 0
           fi
           hour=$(TZ=America/Los_Angeles date +%-H)
           if [ "$GITHUB_EVENT_NAME" != "schedule" ] || { [ "$hour" -ge 5 ] && [ "$hour" -le 11 ]; }; then
             export MORNING=1
           fi
-          npm install --no-save --no-audit --no-fund --prefix scripts/email firebase-admin@12.7.0 nodemailer@6.9.16 web-push@3.6.7
+          npm install --no-save --no-audit --no-fund --prefix scripts/email @supabase/supabase-js@2.118.0 nodemailer@6.9.16 web-push@3.6.7
           node scripts/email/send-emails.mjs
 
       # Copy only the files the website needs into _site/ and publish that folder.

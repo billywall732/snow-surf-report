@@ -2,25 +2,23 @@
 // morning email and phone notifications (sent by the GitHub Action) know what to
 // send you, and so your settings follow you to other devices.
 //
-// Uses Firebase (Google's free app backend):
-//   - Firebase Authentication does the Google sign-in. We only learn your name and
-//     email address; the app never gets access to your Gmail.
-//   - Firestore stores one record per person at users/<your id>. firestore.rules
-//     lets only you read or change your own record.
-// Firebase's code is only downloaded when someone taps "Sign in" (or was signed in
+// Uses the sign-in shared by every app on offthewall.dev (Supabase, /shared/auth.js):
+//   - Google sign-in tells us only your name and email address; the app never gets
+//     access to your Gmail.
+//   - Your setup is one row in the ssr_users table. Row-level security lets only you
+//     read or change it, and the fields the morning job keeps (confirmed addresses,
+//     when it last emailed you) can't be written from the browser. The tables and
+//     their tests live in the private offthewall-db repo.
+// The sign-in code is only downloaded when someone taps "Sign in" (or was signed in
 // before), so the page stays fast for everyone else.
-import { firebaseConfig } from './firebase-config.js';
 
-const SDK = 'https://www.gstatic.com/firebasejs/10.12.2'; // pinned version
-const SIGNED_IN_KEY = 'ssr-signed-in';
+// Kill switch: false hides every sign-in button, and the Notifications tab says email
+// alerts are coming soon.
+const SIGN_IN_OPEN = true;
+export const isConfigured = SIGN_IN_OPEN;
 
-// Sign-in is switched off until offthewall.dev is an authorized domain in Firebase
-// (Authentication → Settings → Authorized domains). Google refuses sign-in from an
-// unlisted domain, so the buttons would only fail. With this false, every sign-in
-// button is hidden and the Notifications tab says email alerts are coming soon.
-// Set it back to true once the domain is added.
-const SIGN_IN_OPEN = false;
-export const isConfigured = SIGN_IN_OPEN && Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+const AUTH_SCRIPTS = ['/shared/vendor/supabase-2.118.0.js', '/shared/auth.js'];
+const SESSION_KEY = 'sb-yxdmuznxcqcauyehhfmp-auth-token'; // where the shared sign-in keeps its session
 
 // What the rest of the app sees
 export const account = {
@@ -32,89 +30,100 @@ export const account = {
   error: '',
 };
 
-let fb = null; // the loaded Firebase pieces
-let hooks = null; // { getPrefs, applyPrefs } from app.js
-let applying = false; // true while copying cloud settings into the app (don't save them back)
+let auth = null; // window.otwAuth once loaded
+let loading = null;
+let hooks = null; // { getPrefs, applyPrefs } from alerts.js
+let applying = false; // true while copying saved settings into the app (don't save them back)
 let saveTimer = null;
+let handledId; // the person handleUser last set up (undefined = nobody yet)
 const listeners = new Set();
 const changed = () => { for (const fn of listeners) fn(account); };
 export const onAccountChange = (fn) => listeners.add(fn);
 
-async function loadFirebase() {
-  if (fb) return fb;
-  const [{ initializeApp }, auth, store] = await Promise.all([
-    import(`${SDK}/firebase-app.js`),
-    import(`${SDK}/firebase-auth.js`),
-    import(`${SDK}/firebase-firestore.js`),
-  ]);
-  const app = initializeApp(firebaseConfig);
-  fb = { auth, store, authApp: auth.getAuth(app), db: store.getFirestore(app) };
-  // Runs on sign-in, sign-out, and when a page loads with you already signed in
-  auth.onAuthStateChanged(fb.authApp, (u) => { handleUser(u); });
-  return fb;
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error(`Couldn't load ${src}`));
+    document.head.append(s);
+  });
 }
 
-// hooks.getPrefs() -> { settings, profile, pins, rider }   (what to save)
-// hooks.applyPrefs(prefs)                           (put saved prefs into the app)
-export async function initAccount(h) {
-  hooks = h;
-  if (!isConfigured) return;
-  let wasSignedIn = false;
-  try { wasSignedIn = localStorage.getItem(SIGNED_IN_KEY) === '1'; } catch { /* ignore */ }
-  if (wasSignedIn) {
-    account.busy = true;
-    changed();
-    try {
-      await loadFirebase(); // onAuthStateChanged will tell us who's signed in
-    } catch {
-      account.busy = false;
-      account.error = 'Couldn’t reach the sign-in service. Check your connection.';
-      changed();
+async function loadAuth() {
+  if (auth) return auth;
+  loading ??= (async () => {
+    if (!window.otwAuth) {
+      if (!window.supabase) await loadScript(AUTH_SCRIPTS[0]);
+      await loadScript(AUTH_SCRIPTS[1]);
     }
+    if (!window.otwAuth) throw new Error('Sign-in is unavailable');
+    auth = window.otwAuth;
+    auth.onChange((u) => { handleUser(u); }); // signed in or out, here or in another tab
+    return auth;
+  })();
+  try {
+    return await loading;
+  } catch (err) {
+    loading = null;
+    throw err;
   }
 }
 
-// Start loading Firebase early (e.g. when a finger touches a sign-in button), so
-// the Google pop-up can open as soon as the tap lands.
-export function warmUp() {
-  if (isConfigured) loadFirebase().catch(() => {});
+const table = () => auth.db.from('ssr_users');
+const hasSession = () => { try { return Boolean(localStorage.getItem(SESSION_KEY)); } catch { return false; } };
+
+// hooks.getPrefs() -> { settings, profile, pins, rider }   (what to save)
+// hooks.applyPrefs(prefs)                                   (put saved prefs into the app)
+export async function initAccount(h) {
+  hooks = h;
+  if (!isConfigured) return;
+  // Only load the sign-in code for someone signed in before, or just back from Google
+  if (!hasSession() && !/[?&]code=/.test(location.search)) return;
+  account.busy = true;
+  changed();
+  try {
+    const a = await loadAuth();
+    await handleUser(await a.ready);
+  } catch {
+    account.busy = false;
+    account.error = 'Couldn’t reach the sign-in service. Check your connection.';
+    changed();
+  }
 }
 
+// Start loading the sign-in code early (e.g. when a finger touches a sign-in button).
+export function warmUp() {
+  if (isConfigured) loadAuth().catch(() => {});
+}
+
+// Off to Google, then back to this page (signed in).
 export async function signIn() {
   account.busy = true;
   account.error = '';
   changed();
   try {
-    const { auth, authApp } = await loadFirebase();
-    const provider = new auth.GoogleAuthProvider();
-    try {
-      await auth.signInWithPopup(authApp, provider);
-    } catch (err) {
-      // Some phones block pop-ups: fall back to a full-page Google sign-in
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
-        // Remember to load Firebase when Google sends you back, to finish signing in
-        try { localStorage.setItem(SIGNED_IN_KEY, '1'); } catch { /* ignore */ }
-        await auth.signInWithRedirect(authApp, provider);
-        return;
-      }
-      throw err;
-    }
-  } catch (err) {
+    const a = await loadAuth();
+    const res = await a.signIn();
+    if (res?.error) throw res.error;
+  } catch {
     account.busy = false;
-    account.error = err.code === 'auth/popup-closed-by-user' ? '' : 'Sign-in didn’t work. Please try again.';
+    account.error = 'Sign-in didn’t work. Please try again.';
     changed();
   }
 }
 
 export async function signOut() {
-  if (!fb) return;
-  await fb.auth.signOut(fb.authApp);
+  if (!auth) return;
+  await auth.signOut();
+  await handleUser(null);
 }
 
-// Remove everything saved in your account, then sign out.
+// Remove everything saved in your account, then sign out. Throws if the delete fails.
 export async function deleteMyData() {
-  if (!fb || !account.user) return;
-  await fb.store.deleteDoc(fb.store.doc(fb.db, 'users', account.user.uid));
+  if (!auth || !account.user) return;
+  const { error } = await table().delete().eq('user_id', account.user.uid);
+  if (error) throw new Error(error.message);
   await signOut();
 }
 
@@ -127,18 +136,19 @@ export const emailConfirmed = () => !account.alertEmail
   || account.verifiedEmails.includes(account.alertEmail);
 
 export async function setAlertEmail(address) {
-  if (!account.user || !fb) return;
+  if (!account.user || !auth) return;
   const clean = address.trim().toLowerCase();
   account.alertEmail = clean === account.user.email.toLowerCase() ? '' : clean;
   changed();
-  await write({ alertEmail: account.alertEmail });
+  await write({ alert_email: account.alertEmail || null });
 }
 
 // This device's push subscription (morning notifications even when the app is
-// closed). Saved under pushSubs.<device id>; null removes it.
+// closed). null removes it.
 export async function savePushSub(deviceId, sub) {
-  if (!account.user || !fb) return false;
-  return write({ pushSubs: { [deviceId]: sub ?? fb.store.deleteField() } });
+  if (!account.user || !auth) return false;
+  const { error } = await auth.db.rpc('ssr_set_push_sub', { device_id: deviceId, sub: sub ?? null });
+  return !error;
 }
 
 // The link in a confirmation email opens #confirm/<code>. Recording the code is
@@ -146,17 +156,23 @@ export async function savePushSub(deviceId, sub) {
 // Works without signing in (the email may open in a different browser).
 export async function confirmEmail(code) {
   try {
-    const { store, db } = await loadFirebase();
-    await store.setDoc(store.doc(db, 'confirmations', code), { at: store.serverTimestamp() });
-    return true;
+    const a = await loadAuth();
+    const { error } = await a.db.from('ssr_email_confirmations').insert({ token: code });
+    return !error || error.code === '23505'; // 23505: already recorded (link opened twice)
   } catch {
     return false;
   }
 }
 
+// Update this person's row, creating it if it isn't there yet.
 async function write(fields) {
   try {
-    await fb.store.setDoc(fb.store.doc(fb.db, 'users', account.user.uid), { email: account.user.email, ...fields }, { merge: true });
+    const upd = await table().update(fields).eq('user_id', account.user.uid).select('user_id');
+    if (upd.error) throw upd.error;
+    if (!upd.data.length) {
+      const ins = await table().insert(fields);
+      if (ins.error) throw ins.error;
+    }
     return true;
   } catch {
     account.error = 'Couldn’t save that to your account. Please try again.';
@@ -179,49 +195,44 @@ export function saveSoon() {
 }
 
 async function save() {
-  if (!account.user || !fb) return;
+  if (!account.user || !auth) return;
   const { settings, profile, pins, rider } = hooks.getPrefs();
-  try {
-    await fb.store.setDoc(fb.store.doc(fb.db, 'users', account.user.uid), {
-      email: account.user.email,
-      name: account.user.name,
-      emailAlerts: account.emailAlerts,
-      settings,
-      profile,
-      pins,
-      rider,
-      updatedAt: fb.store.serverTimestamp(),
-    }, { merge: true });
-  } catch {
+  const ok = await write({ name: account.user.name, email_alerts: account.emailAlerts, settings, profile, pins, rider: rider ?? null });
+  if (!ok) {
     account.error = 'Couldn’t save your settings to your account. They’re still saved on this device.';
     changed();
   }
 }
 
 async function handleUser(u) {
-  try {
-    if (u) localStorage.setItem(SIGNED_IN_KEY, '1');
-    else localStorage.removeItem(SIGNED_IN_KEY);
-  } catch { /* ignore */ }
+  const id = u?.id ?? null;
+  if (id === handledId) return; // already set up for this person (or already signed out)
+  handledId = id;
 
   if (!u) {
+    clearTimeout(saveTimer);
     Object.assign(account, { user: null, emailAlerts: false, alertEmail: '', verifiedEmails: [], busy: false });
     changed();
     return;
   }
-  account.user = { uid: u.uid, email: u.email, name: u.displayName ?? '' };
+  const p = auth.profile(u);
+  const named = u.user_metadata?.full_name || u.user_metadata?.name || '';
+  account.user = { uid: u.id, email: (u.email ?? '').toLowerCase(), name: named || p.name || '' };
   account.busy = true;
+  account.error = '';
   changed();
   try {
-    const snap = await fb.store.getDoc(fb.store.doc(fb.db, 'users', u.uid));
-    if (snap.exists()) {
+    const { data, error } = await table()
+      .select('email_alerts, alert_email, verified_emails, settings, profile, pins, rider')
+      .eq('user_id', u.id).maybeSingle();
+    if (error) throw error;
+    if (data && data.settings) {
       // Your account already has settings: use them on this device too
-      const data = snap.data();
-      account.emailAlerts = Boolean(data.emailAlerts);
-      account.alertEmail = data.alertEmail ?? '';
-      account.verifiedEmails = data.verifiedEmails ?? [];
+      account.emailAlerts = Boolean(data.email_alerts);
+      account.alertEmail = data.alert_email ?? '';
+      account.verifiedEmails = data.verified_emails ?? [];
       applying = true;
-      hooks.applyPrefs({ settings: data.settings, profile: data.profile, pins: data.pins, rider: data.rider });
+      hooks.applyPrefs({ settings: data.settings, profile: data.profile, pins: data.pins, rider: data.rider ?? undefined });
       applying = false;
     } else {
       // First sign-in: save this device's settings to the new account

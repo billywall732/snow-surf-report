@@ -1,5 +1,5 @@
 // Alerts by email and phone notification. Run by the GitHub Action after the report is built:
-//   node scripts/email/send-emails.mjs              (real: reads Firestore, sends via Gmail + web push)
+//   node scripts/email/send-emails.mjs              (real: reads Supabase, sends via Gmail + web push)
 //   node scripts/email/send-emails.mjs --dry-run sample-users.json
 //                                                   (test: prints what it would send, sends nothing)
 //   SAMPLE=1 node scripts/email/send-emails.mjs     (one example snow email and one example
@@ -17,18 +17,19 @@
 //     templates.mjs) and/or sends a notification to each phone or computer they
 //     turned notifications on for.
 //
-// Real runs need these GitHub secrets (see README "Email and phone alerts"):
-//   FIREBASE_SERVICE_ACCOUNT  the service-account key JSON from Firebase
+// Real runs need these (see README "Email and phone alerts"):
+//   SUPABASE_URL              the Supabase project's address (a repo variable)
+//   SUPABASE_SECRET_KEY       its secret key: reads everyone's alert settings (a secret)
 //   GMAIL_USER                the Gmail address emails are sent from
 //   GMAIL_APP_PASSWORD        an App Password for that Gmail account
-//   VAPID_PRIVATE_KEY         signs phone notifications (public half: js/firebase-config.js)
-// and the packages firebase-admin, nodemailer and web-push (the workflow installs them).
+//   VAPID_PRIVATE_KEY         signs phone notifications (public half: js/push-config.js)
+// and the packages @supabase/supabase-js, nodemailer and web-push (the workflow installs them).
 // Without the Gmail secrets it skips email; without VAPID_PRIVATE_KEY it skips push.
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import { computeAlerts, DEFAULT_SETTINGS, snowComing, watching } from '../../js/alert-rules.js';
 import { fitDays, hasProfile, profileText } from '../../js/fit.js';
-import { vapidPublicKey } from '../../js/firebase-config.js';
+import { vapidPublicKey } from '../../js/push-config.js';
 import { confirmationEmail, digestEmail, snowEmail, surfEmail } from './templates.mjs';
 
 const SITE_URL = process.env.SITE_URL || 'https://offthewall.dev/snow-surf-report/';
@@ -43,28 +44,45 @@ const report = JSON.parse(await fs.readFile(new URL('data/report.json', root), '
 const today = report.generatedAt.slice(0, 10);
 const now = new Date().toISOString().slice(0, 10);
 
-// ---------- The database ----------
-// users/<id>          { email, name, emailAlerts, alertEmail, verifiedEmails, pushSubs, settings, ... }
-// pending/<id>        { email, token, sentDate, sends }   confirmation we emailed (only this script reads it)
-// confirmations/<token>  { at }                             written by the app when the link is tapped
+// ---------- The database (Supabase) ----------
+// ssr_users                one row per signed-in person: email, name, email_alerts, alert_email,
+//                          verified_emails, push_subs, settings, profile, pins, rider, last_sent_date ...
+// ssr_email_pending        confirmation we emailed { user_id, email, token, sent_date, sends } (only this script)
+// ssr_email_confirmations  { token, at }: written by the app when a confirmation link is tapped
+// The secret key bypasses the row-level security that keeps people to their own rows.
 
-let users; // [{ id, ...the user's record }]
-let db = null;
-let FieldValue = null;
+let users; // [{ id, email, name, emailAlerts, ... }]: the same shape the dry-run file uses
+let sb = null;
 if (dryRun) {
   users = JSON.parse(await fs.readFile(process.argv[dryRunIndex + 1], 'utf8'));
 } else if (sample) {
   users = []; // examples only: the database isn't touched
 } else {
-  const { initializeApp, cert } = await import('firebase-admin/app');
-  const firestore = await import('firebase-admin/firestore');
-  initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
-  db = firestore.getFirestore();
-  FieldValue = firestore.FieldValue;
-  const snap = await db.collection('users').get();
-  users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const { createClient } = await import('@supabase/supabase-js');
+  sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+  users = (await must(sb.from('ssr_users').select('*'))).map((r) => ({
+    id: r.user_id,
+    email: r.email,
+    name: r.name,
+    emailAlerts: r.email_alerts,
+    alertEmail: r.alert_email ?? '',
+    verifiedEmails: r.verified_emails ?? [],
+    pushSubs: r.push_subs ?? {},
+    settings: r.settings ?? undefined,
+    profile: r.profile ?? undefined,
+    pins: r.pins ?? undefined,
+    rider: r.rider ?? undefined,
+    lastSentDate: r.last_sent_date ?? undefined,
+    lastDigestDate: r.last_digest_date ?? undefined,
+  }));
 }
-const userDoc = (id) => db.collection('users').doc(id);
+// Supabase answers { data, error } instead of throwing: make errors throw
+async function must(query) {
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data;
+}
+const updateUser = (id, fields) => must(sb.from('ssr_users').update(fields).eq('user_id', id));
 
 // ---------- Sending ----------
 
@@ -160,14 +178,15 @@ async function confirmAddresses() {
       await sendEmail(want, confirmationEmail({ user, link: `${SITE_URL}#confirm/<code>` }));
       continue;
     }
-    const pendingRef = db.collection('pending').doc(user.id);
-    const pending = (await pendingRef.get()).data();
+    const pendingRow = await must(sb.from('ssr_email_pending').select('*').eq('user_id', user.id).maybeSingle());
+    const pending = pendingRow && { email: pendingRow.email, token: pendingRow.token, sentDate: pendingRow.sent_date, sends: pendingRow.sends };
     if (pending?.email === want) {
-      const click = db.collection('confirmations').doc(pending.token);
-      if ((await click.get()).exists) {
-        await userDoc(user.id).update({ verifiedEmails: FieldValue.arrayUnion(want) });
-        user.verifiedEmails = [...(user.verifiedEmails ?? []), want];
-        await Promise.all([pendingRef.delete(), click.delete()]);
+      const click = await must(sb.from('ssr_email_confirmations').select('token').eq('token', pending.token).maybeSingle());
+      if (click) {
+        user.verifiedEmails = [...new Set([...(user.verifiedEmails ?? []), want])];
+        await updateUser(user.id, { verified_emails: user.verifiedEmails });
+        await must(sb.from('ssr_email_pending').delete().eq('user_id', user.id));
+        await must(sb.from('ssr_email_confirmations').delete().eq('token', pending.token));
         confirmed++;
         continue;
       }
@@ -178,7 +197,7 @@ async function confirmAddresses() {
     const token = pending?.email === want ? pending.token : crypto.randomBytes(24).toString('hex');
     try {
       await sendEmail(want, confirmationEmail({ user, link: `${SITE_URL}#confirm/${token}` }));
-      await pendingRef.set({ email: want, token, sentDate: now, sends: (pending?.email === want ? pending.sends ?? 0 : 0) + 1 });
+      await must(sb.from('ssr_email_pending').upsert({ user_id: user.id, email: want, token, sent_date: now, sends: (pending?.email === want ? pending.sends ?? 0 : 0) + 1 }));
       confirmSent++;
     } catch (err) {
       console.error(`Couldn't send a confirmation email: ${err.message}`);
@@ -186,8 +205,7 @@ async function confirmAddresses() {
   }
   // Links nobody's waiting for (old, or never ours): clear them out after 2 days
   if (!dryRun) {
-    const old = await db.collection('confirmations').where('at', '<', new Date(Date.now() - 2 * 86400e3)).get();
-    await Promise.all(old.docs.map((d) => d.ref.delete()));
+    await must(sb.from('ssr_email_confirmations').delete().lt('at', new Date(Date.now() - 2 * 86400e3).toISOString()));
   }
 }
 
@@ -256,7 +274,7 @@ async function maybeDigest(user) {
     console.error(`Couldn't send the weekly note to user ${user.id}: ${err.message}`);
     return false;
   }
-  if (!dryRun) await userDoc(user.id).update({ lastSentDate: today, lastDigestDate: today });
+  if (!dryRun) await updateUser(user.id, { last_sent_date: today, last_digest_date: today });
   return true;
 }
 
@@ -296,13 +314,15 @@ async function morningAlerts() {
           pushed++;
           sent = true;
         } else if (!dryRun) {
-          await userDoc(user.id).update({ [`pushSubs.${deviceId}`]: FieldValue.delete() }); // device is gone
+          const { [deviceId]: gone, ...rest } = user.pushSubs ?? {}; // the device is gone
+          user.pushSubs = rest;
+          await updateUser(user.id, { push_subs: rest });
         }
       } catch (err) {
         console.error(`Couldn't notify a device of user ${user.id}: ${err.message}`);
       }
     }
-    if (sent && !dryRun) await userDoc(user.id).update({ lastSentDate: today });
+    if (sent && !dryRun) await updateUser(user.id, { last_sent_date: today });
   }
 }
 

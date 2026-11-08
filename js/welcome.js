@@ -154,7 +154,7 @@ function welcomeStep() {
     h('ul', { class: 'walk-points' },
       h('li', {}, h('span', { 'aria-hidden': 'true' }, '❄️ '), 'Mountains rated for fresh snow, base, wind and temperature'),
       h('li', {}, h('span', { 'aria-hidden': 'true' }, '🏄 '), 'Surf spots rated for waves, wind and tides, and for your level and board'),
-      h('li', {}, h('span', { 'aria-hidden': 'true' }, '🔔 '), 'Alerts on this device when your spots look good (email alerts are coming soon)')),
+      h('li', {}, h('span', { 'aria-hidden': 'true' }, '🔔 '), 'Alerts on this device or by email when your spots look good')),
     h('p', { class: 'fine' }, 'Two minutes to set up. Skip any time; everything can be changed later under Profile and Notifications.'),
   ];
 }
