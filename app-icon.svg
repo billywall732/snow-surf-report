@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Snow and Surf Report home-screen icon: a round badge with a snowy peak over waves, in the
+       Off the Wall app-icon style (one object on a dark glow in the app's color, two swooshes) -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#11706c"/><stop offset="1" stop-color="#031a1a"/></radialGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe9f2"/><stop offset="1" stop-color="#eaf8fb"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a9df4"/><stop offset="1" stop-color="#1257a8"/></linearGradient>
+    <clipPath id="badge"><circle cx="256" cy="262" r="160"/></clipPath>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" stroke-opacity=".85">
+    <path d="M358 79 A205 205 0 0 1 449 186"/><path d="M154 434 A205 205 0 0 1 63 326"/>
+  </g>
+  <circle cx="262" cy="272" r="160" fill="#000" fill-opacity=".35"/>
+  <g clip-path="url(#badge)">
+    <rect x="90" y="96" width="332" height="332" fill="url(#sky)"/>
+    <path d="M96 340 L238 150 L380 340 Z" fill="#6f8296"/>
+    <path d="M238 150 L380 340 L262 340 Z" fill="#566676"/>
+    <path d="M238 150 L285 213 L262 202 L240 222 L216 200 L192 212 Z" fill="#fff"/>
+    <path d="M300 236 L352 160 L430 270 Z" fill="#8597aa"/>
+    <path d="M352 160 L374 191 L360 186 L346 197 L334 184 Z" fill="#fff"/>
+    <path d="M80 322 q32 -30 64 0 t64 0 t64 0 t64 0 t64 0 t64 0 V440 H80 Z" fill="url(#sea)"/>
+    <path d="M80 362 q32 -26 64 0 t64 0 t64 0 t64 0 t64 0 t64 0 V440 H80 Z" fill="#0d4a92"/>
+    <path d="M80 322 q32 -30 64 0 t64 0 t64 0 t64 0 t64 0 t64 0" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <circle cx="256" cy="262" r="160" fill="none" stroke="#fff" stroke-width="12"/>
+</svg>

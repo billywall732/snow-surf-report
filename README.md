@@ -119,6 +119,7 @@ The old github.io address redirects to the new one. Things saved in the browser 
 
 ```
 index.html             the page
+app-icon.svg           the home-screen icon (a snowy peak over waves); icon-180/192/512.png are made from it
 css/styles.css         styles (light + dark via CSS variables)
 js/app.js              starts the page: header, tabs, theme switch, footer
 js/places.js           shared by both tabs: pins, list, filters, detail view, map

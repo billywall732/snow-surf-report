@@ -131,7 +131,8 @@ jobs:
         run: |
           mkdir _site
           # icon-email.png: the logo in the alert emails (they load it from the site)
-          cp -r index.html manifest.webmanifest icon.svg icon-email.png css js data _site/
+          # icon-180/192/512.png: the home-screen icons (made from app-icon.svg)
+          cp -r index.html manifest.webmanifest icon.svg icon-email.png icon-180.png icon-192.png icon-512.png css js data _site/
 
       # Cache-busting: GitHub Pages lets browsers keep files for 10 minutes, so right
       # after a publish a phone could mix the old CSS with the new JavaScript (broken
