@@ -702,24 +702,39 @@ html, body { overflow-x: clip; }
 .map-zoom-button:disabled { opacity: 0.4; cursor: default; }
 
 /* ==========================================================================
-   Bottom bar: Snow · Surf · Light/Dark · Animations
+   The tabs: Snow · Surf · Notifications · Profile · More
+   Phones (480px and under): pinned along the bottom, like a phone app.
+   Wider screens: the same tabs as a row under the masthead, part of the page, so nothing is pinned
+   over the content (it used to sit over headings like Map at desktop width).
    ========================================================================== */
 
-body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for the bar */
-
 .bottom-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
+  position: relative; /* the More menu drops down from here on wide screens */
   display: flex;
   gap: 4px;
-  /* On wide screens the buttons gather in the middle instead of spreading out */
-  padding: 6px max(8px, calc((100% - 560px) / 2)) calc(6px + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  border-top: 1px solid var(--rule);
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  /* The buttons gather in the middle (560px, as they did along the bottom) */
+  width: min(100% - 32px, 560px);
+  margin: 0 auto 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (max-width: 480px) {
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for the bar */
+  .bottom-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    width: auto;
+    margin: 0;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    border-bottom: 0;
+    border-top: 1px solid var(--rule);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  }
 }
 .bottom-tabs { flex: 4; display: flex; gap: 4px; }
 .bar-button {
@@ -774,11 +789,12 @@ body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for t
   border-radius: 999px;
 }
 
+/* Wide screens: drops down below the tab row, under More. Phones: just above the bottom bar. */
 .more-menu {
-  position: fixed;
+  position: absolute;
   z-index: 21;
-  right: max(8px, calc((100% - 560px) / 2));
-  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 0;
+  top: calc(100% + 6px);
   min-width: 220px;
   padding: 6px;
   background: var(--surface);
@@ -1343,7 +1359,7 @@ dialog.detail.confirm-delete { width: min(520px, calc(100% - 32px)); max-width: 
 .update-bar {
   position: fixed;
   left: 50%;
-  bottom: calc(80px + env(safe-area-inset-bottom));
+  bottom: calc(20px + env(safe-area-inset-bottom)); /* phones: above the bottom bar (below) */
   z-index: 25;
   translate: -50% 0;
   display: flex;
@@ -1360,6 +1376,12 @@ dialog.detail.confirm-delete { width: min(520px, calc(100% - 32px)); max-width: 
   box-shadow: var(--shadow-lg);
 }
 .update-bar[hidden] { display: none; }
+/* Phones: the tabs are pinned along the bottom, so the More menu opens just above them and the
+   update notice sits above them too (as before) */
+@media (max-width: 480px) {
+  .more-menu { position: fixed; right: 8px; top: auto; bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .update-bar { bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
 .update-refresh {
   min-height: 36px;
   padding: 6px 14px;
@@ -1733,14 +1755,16 @@ h4 { font-size: 14px; font-weight: 650; }
 .verdict-maybe { color: #a35f00; font-weight: 700; }
 .verdict-skip, .verdict-closed { color: var(--muted); font-weight: 700; }
 
-/* Top 6 today: swipe sideways; the next card peeks in about a third, so it's clear
-   there's more (on wide screens, three and a bit) */
+/* Top 6 today. Phones: swipe sideways; the next card peeks in about a third, so it's clear there's
+   more. Wider screens: all six in full, two rows of three, so no card is cut off mid-name. */
 .top-six { margin: 4px 0 28px; }
 .top-six-row {
   display: grid; grid-auto-flow: column; grid-auto-columns: 68%; gap: 12px;
   overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: thin;
 }
-@media (min-width: 720px) { .top-six-row { grid-auto-columns: calc((100% - 36px) / 3.3); } }
+@media (min-width: 720px) {
+  .top-six-row { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow-x: visible; scroll-snap-type: none; }
+}
 .top-six-card {
   scroll-snap-align: start; display: grid; align-content: start; gap: 4px;
   padding: 14px 16px; text-align: left; font: inherit; color: inherit; cursor: pointer;
