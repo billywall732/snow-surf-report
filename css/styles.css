@@ -703,38 +703,25 @@ html, body { overflow-x: clip; }
 
 /* ==========================================================================
    The tabs: Snow · Surf · Notifications · Profile · More
-   Phones (480px and under): pinned along the bottom, like a phone app.
-   Wider screens: the same tabs as a row under the masthead, part of the page, so nothing is pinned
-   over the content (it used to sit over headings like Map at desktop width).
+   Pinned along the bottom at every width, like a phone app. On wide screens the buttons gather in
+   the middle (560px) instead of spreading out.
    ========================================================================== */
 
+body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for the bar */
+html { scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* nothing scrolls into view under it */
+
 .bottom-bar {
-  position: relative; /* the More menu drops down from here on wide screens */
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
   display: flex;
   gap: 4px;
-  /* The buttons gather in the middle (560px, as they did along the bottom) */
-  width: min(100% - 32px, 560px);
-  margin: 0 auto 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-@media (max-width: 480px) {
-  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* room for the bar */
-  .bottom-bar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 20;
-    width: auto;
-    margin: 0;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-    background: color-mix(in srgb, var(--surface) 96%, transparent);
-    border-bottom: 0;
-    border-top: 1px solid var(--rule);
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
-  }
+  padding: 6px max(8px, calc((100% - 560px) / 2)) calc(6px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-top: 1px solid var(--rule);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
 }
 .bottom-tabs { flex: 4; display: flex; gap: 4px; }
 .bar-button {
@@ -789,12 +776,12 @@ html, body { overflow-x: clip; }
   border-radius: 999px;
 }
 
-/* Wide screens: drops down below the tab row, under More. Phones: just above the bottom bar. */
+/* Opens just above the bottom bar, under More */
 .more-menu {
-  position: absolute;
+  position: fixed;
   z-index: 21;
-  right: 0;
-  top: calc(100% + 6px);
+  right: max(8px, calc((100% - 560px) / 2));
+  bottom: calc(72px + env(safe-area-inset-bottom));
   min-width: 220px;
   padding: 6px;
   background: var(--surface);
@@ -1359,7 +1346,7 @@ dialog.detail.confirm-delete { width: min(520px, calc(100% - 32px)); max-width: 
 .update-bar {
   position: fixed;
   left: 50%;
-  bottom: calc(20px + env(safe-area-inset-bottom)); /* phones: above the bottom bar (below) */
+  bottom: calc(80px + env(safe-area-inset-bottom));
   z-index: 25;
   translate: -50% 0;
   display: flex;
@@ -1376,12 +1363,6 @@ dialog.detail.confirm-delete { width: min(520px, calc(100% - 32px)); max-width: 
   box-shadow: var(--shadow-lg);
 }
 .update-bar[hidden] { display: none; }
-/* Phones: the tabs are pinned along the bottom, so the More menu opens just above them and the
-   update notice sits above them too (as before) */
-@media (max-width: 480px) {
-  .more-menu { position: fixed; right: 8px; top: auto; bottom: calc(72px + env(safe-area-inset-bottom)); }
-  .update-bar { bottom: calc(80px + env(safe-area-inset-bottom)); }
-}
 .update-refresh {
   min-height: 36px;
   padding: 6px 14px;
