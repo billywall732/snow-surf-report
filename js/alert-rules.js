@@ -26,9 +26,9 @@ export const DEFAULT_SETTINGS = {
 };
 
 // Is this place covered by your alerts? ('all' is from an older version of the app)
-function covered(scope, item, pinned, watch, rider) {
+function covered(kind, scope, item, pinned, watch, rider) {
   if (scope === 'all') return true;
-  if (scope === 'nearby') return Boolean(rider.home && rider.homeExplicit) && withinReach(item, rider);
+  if (scope === 'nearby') return Boolean(rider.home && rider.homeExplicit) && withinReach(item, rider, kind);
   return scope === 'chosen' ? watch.includes(item.id) : pinned.includes(item.id);
 }
 
@@ -54,7 +54,7 @@ export function computeAlerts(report, settings, profile, pins, riderIn = EMPTY_R
 
   if (s.snowOn) {
     for (const r of report.sections.snow.items) {
-      if (!covered(s.snowScope, r, pins.snow ?? [], s.snowWatch ?? [], rider)) continue;
+      if (!covered('snow', s.snowScope, r, pins.snow ?? [], s.snowWatch ?? [], rider)) continue;
       if (noSnowboards(r, rider)) continue; // skiers only, and you snowboard
       if (s.snowScope === 'nearby' && !onYourPass(r, rider)) continue;
       const n = lookAhead(s.snowDays);
@@ -74,7 +74,7 @@ export function computeAlerts(report, settings, profile, pins, riderIn = EMPTY_R
   if (s.surfOn && hasProfile(profile)) {
     const skills = report.sections.surf.skills;
     for (const spot of report.sections.surf.items) {
-      if (!covered(s.surfScope, spot, pins.surf ?? [], s.surfWatch ?? [], rider)) continue;
+      if (!covered('surf', s.surfScope, spot, pins.surf ?? [], s.surfWatch ?? [], rider)) continue;
       if (surfBlockers(spot, rider, { checkDistance: false }).length) continue; // water too cold for you
       const days = fitDays(spot, profile, skills).slice(0, lookAhead(s.surfDays));
       const good = days.filter((d) => d.fits);
@@ -108,7 +108,7 @@ export function watching(report, settings, profile, pins, riderIn = EMPTY_RIDER)
   const out = { snow: [], surf: [] };
   if (s.snowOn) {
     for (const r of report.sections.snow.items) {
-      if (!covered(s.snowScope, r, pins.snow ?? [], s.snowWatch ?? [], rider)) continue;
+      if (!covered('snow', s.snowScope, r, pins.snow ?? [], s.snowWatch ?? [], rider)) continue;
       if (s.snowScope === 'nearby' && !onYourPass(r, rider)) continue;
       const n = lookAhead(s.snowDays);
       const coming = snowComing(r, n);
@@ -122,7 +122,7 @@ export function watching(report, settings, profile, pins, riderIn = EMPTY_RIDER)
   if (s.surfOn) {
     const skills = report.sections.surf.skills;
     for (const spot of report.sections.surf.items) {
-      if (!covered(s.surfScope, spot, pins.surf ?? [], s.surfWatch ?? [], rider)) continue;
+      if (!covered('surf', s.surfScope, spot, pins.surf ?? [], s.surfWatch ?? [], rider)) continue;
       const cold = surfBlockers(spot, rider, { checkDistance: false })[0];
       let status;
       if (cold) status = cold;

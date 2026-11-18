@@ -1,6 +1,35 @@
 // The FAQs page (from More → FAQs): how to use the app, and common questions.
-// Each answer is a list of paragraphs. Edit freely: it's just text.
-import { h } from './ui.js';
+// Each answer is a list of paragraphs. Edit freely: it's just text. (A paragraph can
+// also be a function that builds something live, like the list of sources.)
+import { formatTime, h, state } from './ui.js';
+
+// Walk the report and find every block with a source, so we can say when each
+// source was last fetched and whether anything failed.
+function collectBlocks(node, out = []) {
+  if (node && typeof node === 'object') {
+    if (typeof node.source === 'string' && node.fetchedAt) out.push(node);
+    for (const v of Object.values(node)) collectBlocks(v, out);
+  }
+  return out;
+}
+
+// Sources, with the latest fetch time from today's report
+function sourcesList() {
+  const report = state.report;
+  if (!report) return null;
+  const blocks = collectBlocks(report.sections);
+  return h('ul', { class: 'faq-sources' }, Object.entries(report.sources)
+    .filter(([id]) => blocks.some((b) => b.source === id))
+    .map(([id, s]) => {
+      const mine = blocks.filter((b) => b.source === id);
+      const latest = mine.map((b) => b.fetchedAt).sort().at(-1);
+      const failed = mine.filter((b) => b.status !== 'ok').length;
+      return h('li', {},
+        s.url ? h('a', { href: s.url, rel: 'noopener' }, s.name) : s.name,
+        ` — fetched ${formatTime(latest)}`,
+        failed ? h('span', { class: 'warn' }, ` · ${failed} unavailable`) : null);
+    }));
+}
 
 const FAQ = [
   ['Getting started', [
@@ -18,7 +47,7 @@ const FAQ = [
     ]],
     ['What is the Rider Profile?', [
       'Tell the app whether you ski or snowboard, your level (Beginner to Expert), what you’re after (powder, groomers, terrain parks, steeps), your pass, how you surf, the coldest water you’ll surf and where you’re coming from.',
-      'It powers “Recommended for you” at the top of the Snow and Surf tabs, the “For you” notes in each detail view, and “near me” alerts. Snowboarders never get skiers-only mountains (like Alta and Deer Valley) in their picks or alerts.',
+      'It powers the “Recommended Mountains For You” and “Recommended Beaches For You” pills on the Snow and Surf tabs, the “For you” notes in each detail view, and “near me” alerts. Snowboarders never get skiers-only mountains (like Alta and Deer Valley) in their picks or alerts.',
     ]],
     ['How are “Recommended for you” picks chosen?', [
       'Each place starts from today’s 1–5 rating. Mountains get extra points for size (skiable acres, so a big resort like Mammoth beats a small local hill), for terrain that matches your level (from Wikipedia’s trail mix), for what you’re after (fresh and incoming snow, calm dry days, terrain parks, lots of black runs) and, a little, for being closer.',
@@ -85,7 +114,7 @@ const FAQ = [
   ]],
   ['Notifications', [
     ['How do alerts work?', [
-      'On the Notifications tab, “What to alert me about” has one line each for snow and surf; tap Change to pick how many inches and which mountains or beaches. With “… I choose”, tap Choose to pick from a list you can search and filter by area, pass, chosen/pinned/near you, and sort A–Z or closest first. “Near me” covers every place within your travel distance from your Rider Profile.',
+      'On the Notifications tab, “What to alert me about” has one line each for snow and surf; tap Change to pick how many inches and which mountains or beaches. With “… I choose”, tap Choose to pick from a list you can search and filter by area, pass, chosen/pinned/near you, and sort A–Z or closest first. “Near me” covers every place within how far you’ll travel for that sport (set separately for snow and surf in your Rider Profile).',
       'Anything that matches is listed there, and the Notifications tab shows a red badge with the count.',
     ]],
     ['Can I get alerts by email?', [
@@ -104,11 +133,14 @@ const FAQ = [
   ]],
   ['Data and privacy', [
     ['Where does the data come from?', [
-      'Open-Meteo (mountain and surf forecasts), NOAA (tides and wave buoys), and USDA SNOTEL (measured snow depth). All free, public sources; the list with fetch times is at the bottom of each page.',
+      'Open-Meteo (mountain and surf forecasts), NOAA (tides and wave buoys), and USDA SNOTEL (measured snow depth). All free, public sources. Here they are, with when each was last fetched:',
+      sourcesList,
+      'Season dates and beach directions come from the config file. Ratings are simple rules, not advice — check the resort and the beach before you go.',
     ]],
     ['What do you store about me?', [
       'If you don’t sign in: nothing on a server. Your pins, filters, Rider Profile, alert settings, light/dark choice and animation setting are saved only in this browser.',
       'If you sign in with Google: your name, email address, alert settings, Rider Profile (including your home area, rounded to about 7 miles) and pinned spots are saved in your account (in Supabase, the sign-in service every app on offthewall.dev shares), so we can send your alerts. If you choose another email address or turn on phone notifications, that address and each device’s notification address are saved too. Only you can see or change them. We never get access to your Gmail. Use “Delete my saved data” at the bottom of the Notifications tab (under “Your data”) to remove everything: it clears this device and, if you’re signed in, your account’s copy.',
+      () => h('p', {}, 'Anonymous visit counts, no cookies. ', h('a', { href: '/privacy/' }, 'Privacy policy')),
     ]],
     ['The page looks broken or old after an update', [
       'Close the tab and open the site again. The site updates every hour, and your browser may briefly hold on to the previous version.',
@@ -127,6 +159,6 @@ export function renderFaq() {
       h('h3', {}, group),
       items.map(([q, paragraphs]) => h('details', { class: 'faq' },
         h('summary', {}, q),
-        paragraphs.map((p) => h('p', {}, p)))))),
+        paragraphs.map((p) => (typeof p === 'function' ? p() : h('p', {}, p))))))),
   );
 }

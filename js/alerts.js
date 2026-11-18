@@ -16,7 +16,7 @@ import { h } from './ui.js';
 import { computeAlerts, DEFAULT_SETTINGS, LOOK_AHEAD, watching } from './alert-rules.js';
 import { hasProfile, loadProfile, onProfileChange, profileText, saveProfile } from './skill.js';
 import { loadRider, onRiderChange, openProfile, saveRider } from './rider.js';
-import { distanceMi, normalizeRider, withinReach } from './recommend.js';
+import { distanceMi, normalizeRider, travelLimit, withinReach } from './recommend.js';
 import { account, confirmEmail, deleteMyData, emailConfirmed, emailTarget, initAccount, isConfigured, onAccountChange, savePushSub, saveSoon, setAlertEmail, setEmailAlerts, signIn, signOut } from './account.js';
 import { vapidPublicKey } from './push-config.js';
 
@@ -252,7 +252,7 @@ function scopeText(kind, settings, rider) {
   if (scope === 'chosen') return plural(settings[`${kind}Watch`].length, `${one} you chose`, `${many} you chose`);
   if (scope === 'nearby') {
     if (!rider.home || !rider.homeExplicit) return `${many} near you (set your home in your Rider Profile)`;
-    return `${many} ${rider.radiusMi ? `within ${rider.radiusMi} mi of` : 'from'} ${rider.home.label}`;
+    return `${many} ${travelLimit(rider, kind) ? `within ${travelLimit(rider, kind)} mi of` : 'from'} ${rider.home.label}`;
   }
   const n = pins()[kind].length;
   return n ? `your ${plural(n, `pinned ${one}`, `pinned ${many}`)}` : `your pinned ${many} (none yet: pin some on the ${kind === 'snow' ? 'Snow' : 'Surf'} tab)`;
@@ -336,10 +336,10 @@ function render() {
   const rider = loadRider();
 
   // "Near me" needs a home in the Rider Profile
-  const nearNote = (scope, extra = '') => {
+  const nearNote = (kind, scope, extra = '') => {
     if (scope !== 'nearby') return null;
     if (!rider.home || !rider.homeExplicit) return h('p', { class: 'fine warn' }, 'Set where you ride from in your Rider Profile to use this. ', profileLink());
-    const where = rider.radiusMi ? `within ${rider.radiusMi} mi of ` : 'from ';
+    const where = travelLimit(rider, kind) ? `within ${travelLimit(rider, kind)} mi of ` : 'from ';
     return h('p', { class: 'fine' }, `Everywhere ${where}${rider.home.label}${extra}. `, profileLink());
   };
   const cap = (x) => x[0].toUpperCase() + x.slice(1);
@@ -361,7 +361,7 @@ function render() {
         select('alerts-snow-inches', 'At least', [2, 4, 6, 10, 12].map((n) => [n, `${n}" of snow`]), settings.snowInches, (v) => update({ snowInches: Number(v) })),
         select('alerts-snow-days', 'Look ahead', LOOK_AHEAD.map((n) => [n, `Next ${n} days`]), settings.snowDays ?? 3, (v) => update({ snowDays: Number(v) })),
         select('alerts-snow-scope', 'For', scopes('mountains'), scopeValue(settings.snowScope), (v) => update({ snowScope: v }))),
-      nearNote(settings.snowScope, passNote),
+      nearNote('snow', settings.snowScope, passNote),
       settings.snowScope === 'chosen' ? chooser('snow') : null,
       boardOnly ? h('p', { class: 'fine' }, 'You snowboard, so skiers-only mountains are left out.') : null,
     ],
@@ -382,7 +382,7 @@ function render() {
       h('div', { class: 'list-controls' },
         select('alerts-surf-days', 'Look ahead', LOOK_AHEAD.map((n) => [n, `Next ${n} days`]), settings.surfDays ?? 3, (v) => update({ surfDays: Number(v) })),
         select('alerts-surf-scope', 'For', scopes('beaches'), scopeValue(settings.surfScope), (v) => update({ surfScope: v }))),
-      nearNote(settings.surfScope),
+      nearNote('surf', settings.surfScope),
       settings.surfScope === 'chosen' ? chooser('surf') : null,
     ],
   });
@@ -604,7 +604,7 @@ function isWatched(kind, id) {
   if (scope === 'chosen') return s[`${kind}Watch`].includes(id);
   if (scope === 'nearby') {
     const rider = loadRider();
-    return Boolean(rider.home && rider.homeExplicit) && withinReach(report.sections[kind].items.find((x) => x.id === id), rider);
+    return Boolean(rider.home && rider.homeExplicit) && withinReach(report.sections[kind].items.find((x) => x.id === id), rider, kind);
   }
   return ((kind === 'snow' ? snowTab : surfTab)?.pinned() ?? []).includes(id);
 }
@@ -666,7 +666,7 @@ function chooser(kind) {
       ['chosen', 'Chosen only'],
       ['unchosen', 'Not chosen yet'],
       ['pinned', 'My pinned'],
-      ...(rider.homeExplicit ? [['near', `Within ${rider.radiusMi ?? '∞'} mi`]] : []),
+      ...(rider.homeExplicit ? [['near', travelLimit(rider, kind) ? `Within ${travelLimit(rider, kind)} mi` : 'Near me (any distance)']] : []),
     ]),
     filterSelect('sort', 'Order', [['name', 'A–Z'], ...(rider.homeExplicit ? [['distance', 'Closest first']] : [])]));
   const shownCount = h('p', { class: 'fine chooser-count', 'aria-live': 'polite' });
@@ -687,7 +687,7 @@ function chooser(kind) {
           || (pf.show === 'chosen' && watch.includes(x.id))
           || (pf.show === 'unchosen' && !watch.includes(x.id))
           || (pf.show === 'pinned' && pinnedIds.includes(x.id))
-          || (pf.show === 'near' && rider.homeExplicit && withinReach(x, rider)));
+          || (pf.show === 'near' && rider.homeExplicit && withinReach(x, rider, kind)));
       li.hidden = !ok;
       if (ok) shown++;
     }

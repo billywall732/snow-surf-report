@@ -124,7 +124,7 @@ a { color: inherit; text-underline-offset: 2px; }
 }
 
 /* Every top-level block shares the same width and 16px side padding */
-.masthead, main, footer {
+.masthead, main {
   max-width: 1080px;
   margin: 0 auto;
   padding-left: 16px;
@@ -191,7 +191,7 @@ main { padding-top: 24px; padding-bottom: 48px; }
 
 /* Best bet + Recommended for you: two compact cards side by side (phones too).
    "See all picks" widens Recommended to the full row. */
-.top-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.top-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); margin-bottom: 12px; }
 .top-grid > * { min-width: 0; margin: 0; }
 .top-grid .recs.is-open { grid-column: 1 / -1; }
 .verdict { font-family: var(--serif); font-size: 16px; }
@@ -323,12 +323,6 @@ main { padding-top: 24px; padding-bottom: 48px; }
 .data-table th, .data-table td { text-align: left; padding: 3px 14px 3px 0; border-bottom: 1px solid var(--rule); }
 .data-table th { color: var(--muted); font-weight: 600; }
 
-/* ---------- Footer ---------- */
-
-footer { padding-bottom: 40px; border-top: 1px solid var(--rule); padding-top: 20px; }
-footer h2 { font-size: 18px; margin-bottom: 8px; }
-footer ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ink-2); }
-footer li { margin: 2px 0; }
 
 /* Very narrow phones */
 @media (max-width: 360px) {
@@ -429,7 +423,8 @@ footer li { margin: 2px 0; }
 .row-title { min-width: 0; }
 .row-name { font-weight: 650; }
 .row-region { margin-left: 8px; font-size: 13px; color: var(--muted); white-space: nowrap; }
-.row-rating { display: flex; align-items: center; gap: 8px; }
+.row-rating { display: flex; align-items: center; justify-content: flex-end; gap: 8px; text-align: right; }
+.row-rating .rating-score { white-space: nowrap; }
 .row-stats { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); }
 
 /* ---------- Map ---------- */
@@ -616,12 +611,13 @@ html, body { overflow-x: clip; }
 .legend-item { white-space: nowrap; }
 
 @media (max-width: 600px) {
-  /* List rows: name on top, town under it, then the numbers. */
-  .row-main { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  /* List rows: name and town on top, then "3/5 · WORTH A LOOK" with the bar at the
+     far right on its own line (too wide to share a line with the name), then the numbers. */
+  .row-main { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .row-name { display: block; }
   .row-region { display: block; margin-left: 0; white-space: normal; }
   .row-region + .visually-hidden + .pass-tag { margin-left: 0; }
-  .row-rating { gap: 6px; padding-top: 3px; }
+  .row-rating { gap: 6px; padding-top: 3px; justify-content: space-between; justify-self: stretch; width: 100%; }
   .row-rating .rating-bar { width: 56px; height: 7px; }
 
   /* Detail view fills the screen, like an app page */
@@ -916,6 +912,8 @@ html { scroll-padding-bottom: calc(76px + env(safe-area-inset-bottom)); } /* not
   cursor: pointer;
 }
 .faq p { margin: 0 14px 12px; color: var(--ink-2); font-size: 15px; }
+.faq-sources { margin: 0 14px 12px; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+.faq-sources li { margin: 2px 0; }
 .faq[open] summary { border-bottom: 1px solid var(--rule); margin-bottom: 10px; }
 
 /* ==========================================================================
@@ -1497,6 +1495,8 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 .section-toggle-note { font-size: 13px; color: var(--muted); }
 .all-body { padding: 0 16px 16px; }
 .all-body .resort-list { box-shadow: none; }
+/* Opened, the full list is a fixed-height box you scroll inside */
+.all-body .resort-list { max-height: min(60vh, 560px); overflow-y: auto; overscroll-behavior: contain; }
 
 /* A small chevron that turns when its section opens */
 .chevron {
@@ -1799,15 +1799,23 @@ h4 { font-size: 14px; font-weight: 650; }
 .verdict-maybe { color: #a35f00; font-weight: 700; }
 .verdict-skip, .verdict-closed { color: var(--muted); font-weight: 700; }
 
-/* Top 6 today stays collapsed until a user asks for the global conditions list. */
-.top-six { min-width: 0; margin: 4px 0 28px; }
-.top-six > summary { list-style: none; }
-.top-six > summary::-webkit-details-marker { display: none; }
-.top-six-summary { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.top-six-heading { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 2px; }
-.top-six-title { font: 600 27px/1.15 var(--serif); }
-.top-six-subtitle { color: var(--muted); font-size: 14px; }
-.top-six-count { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
+/* Pills that open a section: "Recommended Mountains For You ⌄", "Top 6 Mountains Today ⌄".
+   Collapsed until tapped; filled in while open. */
+.pill-details { min-width: 0; margin: 4px 0 12px; }
+.pill-details.top-six { margin-bottom: 28px; }
+.pill-details > summary { list-style: none; }
+.pill-details > summary::-webkit-details-marker { display: none; }
+.pill-summary {
+  display: inline-flex; align-items: center; gap: 10px; max-width: 100%; min-height: 44px;
+  padding: 8px 18px; cursor: pointer; background: var(--surface);
+  border: 1px solid var(--axis); border-radius: 999px;
+}
+.pill-summary:hover { border-color: var(--ink-2); }
+.pill-details[open] > .pill-summary { color: #fff; background: var(--accent); border-color: var(--accent); }
+.pill-details[open] > .pill-summary .chevron { border-color: #fff; }
+.pill-title { font: 600 16px/1.2 var(--sans); }
+.recs-body { padding: 12px 2px 0; }
+.recs-body > .fine:first-child { margin-top: 0; }
 .top-six-row {
   display: grid; grid-auto-flow: column; grid-auto-columns: 68%; gap: 12px;
   min-width: 0; overflow-x: auto; scroll-snap-type: x mandatory;
@@ -1828,8 +1836,6 @@ h4 { font-size: 14px; font-weight: 650; }
 .top-six-card .tile-rating { margin-top: 2px; }
 .top-six-card .rating-score { white-space: normal; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
-  .top-six-title { font-size: 24px; }
-  .top-six-subtitle { font-size: 13px; }
   .top-six-card { padding: 12px; }
   .top-six-card .tile-rating { gap: 4px 6px; }
   .top-six-card .rating-score { font-size: 14px; line-height: 1.15; }

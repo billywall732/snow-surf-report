@@ -1,7 +1,7 @@
 // Snow and Surf Report — reads data/report.json and builds the page.
 // Everything here runs in the browser. No data is fetched from the weather APIs
 // directly; the GitHub Action already did that and saved the result.
-import { drawCharts, formatTime, h, state } from './ui.js';
+import { drawCharts, state } from './ui.js';
 import { redrawMaps } from './places.js';
 import { renderSnow } from './snow.js';
 import { renderSurf, updateTideBackground } from './surf.js';
@@ -50,35 +50,7 @@ function renderHeader() {
   }
 }
 
-// Walk the report and find every block with a source, so the footer can say
-// when each source was last fetched and whether anything failed.
-function collectBlocks(node, out = []) {
-  if (node && typeof node === 'object') {
-    if (typeof node.source === 'string' && node.fetchedAt) out.push(node);
-    for (const v of Object.values(node)) collectBlocks(v, out);
-  }
-  return out;
-}
-
-function renderSources() {
-  const blocks = collectBlocks(report.sections);
-  const items = Object.entries(report.sources)
-    .filter(([id]) => blocks.some((b) => b.source === id))
-    .map(([id, s]) => {
-      const mine = blocks.filter((b) => b.source === id);
-      const latest = mine.map((b) => b.fetchedAt).sort().at(-1);
-      const failed = mine.filter((b) => b.status !== 'ok').length;
-      return h('li', {},
-        s.url ? h('a', { href: s.url, rel: 'noopener' }, s.name) : s.name,
-        ` — fetched ${formatTime(latest)}`,
-        failed ? h('span', { class: 'warn' }, ` · ${failed} unavailable`) : null);
-    });
-  document.getElementById('sources').replaceChildren(
-    h('h2', {}, 'Sources'),
-    h('ul', {}, items),
-    h('p', { class: 'fine' }, 'Season dates and beach directions come from the config file. Ratings are simple rules, not advice — check the resort and the beach before you go.'),
-    h('p', { class: 'fine' }, 'Anonymous visit counts, no cookies. · ', h('a', { href: '/privacy/' }, 'Privacy')));
-}
+// (The list of sources and fetch times is in the FAQs: faq.js)
 
 // ---------- Pages and the bottom bar ----------
 // Five pages: Snow, Surf, Notifications and Profile are tabs in the bottom bar;
@@ -253,7 +225,6 @@ async function main() {
   renderProfile();
   mountSignIn(); // "Sign in" in the header and on the intro screen
   renderFaq();
-  renderSources();
   drawCharts();
   redrawMaps();
   introReady(report); // everything's drawn: fill the bar, show Start Shredding

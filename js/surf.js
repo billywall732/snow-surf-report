@@ -4,7 +4,7 @@ import { svg, timeChart } from './charts.js';
 import { setTideLevel } from './background.js';
 import { createPlacesTab, stateFilter } from './places.js';
 import { notifyButton } from './alerts.js';
-import { inRangeBestBetCard, loadRider, openProfile, recommendCard } from './rider.js';
+import { inRangeBestBetCard, loadRider, openProfile, recommendPill } from './rider.js';
 import { distanceMi, surfBlockers } from './recommend.js';
 import { uvAdvice, wetsuitFor } from './gear.js';
 import { fitDays, fitToday, hasProfile, onProfileChange, profileText, setSkills } from './skill.js';
@@ -84,7 +84,8 @@ export function renderSurf(surfSection) {
     detailPill: (s) => (s.beachFacingDeg != null ? h('span', { class: 'pill' }, `Faces ${compass(s.beachFacingDeg)} (${s.beachFacingDeg}°)`) : null),
     detailBody,
     detailButtons: (s) => notifyButton('surf', s),
-    top: () => [inRangeBestBetCard('surf', (id) => tab.openDetail(id)), recommendCard('surf', (id) => tab.openDetail(id))],
+    top: () => [inRangeBestBetCard('surf', (id) => tab.openDetail(id))],
+    recs: () => recommendPill('surf', (id) => tab.openDetail(id)),
     afterMine: (pinnedIds) => [drawTideCard(pinnedIds)],
     mapIcon: 'wave',
     mapLabel: 'surf spots',

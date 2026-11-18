@@ -341,7 +341,7 @@ async function sendSamples() {
   const surfIds = new Set(alerts.filter((a) => a.kind === 'surf').slice(0, 3).map((a) => a.itemId));
   const picked = alerts.filter((a) => a.kind === 'snow' || surfIds.has(a.itemId));
   // A rider based in Los Angeles, so the examples show "Near you" and "Worth the trip"
-  const rider = { home: { label: 'Los Angeles', lat: 34.05, lon: -118.24 }, radiusMi: 300 };
+  const rider = { home: { label: 'Los Angeles', lat: 34.05, lon: -118.24 }, travelMi: { snow: 300, surf: 300 } };
   const user = { name: '', settings, profile, rider };
   const examples = [...emailsFor(user, picked), digestEmail({ user, watched: watchedFor(user), siteUrl: SITE_URL, dateLabel: dayLabel, firstOne: false, surfDays: settings.surfDays })];
   for (const email of examples) {

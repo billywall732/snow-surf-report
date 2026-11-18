@@ -12,8 +12,15 @@ import { createMap, legendIcon } from './map.js';
 import { drawCharts, h, rating, scoreLabel } from './ui.js';
 import { verdictFor } from './verdict.js';
 
+// List rows read "5/5 · GO" (rating, then label) to the left of the bar.
+// Not open yet / not rated: just the label.
+function rowVerdict(item) {
+  const v = verdictFor(item);
+  const s = item.rating.score;
+  return h('span', { class: `rating-score verdict-${v.key}` }, v.key === 'closed' || s == null ? v.label : `${s}/5 · ${v.label}`);
+}
+
 const MAX_PINS = 4;
-const SHORT_LIST = 10; // rows shown before "Show all"
 const instances = [];
 
 // Redraw every tab's map (after a resize, or when a tab becomes visible).
@@ -108,7 +115,6 @@ export function createPlacesTab(opts) {
   let pinned = load(opts.pinKey, []).filter((id) => known.has(id)).slice(0, MAX_PINS);
   const defaults = Object.fromEntries(opts.filters.map((f) => [f.id, 'all']));
   let list = { ...defaults, sort: opts.sorts[0].value, days: 3, ...load(opts.listKey, {}), query: '' };
-  let showAll = false;
   let pendingPin = null; // a place waiting to replace a pin (when all 4 are taken)
   let selectedId = null; // the place open in the detail view
   let openedByUs = false; // did this page add the #key/<id> history entry?
@@ -125,16 +131,14 @@ export function createPlacesTab(opts) {
     pinHint: h('p', { class: 'pin-hint' }),
     count: h('p', { class: 'fine list-count', 'aria-live': 'polite' }),
     list: h('ul', { class: 'resort-list' }),
-    more: h('button', { type: 'button', class: 'text-button show-all' }),
     map: h('div', { class: 'map-wrap' }),
     mapNote: h('p', { class: 'fine map-note', 'aria-live': 'polite' }),
     afterMine: h('div'),
   };
-  els.more.addEventListener('click', () => { showAll = !showAll; updateList(); });
 
   // "All mountains" starts closed (one tappable row) so the page stays short;
   // tapping it opens the search, filters and list.
-  const allBody = h('div', { id: `${key}-all-body`, class: 'all-body' }, els.pinHint, listControls(), els.count, els.list, els.more);
+  const allBody = h('div', { id: `${key}-all-body`, class: 'all-body' }, els.pinHint, listControls(), els.count, els.list);
   allBody.hidden = true;
   const allToggle = h('button', { type: 'button', class: 'section-toggle', 'aria-expanded': 'false', 'aria-controls': allBody.id },
     h('span', { class: 'section-toggle-text' },
@@ -173,12 +177,11 @@ export function createPlacesTab(opts) {
       .sort((a, b) => b.rating.score - a.rating.score || (b.id === section.bestBet?.id) - (a.id === section.bestBet?.id) || a.name.localeCompare(b.name))
       .slice(0, 6);
     if (!six.length) return null;
-    return h('details', { class: 'top-six', 'aria-labelledby': `${key}-h-top` },
-      h('summary', { class: 'top-six-summary' },
-        h('span', { class: 'top-six-heading' },
-          h('span', { id: `${key}-h-top`, class: 'top-six-title', role: 'heading', 'aria-level': '2' }, 'Top 6 today'),
-          h('span', { class: 'top-six-subtitle' }, `Best rated right now · all ${section.items.length} are in the search below`)),
-        h('span', { class: 'top-six-count' }, `${six.length} spots`),
+    return h('details', { class: 'pill-details top-six', 'aria-labelledby': `${key}-h-top` },
+      // A pill you tap to open: "Top 6 Mountains Today ⌄"
+      h('summary', { class: 'pill-summary' },
+        h('span', { id: `${key}-h-top`, class: 'pill-title', role: 'heading', 'aria-level': '2' },
+          `Top ${six.length} ${key === 'snow' ? 'Mountains' : 'Beaches'} Today`),
         h('span', { class: 'chevron', 'aria-hidden': 'true' })),
       h('div', { class: 'top-six-row' }, six.map((item) => {
         const b = h('button', { type: 'button', class: 'top-six-card', 'aria-label': `${item.name}, ${place(item)}. ${verdictFor(item).label}, ${item.rating.score} of 5. ${item.rating.reason}. Open details.` },
@@ -192,7 +195,9 @@ export function createPlacesTab(opts) {
   }
 
   document.getElementById(opts.panelId).replaceChildren(
-    h('div', { class: 'top-grid' }, opts.top?.() ?? []), // side by side on wide screens
+    h('div', { class: 'top-grid' }, opts.top?.() ?? []),
+    // Two pills, closed until tapped: Recommended For You, then Top 6 Today
+    opts.recs?.() ?? '',
     topSix() ?? '',
     h('section', { 'aria-labelledby': `${key}-h-mine` },
       h('div', { class: 'section-head' },
@@ -209,7 +214,6 @@ export function createPlacesTab(opts) {
           (opts.legend ?? [
             ['', `${words.one[0].toUpperCase()}${words.one.slice(1)}`],
             ['is-pinned', 'Pinned'],
-            ['is-selected', 'Open in details'],
           ]).map(([cls, text]) => h('span', { class: 'legend-item' }, legendIcon(opts.mapIcon, cls), ` ${text}`))),
         h('p', { class: 'fine map-hint' }, 'Tap one for details. Pinch or + to zoom; zoomed in, places close together spread apart.')),
       h('div', { class: 'map-filters' }, opts.filters.map((f) => filterControl(f, 'map'))),
@@ -293,15 +297,14 @@ export function createPlacesTab(opts) {
 
   function updateList() {
     const rows = filteredSorted();
-    const shown = showAll || list.query ? rows : rows.slice(0, SHORT_LIST);
+    // Every match is listed; the list is a fixed-height box you scroll inside (CSS)
+    const shown = rows;
     els.list.replaceChildren(...shown.map(listRow));
     const total = section.items.length;
     // Out of how many? The places your filters leave, before the search box narrows them
     const filtered = list.query ? filteredSorted({ ignoreQuery: true }).length : rows.length;
     els.count.textContent = `Showing ${shown.length} of ${filtered}${filtered < total ? ` matches (${total} total)` : ''}`;
     if (list.query && !rows.length) els.count.textContent += `. No ${words.many} match “${list.query}”.`;
-    els.more.hidden = rows.length <= SHORT_LIST || Boolean(list.query);
-    els.more.textContent = showAll ? 'Show fewer' : `Show all ${rows.length}`;
 
     visibleIds = new Set(rows.map((x) => x.id));
     redrawMap();
@@ -517,7 +520,8 @@ export function createPlacesTab(opts) {
         h('span', { class: 'visually-hidden' }, ', '),
         h('span', { class: 'row-region' }, [place(item), item.area].filter(Boolean).join(' · ')),
         extrasWithSeparators(opts.rowExtras?.(item))),
-      h('span', { class: 'row-rating' }, ratingBar(score), scoreLabel(item)),
+      // "5/5 · GO" first, then the colored bar on the far right
+      h('span', { class: 'row-rating' }, rowVerdict(item), ratingBar(score)),
       h('span', { class: 'row-stats' }, opts.rowStats(item)));
     main.addEventListener('click', () => openDetail(item.id));
     return h('li', { class: `resort-row ${opts.itemClass?.(item) ?? ''}${isPinned(item.id) ? ' is-pinned' : ''}` },

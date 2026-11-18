@@ -4,7 +4,7 @@ import { timeChart } from './charts.js';
 import { createPlacesTab, stateFilter } from './places.js';
 import { snowComing } from './alert-rules.js';
 import { notifyButton } from './alerts.js';
-import { inRangeBestBetCard, loadRider, openProfile, recommendCard } from './rider.js';
+import { inRangeBestBetCard, loadRider, openProfile, recommendPill } from './rider.js';
 import { hasSkiRider, skiFit, skiText } from './recommend.js';
 import { layersFor } from './gear.js';
 import {
@@ -84,7 +84,6 @@ export function renderSnow(snowSection) {
       ['pass-ikon', 'Ikon'],
       ['pass-epic', 'Epic'],
       ['pass-ikon is-pinned', 'Pinned (larger, outlined)'],
-      ['is-selected', 'Open in details'],
     ],
     rowStats: (r) => [
       `New 48h ${num(ok(r.observed) ? r.observed.data.newSnow.h48 : null, '"')}`,
@@ -96,7 +95,8 @@ export function renderSnow(snowSection) {
     detailPill: (r) => seasonPill(r.season),
     detailButtons: (r) => notifyButton('snow', r),
     detailBody,
-    top: () => [inRangeBestBetCard('snow', (id) => tab.openDetail(id)), recommendCard('snow', (id) => tab.openDetail(id))],
+    top: () => [inRangeBestBetCard('snow', (id) => tab.openDetail(id))],
+    recs: () => recommendPill('snow', (id) => tab.openDetail(id)),
     afterMine: (pinnedIds) => [drawSnowBuildup(pinnedIds)],
     mapIcon: 'peak',
     mapLabel: 'Ikon and Epic mountains',

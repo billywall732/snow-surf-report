@@ -5,8 +5,8 @@
 //   ski:  { ride: ['ski', 'snowboard'], levels: ['intermediate', ...], wants: ['powder', ...], passes: ['Ikon', ...] },
 //   surf: { minWaterF: 60 | null },
 //   home: { label, lat, lon } (recommendations default to Pasadena),
-//   radiusMi: 250 | null (nearby-alert radius),
-//   travelHours: { snow: 1 | 3 | 6 | null, surf: 1 | 3 | 6 | null },
+//   travelMi: { snow: miles | null, surf: miles | null } (how far you'll travel for
+//     each sport; null = any distance). Used for picks, "near me" alerts and emails.
 // }
 // profile (surf levels/boards) comes from skill.js / fit.js.
 import { fitToday, hasProfile } from './fit.js';
@@ -16,16 +16,20 @@ export const EMPTY_RIDER = {
   surf: { minWaterF: null },
   home: { label: 'Pasadena, CA', lat: 34.1478, lon: -118.1445 },
   homeExplicit: false,
-  radiusMi: 300,
-  travelHours: { snow: 3, surf: 3 },
+  travelMi: { snow: 300, surf: 300 },
 };
 
-export const TRAVEL_RANGES = [
-  [1, 'Local (about 1 hr drive)'],
-  [3, 'Day trip (about 3 hrs)'],
-  [6, 'Weekend trip (about 6 hrs, overnight)'],
-  [null, 'Anywhere (fly anywhere)'],
+// [miles, label]. Drive times: 1.3x road factor at 55 mph, rounded.
+export const TRAVEL_MILES = [
+  [50, '50 miles (about 1 hr drive)'],
+  [100, '100 miles (about 2½ hrs)'],
+  [200, '200 miles (about 5 hrs)'],
+  [300, '300 miles (about 7 hrs)'],
+  [500, '500 miles'],
+  [1000, '1,000 miles'],
+  [null, 'Any distance'],
 ];
+const MILES = TRAVEL_MILES.map(([v]) => v).filter(Boolean);
 
 export const SKI_LEVELS = [
   ['beginner', 'Beginner', 'Learning, or happy on greens'],
@@ -57,8 +61,13 @@ export function normalizeRider(r) {
     ? r.home : EMPTY_RIDER.home;
   const homeExplicit = typeof r?.homeExplicit === 'boolean' ? r.homeExplicit
     : Boolean(r?.home && Number.isFinite(r.home.lat) && Number.isFinite(r.home.lon));
-  const travelHours = (value) => value === null ? null
-    : [1, 3, 6].includes(Number(value)) ? Number(value) : 3;
+  // Older saves had one miles radius (radiusMi) for both sports: carry it over to each
+  const old = r && 'radiusMi' in r ? (Number(r.radiusMi) || null) : EMPTY_RIDER.travelMi.snow;
+  const miles = (kind) => {
+    if (!r?.travelMi || !(kind in r.travelMi)) return old;
+    const v = r.travelMi[kind];
+    return v == null || v === '' ? null : MILES.includes(Number(v)) ? Number(v) : EMPTY_RIDER.travelMi[kind];
+  };
   return {
     ski: {
       ride: list(r?.ski?.ride), levels: list(r?.ski?.levels), wants: list(r?.ski?.wants), passes: list(r?.ski?.passes),
@@ -66,11 +75,7 @@ export function normalizeRider(r) {
     surf: { minWaterF: Number(r?.surf?.minWaterF) || null },
     home,
     homeExplicit,
-    radiusMi: r && 'radiusMi' in r ? (Number(r.radiusMi) || null) : EMPTY_RIDER.radiusMi,
-    travelHours: {
-      snow: travelHours(r?.travelHours?.snow),
-      surf: travelHours(r?.travelHours?.surf),
-    },
+    travelMi: { snow: miles('snow'), surf: miles('surf') },
   };
 }
 
@@ -85,36 +90,33 @@ export function skiText(rider) {
   return [who, levels.join(', '), rider.ski.passes.join(' or ')].filter(Boolean).join(' · ');
 }
 
-const tooFar = (rider, place) => {
-  if (!rider.home || !rider.radiusMi) return null;
+// How far you'll travel for this sport (null = any distance)
+export const travelLimit = (rider, kind) => rider.travelMi?.[kind] ?? null;
+
+// Miles away, when that's past your range for this sport (else null)
+const tooFar = (rider, place, kind) => {
+  const limit = travelLimit(rider, kind);
+  if (!rider.home || !limit) return null;
   const d = distanceMi(rider.home, place);
-  return d > rider.radiusMi ? d : null;
+  return d > limit ? d : null;
 };
 
-// Estimate one-way driving time from straight-line distance (1.3x road factor, 55 mph average).
-export function driveTimeHours(home, place) {
-  return distanceMi(home, place) * 1.3 / 55;
-}
-
-export function withinTravelRange(place, rider, kind) {
-  const hours = rider.travelHours?.[kind];
-  return !rider.home || hours == null || driveTimeHours(rider.home, place) <= hours;
-}
+export const withinTravelRange = (place, rider, kind) => !tooFar(rider, place, kind);
 
 // A snowboarder (who doesn't also ski) at a skiers-only mountain like Alta
 export const noSnowboards = (resort, rider) => Boolean(resort.skiersOnly && rider.ski.ride.length && !rider.ski.ride.includes('ski'));
 // No pass picked = any mountain is fine
 export const onYourPass = (resort, rider) => !rider.ski.passes.length || (resort.passes ?? []).some((p) => rider.ski.passes.includes(p.pass));
-// Within your travel distance? (No home or "any distance" = yes)
-export const withinReach = (place, rider) => !tooFar(rider, place);
+// Within your travel distance for this sport ('snow' or 'surf')? (No home or "any distance" = yes)
+export const withinReach = (place, rider, kind) => !tooFar(rider, place, kind);
 
 // Is this mountain ruled out for you? Returns the reasons (empty = it's fine).
 export function skiBlockers(resort, rider, { checkDistance = true } = {}) {
   const out = [];
   if (noSnowboards(resort, rider)) out.push('Skiers only: no snowboarding');
   if (!onYourPass(resort, rider)) out.push(`Not on your pass (${rider.ski.passes.join(' or ')})`);
-  const far = checkDistance && tooFar(rider, resort);
-  if (far) out.push(`${far} mi away (farther than ${rider.radiusMi} mi)`);
+  const far = checkDistance && tooFar(rider, resort, 'snow');
+  if (far) out.push(`${far} mi away (farther than ${travelLimit(rider, 'snow')} mi)`);
   return out;
 }
 
@@ -125,7 +127,10 @@ export function skiBlockers(resort, rider, { checkDistance = true } = {}) {
 //   what you're after   0–20   (powder, groomers, park, steeps)
 //   closeness           0–8    (a gentle nudge: a big mountain a few hours away still wins)
 const sizePoints = (acres) => (acres ? Math.max(0, Math.min(6, Math.log2(acres / 100))) * 3 : 6);
-const closePoints = (rider, place) => (rider.home && rider.radiusMi ? Math.max(0, 1 - distanceMi(rider.home, place) / rider.radiusMi) * 8 : 0);
+const closePoints = (rider, place, kind) => {
+  const limit = travelLimit(rider, kind);
+  return rider.home && limit ? Math.max(0, 1 - distanceMi(rider.home, place) / limit) * 8 : 0;
+};
 
 // How well does this mountain suit you today? { score, reasons, blockers }
 export function skiFit(resort, rider, { checkDistance = true } = {}) {
@@ -180,8 +185,8 @@ export function skiFit(resort, rider, { checkDistance = true } = {}) {
 
   // Closer is a little better. (Too far is already a blocker; say it once.)
   if (rider.home) {
-    score += closePoints(rider, resort);
-    if (!tooFar(rider, resort)) reasons.push(`${distanceMi(rider.home, resort)} mi away`);
+    score += closePoints(rider, resort, 'snow');
+    if (!tooFar(rider, resort, 'snow')) reasons.push(`${distanceMi(rider.home, resort)} mi away`);
   }
   return { score, reasons: [...new Set(reasons)].filter((r) => !blockers.includes(r)), blockers };
 }
@@ -194,8 +199,8 @@ export function surfBlockers(spot, rider, { checkDistance = true } = {}) {
   if (rider.surf.minWaterF && water != null && water < rider.surf.minWaterF) {
     out.push(`Water ${Math.round(water)}°F, colder than your ${rider.surf.minWaterF}°F`);
   }
-  const far = checkDistance && tooFar(rider, spot);
-  if (far) out.push(`${far} mi away (farther than ${rider.radiusMi} mi)`);
+  const far = checkDistance && tooFar(rider, spot, 'surf');
+  if (far) out.push(`${far} mi away (farther than ${travelLimit(rider, 'surf')} mi)`);
   return out;
 }
 
@@ -210,16 +215,18 @@ export function surfFit(spot, rider, profile, skills, { checkDistance = true } =
   }
   if (ok(spot.waves)) reasons.push(`${spot.waves.data.heightFt} ft @ ${spot.waves.data.periodS} s`);
   if (rider.home) {
-    score += closePoints(rider, spot);
-    if (!tooFar(rider, spot)) reasons.push(`${distanceMi(rider.home, spot)} mi away`);
+    score += closePoints(rider, spot, 'surf');
+    if (!tooFar(rider, spot, 'surf')) reasons.push(`${distanceMi(rider.home, spot)} mi away`);
   }
   return { score, reasons: reasons.filter((r) => !blockers.includes(r)), blockers };
 }
 
 // Your top picks stay inside the selected sport's travel range.
 export function recommend(kind, report, rider, profile, count = 3) {
-  const anywhere = rider.travelHours?.[kind] == null;
-  const scoringRider = anywhere ? { ...rider, home: null, radiusMi: null } : { ...rider, radiusMi: null };
+  // The range only filters picks here (no closeness points), as before
+  const noLimit = { snow: null, surf: null };
+  const anywhere = travelLimit(rider, kind) == null;
+  const scoringRider = anywhere ? { ...rider, home: null, travelMi: noLimit } : { ...rider, travelMi: noLimit };
   const scored = report.sections[kind].items
     .map((item) => ({
       item,

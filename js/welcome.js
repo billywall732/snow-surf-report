@@ -10,7 +10,7 @@ import { h } from './ui.js';
 import { CITIES } from './cities.js';
 import { RIDE_TYPES, SKI_LEVELS } from './recommend.js';
 import { boards, levels, loadProfile, saveProfile } from './skill.js';
-import { goToPage, loadRider, saveRider } from './rider.js';
+import { goToPage, loadRider, locateHome, saveRider, travelSelect } from './rider.js';
 import { alertSettings, updateAlertSettings } from './alerts.js';
 import { account, isConfigured, onAccountChange, signIn } from './account.js';
 
@@ -58,6 +58,7 @@ function wireReplay() {
 export function openWalkthrough() {
   if (dialog?.open) return;
   step = 1;
+  locateMsg = '';
   dialog = h('dialog', { class: 'detail walkthrough', 'aria-labelledby': 'walk-title' });
   dialog.addEventListener('cancel', (e) => { e.preventDefault(); skip(); }); // Esc = Skip
   document.body.append(dialog);
@@ -84,6 +85,7 @@ function finish() {
 // 'snow', 'surf' or 'both', from which alerts are on
 const wantsOf = (s) => (s.snowOn && !s.surfOn ? 'snow' : s.surfOn && !s.snowOn ? 'surf' : 'both');
 let wants = null; // this run's answer to "what are you here for?" (null = not answered yet)
+let locateMsg = ''; // "Use my location": 'Finding you…', an error, or ''
 
 function setWants(v) {
   wants = v;
@@ -114,6 +116,9 @@ function selectBox(label, options, value, onChange) {
   sel.addEventListener('change', () => onChange(sel.value));
   return h('label', { class: 'control' }, h('span', {}, label), sel);
 }
+// travelSelect (rider.js) hands over (id, label, options, value, onChange); null = any distance
+const travelBox = (id, label, options, value, onChange) =>
+  selectBox(label, options.map(([v, l]) => [v ?? '', l]), value ?? '', onChange);
 function btn(text, onClick, cls = 'action-button') {
   const b = h('button', { type: 'button', class: cls }, text);
   b.addEventListener('click', onClick);
@@ -122,9 +127,14 @@ function btn(text, onClick, cls = 'action-button') {
 
 // ---------- The steps ----------
 
+let drawnStep = 0;
 function draw() {
   if (!dialog) return;
   const focusAfter = dialog.querySelector(':focus')?.textContent;
+  // Every pick redraws the step. Keep the scroll position, or the list jumps back to
+  // the top each time you tap a chip (very noticeable on iPhone).
+  const keepScroll = drawnStep === step ? dialog.querySelector('.walk-body')?.scrollTop ?? 0 : 0;
+  drawnStep = step;
   const body = [welcomeStep, questionsStep, notifyStep, doneStep][step - 1]();
   const titles = ['Welcome', 'A few quick questions', 'How you’ll hear about it', 'You’re all set'];
   dialog.replaceChildren(
@@ -138,10 +148,11 @@ function draw() {
       step > 1 ? btn('Back', () => { step -= 1; draw(); focusTitle(); }, 'text-button') : h('span'),
       step < STEPS
         ? btn(step === 1 ? 'Let’s set it up' : 'Next', () => { step += 1; draw(); focusTitle(); })
-        : btn(`Show me the ${wantsOf(alertSettings()) === 'surf' ? 'surf' : 'snow'}`, finish)));
+        : btn('Let’s Ride', finish))); // opens Snow, or Surf if that's all you're here for
   // Keep keyboard focus on the button you just pressed when the step redraws
   const again = focusAfter && [...dialog.querySelectorAll('button')].find((b) => b.textContent === focusAfter);
-  if (again) again.focus();
+  if (again) again.focus({ preventScroll: true });
+  if (keepScroll) dialog.querySelector('.walk-body').scrollTop = keepScroll;
 }
 function focusTitle() {
   const t = dialog?.querySelector('#walk-title');
@@ -168,22 +179,27 @@ function questionsStep() {
   const cityNow = rider.homeExplicit && rider.home && CITIES.some(([n]) => n === rider.home.label) ? rider.home.label : '';
   const nearby = s.snowScope === 'nearby' || s.surfScope === 'nearby';
   return [
+    // Home first: the travel questions below are measured from it
+    h('fieldset', { class: 'walk-set' }, h('legend', {}, '📍 Where you ride from'),
+      h('p', {}, rider.homeExplicit ? ['Home: ', h('strong', {}, rider.home.label)] : 'Pasadena is the default. Use your location or pick a city.'),
+      btn(locateMsg === 'Finding you…' ? 'Finding you…' : '📍 Use my location', () => locateHome((m) => { locateMsg = m; draw(); }), 'action-button walk-locate'),
+      locateMsg && locateMsg !== 'Finding you…' ? h('p', { class: 'fine warn', role: 'status' }, locateMsg) : null,
+      h('div', { class: 'list-controls' },
+        selectBox('Or pick a city', [['', rider.homeExplicit && rider.home && !cityNow ? `(${rider.home.label})` : 'Choose a city'], ...CITIES.map(([n]) => [n, n])], cityNow, (v) => {
+          const c = CITIES.find(([n]) => n === v);
+          if (c) setRider((r) => ({ ...r, home: { label: c[0], lat: c[1], lon: c[2] }, homeExplicit: true }));
+        }))),
     chipGroup('What are you here for?', [['snow', '❄️ Snow'], ['surf', '🏄 Surf'], ['both', 'Both']], (v) => v === here, setWants),
     snow ? h('fieldset', { class: 'walk-set' }, h('legend', {}, '❄️ On the mountain'),
       chipGroup('How do you ride?', RIDE_TYPES, (v) => rider.ski.ride.includes(v), (v) => setRider((r) => ({ ...r, ski: { ...r.ski, ride: toggleIn(r.ski.ride, v) } })), 'pick one or both'),
-      chipGroup('Your level', SKI_LEVELS, (v) => rider.ski.levels.includes(v), (v) => setRider((r) => ({ ...r, ski: { ...r.ski, levels: toggleIn(r.ski.levels, v) } })))) : null,
+      chipGroup('Your level', SKI_LEVELS, (v) => rider.ski.levels.includes(v), (v) => setRider((r) => ({ ...r, ski: { ...r.ski, levels: toggleIn(r.ski.levels, v) } }))),
+      h('div', { class: 'list-controls' }, travelSelect('snow', 'How far you’ll travel for snow', travelBox))) : null,
     surf ? h('fieldset', { class: 'walk-set' }, h('legend', {}, '🏄 In the water'),
       chipGroup('Your surfing level', levels().map(([k, v]) => [k, v.label]), (v) => surfer.levels.includes(v), (v) => setSurfer((p) => ({ ...p, levels: toggleIn(p.levels, v) }))),
-      chipGroup('Your board', boards().map(([k, v]) => [k, v.label]), (v) => surfer.boards.includes(v), (v) => setSurfer((p) => ({ ...p, boards: toggleIn(p.boards, v) })), 'pick any you ride')) : null,
-    h('fieldset', { class: 'walk-set' }, h('legend', {}, '📍 Where you ride from'),
-      h('div', { class: 'list-controls' },
-        selectBox('Home city', [['', rider.homeExplicit && rider.home && !cityNow ? `(${rider.home.label})` : 'Choose a city'], ...CITIES.map(([n]) => [n, n])], cityNow, (v) => {
-          const c = CITIES.find(([n]) => n === v);
-          if (c) setRider((r) => ({ ...r, home: { label: c[0], lat: c[1], lon: c[2] }, homeExplicit: true }));
-        }),
-        selectBox('How far you’ll travel', [[50, '50 miles'], [100, '100 miles'], [200, '200 miles'], [300, '300 miles'], [500, '500 miles'], [1000, '1,000 miles'], ['', 'Any distance']],
-          rider.radiusMi ?? '', (v) => setRider((r) => ({ ...r, radiusMi: Number(v) || null })))),
-      rider.homeExplicit ? h('label', { class: 'switch-row' }, (() => {
+      chipGroup('Your board', boards().map(([k, v]) => [k, v.label]), (v) => surfer.boards.includes(v), (v) => setSurfer((p) => ({ ...p, boards: toggleIn(p.boards, v) })), 'pick any you ride'),
+      h('div', { class: 'list-controls' }, travelSelect('surf', 'How far you’ll travel for surf', travelBox))) : null,
+    // Nearby alerts use each sport's travel distance, so this comes after them
+    rider.homeExplicit ? h('label', { class: 'switch-row' }, (() => {
         const box = h('input', { type: 'checkbox' });
         box.checked = nearby;
         box.addEventListener('change', () => {
@@ -192,7 +208,7 @@ function questionsStep() {
           draw();
         });
         return box;
-      })(), h('span', {}, 'Alert me about places within that distance')) : h('p', { class: 'fine' }, 'Recommendations use Pasadena by default. Pick a city for nearby alerts, or skip it and pin your favorite spots with ☆ later.')),
+      })(), h('span', {}, `Alert me about places within ${snow && surf ? 'those distances' : 'that distance'}`)) : h('p', { class: 'fine' }, 'Set your home above for nearby alerts, or skip it and pin your favorite spots with ☆ later.'),
     h('p', { class: 'fine' }, 'Saved as you go, on this device (and to your account if you sign in).'),
   ];
 }
@@ -239,7 +255,10 @@ function doneStep() {
     ['Here for', here === 'both' ? 'Snow and surf' : here === 'snow' ? 'Snow' : 'Surf'],
     here !== 'surf' ? ['On the mountain', [label(rider.ski.ride, RIDE_TYPES), label(rider.ski.levels, SKI_LEVELS)].filter(Boolean).join(' · ') || 'Not set'] : null,
     here !== 'snow' ? ['In the water', [label(surfer.levels, levels().map(([k, v]) => [k, v.label])), label(surfer.boards, boards().map(([k, v]) => [k, v.label]))].filter(Boolean).join(' · ') || 'Not set'] : null,
-    ['Home', rider.home ? `${rider.home.label}${rider.radiusMi ? `, within ${rider.radiusMi} miles` : ''}` : 'Not set'],
+    ['Home', rider.home ? rider.home.label : 'Not set'],
+    ...[['snow', 'Travel for snow'], ['surf', 'Travel for surf']]
+      .filter(([k]) => (k === 'snow' ? here !== 'surf' : here !== 'snow'))
+      .map(([k, title]) => [title, rider.travelMi[k] ? `Up to ${rider.travelMi[k].toLocaleString('en-US')} miles` : 'Any distance']),
     ['Alerts', [s.snowOn ? 'snow' : null, s.surfOn ? 'surf' : null].filter(Boolean).join(' and ') + (s.snowScope === 'nearby' || s.surfScope === 'nearby' ? ', for places near home' : ', for spots you pin with ☆')],
     ['Notifications', [s.deviceOn ? 'this device' : null, account.user ? 'email (signed in)' : null].filter(Boolean).join(' and ') || 'None yet (Notifications tab)'],
   ].filter(Boolean);

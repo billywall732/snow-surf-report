@@ -15,7 +15,7 @@
 // iOS/Android read it) and dark mode. Every emoji sits next to a text label. Live cams
 // are links only (video doesn't play in email, and a still frame is stale on arrival).
 // No images, no tracking pixels.
-import { withinReach, normalizeRider } from '../../js/recommend.js';
+import { normalizeRider, travelLimit, withinReach } from '../../js/recommend.js';
 // The verdict words (GO / WORTH A LOOK / SKIP / NOT OPEN YET), shared with the website
 import { VERDICT, verdictOf, notRideable } from '../../js/verdict.js';
 
@@ -206,17 +206,17 @@ function snowBest(p, firstDate) {
 
 // Local first, then trip spots; best first in each; places you can't ride yet last.
 // Never drops a place.
-function rankAndGroup(list, rider, rank, notYet = () => false) {
+function rankAndGroup(kind, list, rider, rank, notYet = () => false) {
   const r = normalizeRider(rider);
-  const grouping = Boolean(r.home && r.radiusMi);
+  const grouping = Boolean(r.home && travelLimit(r, kind));
   const sorted = [...list].sort((a, b) => rank(a, b) || byName(a, b));
   const ready = sorted.filter((x) => !notYet(x));
   const later = sorted.filter(notYet);
   let out;
   if (!grouping) out = ready.map((x) => ({ ...x, group: null }));
   else {
-    const near = ready.filter((x) => withinReach(x.item, r)).map((x) => ({ ...x, group: 'Near you' }));
-    const far = ready.filter((x) => !withinReach(x.item, r)).map((x) => ({ ...x, group: near.length ? 'Worth the trip' : null }));
+    const near = ready.filter((x) => withinReach(x.item, r, kind)).map((x) => ({ ...x, group: 'Near you' }));
+    const far = ready.filter((x) => !withinReach(x.item, r, kind)).map((x) => ({ ...x, group: near.length ? 'Worth the trip' : null }));
     out = [...near, ...far];
   }
   return [...out, ...later.map((x) => ({ ...x, group: out.length || grouping ? 'Not rideable yet' : null }))];
@@ -396,7 +396,7 @@ export function surfEmail({ user, alerts, items, siteUrl, dateLabel, lookAhead, 
   const profile = user.profile ?? { levels: [], boards: [] };
   const list = alerts.map((a) => ({ a, item: items.get(a.itemId) })).filter((x) => x.item);
   const ftOf = (x) => x.a.days[0].ft;
-  const spots = rankAndGroup(list, user.rider, (a, b) => (b.item.rating?.score ?? 0) - (a.item.rating?.score ?? 0) || ftOf(b) - ftOf(a));
+  const spots = rankAndGroup('surf', list, user.rider, (a, b) => (b.item.rating?.score ?? 0) - (a.item.rating?.score ?? 0) || ftOf(b) - ftOf(a));
   for (const x of spots) {
     const d0 = x.a.days[0];
     const waveDays = ok(x.item.waves) ? x.item.waves.data.days ?? [] : [];
@@ -521,7 +521,7 @@ export function snowEmail({ user, alerts, items, siteUrl, dateLabel, lookAhead }
   }
   const amountOf = (a) => Number(a?.title.match(/([\d.]+)"/)?.[1] ?? 0);
   const amount = (p) => Math.max(amountOf(p.coming), amountOf(p.fresh));
-  const places = rankAndGroup([...byPlace.values()].filter((p) => p.item), user.rider,
+  const places = rankAndGroup('snow', [...byPlace.values()].filter((p) => p.item), user.rider,
     (a, b) => (b.item.rating?.score ?? 0) - (a.item.rating?.score ?? 0) || amount(b) - amount(a), (p) => !rideable(p.item));
   for (const p of places) {
     const r = p.item;
