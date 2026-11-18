@@ -165,7 +165,7 @@ function questionsStep() {
   const rider = loadRider();
   const surfer = loadProfile();
   const snow = here !== 'surf', surf = here !== 'snow';
-  const cityNow = rider.home && CITIES.some(([n]) => n === rider.home.label) ? rider.home.label : '';
+  const cityNow = rider.homeExplicit && rider.home && CITIES.some(([n]) => n === rider.home.label) ? rider.home.label : '';
   const nearby = s.snowScope === 'nearby' || s.surfScope === 'nearby';
   return [
     chipGroup('What are you here for?', [['snow', '❄️ Snow'], ['surf', '🏄 Surf'], ['both', 'Both']], (v) => v === here, setWants),
@@ -177,13 +177,13 @@ function questionsStep() {
       chipGroup('Your board', boards().map(([k, v]) => [k, v.label]), (v) => surfer.boards.includes(v), (v) => setSurfer((p) => ({ ...p, boards: toggleIn(p.boards, v) })), 'pick any you ride')) : null,
     h('fieldset', { class: 'walk-set' }, h('legend', {}, '📍 Where you ride from'),
       h('div', { class: 'list-controls' },
-        selectBox('Home city', [['', rider.home && !cityNow ? `(${rider.home.label})` : 'Choose a city'], ...CITIES.map(([n]) => [n, n])], cityNow, (v) => {
+        selectBox('Home city', [['', rider.homeExplicit && rider.home && !cityNow ? `(${rider.home.label})` : 'Choose a city'], ...CITIES.map(([n]) => [n, n])], cityNow, (v) => {
           const c = CITIES.find(([n]) => n === v);
-          if (c) setRider((r) => ({ ...r, home: { label: c[0], lat: c[1], lon: c[2] } }));
+          if (c) setRider((r) => ({ ...r, home: { label: c[0], lat: c[1], lon: c[2] }, homeExplicit: true }));
         }),
         selectBox('How far you’ll travel', [[50, '50 miles'], [100, '100 miles'], [200, '200 miles'], [300, '300 miles'], [500, '500 miles'], [1000, '1,000 miles'], ['', 'Any distance']],
           rider.radiusMi ?? '', (v) => setRider((r) => ({ ...r, radiusMi: Number(v) || null })))),
-      rider.home ? h('label', { class: 'switch-row' }, (() => {
+      rider.homeExplicit ? h('label', { class: 'switch-row' }, (() => {
         const box = h('input', { type: 'checkbox' });
         box.checked = nearby;
         box.addEventListener('change', () => {
@@ -192,7 +192,7 @@ function questionsStep() {
           draw();
         });
         return box;
-      })(), h('span', {}, 'Alert me about places within that distance')) : h('p', { class: 'fine' }, 'Pick a city to get picks and alerts near you. Or skip it and pin your favorite spots with ☆ later.')),
+      })(), h('span', {}, 'Alert me about places within that distance')) : h('p', { class: 'fine' }, 'Recommendations use Pasadena by default. Pick a city for nearby alerts, or skip it and pin your favorite spots with ☆ later.')),
     h('p', { class: 'fine' }, 'Saved as you go, on this device (and to your account if you sign in).'),
   ];
 }

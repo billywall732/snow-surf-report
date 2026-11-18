@@ -35,6 +35,7 @@ export const CITIES = [
   ['Nashville, TN', 36.16, -86.78],
   ['New York, NY', 40.71, -74.01],
   ['Orlando, FL', 28.54, -81.38],
+  ['Pasadena, CA', 34.1478, -118.1445],
   ['Philadelphia, PA', 39.95, -75.17],
   ['Phoenix, AZ', 33.45, -112.07],
   ['Pittsburgh, PA', 40.44, -80.0],

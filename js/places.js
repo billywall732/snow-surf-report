@@ -164,8 +164,7 @@ export function createPlacesTab(opts) {
   const dialog = h('dialog', { id: `${key}-detail`, class: 'detail', 'aria-labelledby': `${key}-detail-title` });
   document.body.append(dialog);
 
-  // Top 6 today: the best-rated places as a row you swipe, the next card peeking in at
-  // the edge so it's clear there's more. All 76 / 52 stay behind the search below.
+  // Top 6 today: best-rated places stay behind a collapsed heading until requested.
   // Places you can't ride yet (a closed mountain) never make the six.
   function topSix() {
     const six = [...section.items]
@@ -174,13 +173,16 @@ export function createPlacesTab(opts) {
       .sort((a, b) => b.rating.score - a.rating.score || (b.id === section.bestBet?.id) - (a.id === section.bestBet?.id) || a.name.localeCompare(b.name))
       .slice(0, 6);
     if (!six.length) return null;
-    return h('section', { class: 'top-six', 'aria-labelledby': `${key}-h-top` },
-      h('div', { class: 'section-head' },
-        h('h2', { id: `${key}-h-top` }, 'Top 6 today'),
-        h('p', { class: 'fine' }, `Best rated right now · all ${section.items.length} are in the search below`)),
+    return h('details', { class: 'top-six', 'aria-labelledby': `${key}-h-top` },
+      h('summary', { class: 'top-six-summary' },
+        h('span', { class: 'top-six-heading' },
+          h('span', { id: `${key}-h-top`, class: 'top-six-title', role: 'heading', 'aria-level': '2' }, 'Top 6 today'),
+          h('span', { class: 'top-six-subtitle' }, `Best rated right now · all ${section.items.length} are in the search below`)),
+        h('span', { class: 'top-six-count' }, `${six.length} spots`),
+        h('span', { class: 'chevron', 'aria-hidden': 'true' })),
       h('div', { class: 'top-six-row' }, six.map((item) => {
         const b = h('button', { type: 'button', class: 'top-six-card', 'aria-label': `${item.name}, ${place(item)}. ${verdictFor(item).label}, ${item.rating.score} of 5. ${item.rating.reason}. Open details.` },
-          h('span', { class: 'top-six-name' }, item.name),
+          h('span', { class: 'top-six-name', title: item.name }, item.name),
           h('span', { class: 'top-six-where' }, place(item)),
           h('span', { class: 'tile-rating' }, ratingBar(item.rating.score), scoreLabel(item)),
           h('span', { class: 'top-six-why' }, item.rating.reason));
@@ -279,7 +281,7 @@ export function createPlacesTab(opts) {
       class: `tile ${opts.itemClass?.(item) ?? ''}`,
       'aria-label': `${item.name}, ${place(item)}. ${score ?? 'Not rated'} of 5. ${stats.join(', ')}. ${insight} Open details.`,
     },
-      h('span', { class: 'tile-name' }, item.name),
+      h('span', { class: 'tile-name', title: item.name }, item.name),
       h('span', { class: 'tile-where' }, place(item)),
       h('span', { class: 'tile-rating' }, ratingBar(score), scoreLabel(item)),
       h('span', { class: 'tile-stats' }, stats.map((s) => h('span', { class: 'tile-stat' }, s))),

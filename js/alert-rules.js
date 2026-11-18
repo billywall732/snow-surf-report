@@ -28,7 +28,7 @@ export const DEFAULT_SETTINGS = {
 // Is this place covered by your alerts? ('all' is from an older version of the app)
 function covered(scope, item, pinned, watch, rider) {
   if (scope === 'all') return true;
-  if (scope === 'nearby') return Boolean(rider.home) && withinReach(item, rider);
+  if (scope === 'nearby') return Boolean(rider.home && rider.homeExplicit) && withinReach(item, rider);
   return scope === 'chosen' ? watch.includes(item.id) : pinned.includes(item.id);
 }
 

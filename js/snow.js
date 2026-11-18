@@ -4,11 +4,11 @@ import { timeChart } from './charts.js';
 import { createPlacesTab, stateFilter } from './places.js';
 import { snowComing } from './alert-rules.js';
 import { notifyButton } from './alerts.js';
-import { loadRider, openProfile, recommendCard } from './rider.js';
+import { inRangeBestBetCard, loadRider, openProfile, recommendCard } from './rider.js';
 import { hasSkiRider, skiFit, skiText } from './recommend.js';
 import { layersFor } from './gear.js';
 import {
-  bestBetCard, chartSlot, dataTable, formatDay, formatShortDate,
+  chartSlot, dataTable, drawCharts, formatDay, formatShortDate,
   h, num, ok, sourceName, stat, unavailable,
 } from './ui.js';
 
@@ -43,8 +43,13 @@ function passTags(r) {
 }
 
 let tab;
+let section;
+let buildupMountainId = null;
+const buildupCard = h('details', { class: 'card snow-buildup', open: '' });
+buildupCard.addEventListener('toggle', () => { if (buildupCard.open) drawCharts(); });
 
-export function renderSnow(section) {
+export function renderSnow(snowSection) {
+  section = snowSection;
   tab = createPlacesTab({
     key: 'snow',
     panelId: 'panel-snow',
@@ -91,7 +96,8 @@ export function renderSnow(section) {
     detailPill: (r) => seasonPill(r.season),
     detailButtons: (r) => notifyButton('snow', r),
     detailBody,
-    top: () => [bestBetCard(section, 'snow', (id) => tab.openDetail(id)), recommendCard('snow', (id) => tab.openDetail(id))],
+    top: () => [inRangeBestBetCard('snow', (id) => tab.openDetail(id)), recommendCard('snow', (id) => tab.openDetail(id))],
+    afterMine: (pinnedIds) => [drawSnowBuildup(pinnedIds)],
     mapIcon: 'peak',
     mapLabel: 'Ikon and Epic mountains',
   });
@@ -158,6 +164,80 @@ function snowTile(r) {
     ],
     insight: snowInsight(r),
   };
+}
+
+function drawSnowBuildup(pinnedIds = []) {
+  const mountains = pinnedIds.map((id) => section.items.find((r) => r.id === id)).filter(Boolean);
+  if (!mountains.some((r) => r.id === buildupMountainId)) buildupMountainId = mountains[0]?.id ?? null;
+  const mountain = mountains.find((r) => r.id === buildupMountainId);
+  const previous = h('button', { type: 'button', class: 'stepper-arrow', 'aria-label': 'Previous pinned mountain', hidden: mountains.length < 2 }, '‹');
+  const next = h('button', { type: 'button', class: 'stepper-arrow', 'aria-label': 'Next pinned mountain', hidden: mountains.length < 2 }, '›');
+  const step = (direction) => {
+    const index = mountains.findIndex((r) => r.id === buildupMountainId);
+    buildupMountainId = mountains[(index + direction + mountains.length) % mountains.length].id;
+    drawSnowBuildup(pinnedIds);
+    drawCharts();
+  };
+  previous.addEventListener('click', () => step(-1));
+  next.addEventListener('click', () => step(1));
+
+  const body = [];
+  if (!mountain) {
+    body.push(h('p', { class: 'fine' }, 'Pin a mountain to see its snow buildup here.'));
+  } else {
+    const obs = mountain.observed;
+    const forecast = mountain.forecast;
+    const fcDays = ok(forecast) ? forecast.data.days.slice(0, 7) : [];
+    const chartDays = fcDays.filter((d) => Number.isFinite(d.snowfall));
+    body.push(
+      h('div', { class: 'snow-buildup-stats' },
+        stat('Base', num(ok(obs) ? obs.data.depthNow : null, '"')),
+        stat('New 48h', num(ok(obs) ? obs.data.newSnow.h48 : null, '"')),
+        stat('New 7d', num(ok(obs) ? obs.data.newSnow.d7 : null, '"'))),
+      h('p', { class: 'fine' }, ok(obs)
+        ? obs.modelled
+          ? `Base modelled by ${sourceName(obs.source)}; natural snow only, snowmaking is not included.`
+          : `Base reported by SNOTEL ${obs.stationName}; natural/snowmaking split is not reported by this feed.`
+        : 'Snow base and past snowfall are unavailable from the report.'),
+      h('h4', {}, fcDays.length >= 7 ? '7-day forecast' : `Next ${fcDays.length || 3} days`),
+      chartDays.length
+        ? chartSlot((el) => {
+          const points = chartDays.map((d) => ({
+            x: Date.parse(`${d.date}T12:00Z`), y: d.snowfall, date: d.date,
+            dayIndex: fcDays.findIndex((forecastDay) => forecastDay.date === d.date),
+          }));
+          const start = points[0].x;
+          const end = points.at(-1).x;
+          timeChart(el, {
+            title: `Projected snowfall at ${mountain.name} over the next ${fcDays.length} days.`,
+            points,
+            xDomain: points.length > 1 ? [start, end] : [start - 43_200_000, end + 43_200_000],
+            xTicks: points.map((p) => ({ x: p.x, label: formatDay(p.date, p.dayIndex) })),
+            yMin: 0,
+            yMinSpan: 1,
+            unit: '"',
+            area: true,
+            height: 150,
+            tooltip: (p) => `${formatShortDate(p.date)}: ${p.y}" forecast`,
+          });
+        })
+        : ok(forecast) ? h('p', { class: 'fine' }, 'Forecast snowfall values are —.') : unavailable('Snowfall forecast', forecast),
+      fcDays.length
+        ? dataTable(`Projected snowfall at ${mountain.name}`, ['Day', 'Snow'], fcDays.map((d, i) => [formatDay(d.date, i), num(d.snowfall, '"')]))
+        : null,
+      h('p', { class: 'fine' }, 'The report does not include resort-reported natural versus snowmaking totals, so no split is estimated.'),
+    );
+  }
+  buildupCard.replaceChildren(
+    h('summary', { class: 'snow-buildup-summary' },
+      h('span', { class: 'snow-buildup-title' }, 'Snow buildup'),
+      h('span', { class: 'snow-buildup-mountain' }, mountain?.name ?? 'Pinned mountains'),
+      h('span', { class: 'chevron', 'aria-hidden': 'true' })),
+    h('div', { class: 'snow-buildup-body' },
+      mountain ? h('div', { class: 'mountain-stepper', role: 'group', 'aria-label': 'Select a pinned mountain' },
+        previous, h('span', { class: 'mountain-stepper-name', title: mountain.name }, mountain.name), next) : null,
+      body));
+  return buildupCard;
 }
 
 function snowInsight(r) {

@@ -251,7 +251,7 @@ function scopeText(kind, settings, rider) {
   const scope = settings[`${kind}Scope`];
   if (scope === 'chosen') return plural(settings[`${kind}Watch`].length, `${one} you chose`, `${many} you chose`);
   if (scope === 'nearby') {
-    if (!rider.home) return `${many} near you (set your home in your Rider Profile)`;
+    if (!rider.home || !rider.homeExplicit) return `${many} near you (set your home in your Rider Profile)`;
     return `${many} ${rider.radiusMi ? `within ${rider.radiusMi} mi of` : 'from'} ${rider.home.label}`;
   }
   const n = pins()[kind].length;
@@ -338,7 +338,7 @@ function render() {
   // "Near me" needs a home in the Rider Profile
   const nearNote = (scope, extra = '') => {
     if (scope !== 'nearby') return null;
-    if (!rider.home) return h('p', { class: 'fine warn' }, 'Set where you ride from in your Rider Profile to use this. ', profileLink());
+    if (!rider.home || !rider.homeExplicit) return h('p', { class: 'fine warn' }, 'Set where you ride from in your Rider Profile to use this. ', profileLink());
     const where = rider.radiusMi ? `within ${rider.radiusMi} mi of ` : 'from ';
     return h('p', { class: 'fine' }, `Everywhere ${where}${rider.home.label}${extra}. `, profileLink());
   };
@@ -604,7 +604,7 @@ function isWatched(kind, id) {
   if (scope === 'chosen') return s[`${kind}Watch`].includes(id);
   if (scope === 'nearby') {
     const rider = loadRider();
-    return Boolean(rider.home) && withinReach(report.sections[kind].items.find((x) => x.id === id), rider);
+    return Boolean(rider.home && rider.homeExplicit) && withinReach(report.sections[kind].items.find((x) => x.id === id), rider);
   }
   return ((kind === 'snow' ? snowTab : surfTab)?.pinned() ?? []).includes(id);
 }
@@ -630,7 +630,7 @@ function chooser(kind) {
   const search = h('input', { type: 'search', id: `choose-${kind}-search`, placeholder: `Search ${many}`, autocomplete: 'off', value: pickerQuery[kind] });
   const listEl = h('ul', { class: 'chooser-list' }, items.map((x) => {
     const on = chosen.includes(x);
-    const miles = rider.home ? distanceMi(rider.home, x) : null;
+    const miles = rider.homeExplicit ? distanceMi(rider.home, x) : null;
     const b = h('button', { type: 'button', class: 'chooser-item', 'aria-pressed': String(on), 'data-id': x.id, 'data-name': `${x.name} ${x.city ?? ''} ${x.region}`.toLowerCase() },
       h('span', { class: 'chooser-check', 'aria-hidden': 'true' }, on ? '✓' : '+'),
       h('span', {}, x.name, h('span', { class: 'chooser-where' }, ` ${x.city ? `${x.city}, ` : ''}${x.region}${miles != null ? ` · ${miles} mi` : ''}`)));
@@ -666,9 +666,9 @@ function chooser(kind) {
       ['chosen', 'Chosen only'],
       ['unchosen', 'Not chosen yet'],
       ['pinned', 'My pinned'],
-      ...(rider.home ? [['near', `Within ${rider.radiusMi ?? '∞'} mi`]] : []),
+      ...(rider.homeExplicit ? [['near', `Within ${rider.radiusMi ?? '∞'} mi`]] : []),
     ]),
-    filterSelect('sort', 'Order', [['name', 'A–Z'], ...(rider.home ? [['distance', 'Closest first']] : [])]));
+    filterSelect('sort', 'Order', [['name', 'A–Z'], ...(rider.homeExplicit ? [['distance', 'Closest first']] : [])]));
   const shownCount = h('p', { class: 'fine chooser-count', 'aria-live': 'polite' });
 
   const applySearch = () => {
@@ -687,13 +687,13 @@ function chooser(kind) {
           || (pf.show === 'chosen' && watch.includes(x.id))
           || (pf.show === 'unchosen' && !watch.includes(x.id))
           || (pf.show === 'pinned' && pinnedIds.includes(x.id))
-          || (pf.show === 'near' && withinReach(x, rider)));
+          || (pf.show === 'near' && rider.homeExplicit && withinReach(x, rider)));
       li.hidden = !ok;
       if (ok) shown++;
     }
     // Reorder: A–Z, or closest to your home first
     const key = (li) => byId[li.firstChild.dataset.id];
-    rows.sort((a, b) => (pf.sort === 'distance' && rider.home
+    rows.sort((a, b) => (pf.sort === 'distance' && rider.homeExplicit
       ? distanceMi(rider.home, key(a)) - distanceMi(rider.home, key(b)) : 0) || key(a).name.localeCompare(key(b).name));
     listEl.append(...rows);
     shownCount.textContent = shown === items.length ? `All ${items.length} ${many}` : `Showing ${shown} of ${items.length} ${many}`;

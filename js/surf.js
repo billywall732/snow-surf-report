@@ -4,12 +4,12 @@ import { svg, timeChart } from './charts.js';
 import { setTideLevel } from './background.js';
 import { createPlacesTab, stateFilter } from './places.js';
 import { notifyButton } from './alerts.js';
-import { loadRider, openProfile, recommendCard } from './rider.js';
+import { inRangeBestBetCard, loadRider, openProfile, recommendCard } from './rider.js';
 import { distanceMi, surfBlockers } from './recommend.js';
 import { uvAdvice, wetsuitFor } from './gear.js';
 import { fitDays, fitToday, hasProfile, onProfileChange, profileText, setSkills } from './skill.js';
 import {
-  add, bestBetCard, chartSlot, compass, dataTable, drawCharts, formatShortDate, formatTime,
+  add, chartSlot, compass, dataTable, drawCharts, formatShortDate, formatTime,
   h, num, ok, stat, unavailable,
 } from './ui.js';
 
@@ -19,6 +19,7 @@ const STATE_CODES = new Set(['ca', 'or', 'wa', 'hi', 'tx', 'fl', 'sc', 'nc', 'va
 let section;
 let tab;
 let tideStationId = null; // station shown in the "Today's tide" card
+let tideBeachId = null;
 // Collapsed to one line ("next high · next low") until you tap it for the chart
 const tideCard = h('details', { class: 'card tide' });
 tideCard.addEventListener('toggle', () => { if (tideCard.open) drawCharts(); }); // charts draw once visible
@@ -83,7 +84,7 @@ export function renderSurf(surfSection) {
     detailPill: (s) => (s.beachFacingDeg != null ? h('span', { class: 'pill' }, `Faces ${compass(s.beachFacingDeg)} (${s.beachFacingDeg}°)`) : null),
     detailBody,
     detailButtons: (s) => notifyButton('surf', s),
-    top: () => [bestBetCard(section, 'surf', (id) => tab.openDetail(id)), recommendCard('surf', (id) => tab.openDetail(id))],
+    top: () => [inRangeBestBetCard('surf', (id) => tab.openDetail(id)), recommendCard('surf', (id) => tab.openDetail(id))],
     afterMine: (pinnedIds) => [drawTideCard(pinnedIds)],
     mapIcon: 'wave',
     mapLabel: 'surf spots',
@@ -179,38 +180,39 @@ function tideChart(st) {
   ];
 }
 
-// "Today's tide" card: one button per tide station your pinned beaches use.
+// "Today's tide" card: one pinned beach at a time, in the user's pin order.
 let lastPinned = [];
 function drawTideCard(pinnedIds = lastPinned) {
   lastPinned = pinnedIds;
   const pinnedSpots = pinnedIds.map((id) => section.items.find((s) => s.id === id));
-  const choices = [];
-  for (const s of pinnedSpots) {
-    // Beaches that share a tide station share one button: 'El Porto & Malibu'
-    const same = choices.find((c) => c.id === s.tideStation);
-    if (same) same.label += ` & ${s.name}`;
-    else choices.push({ id: s.tideStation, label: s.name });
-  }
-  if (!choices.length) {
+  if (!pinnedSpots.length) {
+    tideBeachId = null;
     tideCard.replaceChildren(
       h('summary', { class: 'tide-summary' }, h('span', { class: 'tide-title' }, "Today's tide"), h('span', { class: 'tide-next' }, 'Pin a beach to see its tide')),
       h('p', { class: 'fine' }, 'Pin a beach to see its tide here.'));
     return tideCard;
   }
-  if (!choices.some((c) => c.id === tideStationId)) tideStationId = choices[0].id;
-  const st = section.tideStations[tideStationId];
-
-  const switcher = h('div', { class: 'switch', role: 'group', 'aria-label': 'Show the tide for' },
-    choices.map((c) => {
-      const b = h('button', { type: 'button', 'aria-pressed': String(c.id === tideStationId) }, c.label);
-      b.addEventListener('click', () => { tideStationId = c.id; drawTideCard(); drawCharts(); });
-      return b;
-    }));
+  if (!pinnedSpots.some((s) => s.id === tideBeachId)) tideBeachId = pinnedSpots[0].id;
+  const beach = pinnedSpots.find((s) => s.id === tideBeachId);
+  tideStationId = beach.tideStation;
+  const st = section.tideStations[beach.tideStation];
+  const step = (direction) => {
+    const index = pinnedSpots.findIndex((s) => s.id === tideBeachId);
+    tideBeachId = pinnedSpots[(index + direction + pinnedSpots.length) % pinnedSpots.length].id;
+    drawTideCard();
+    drawCharts();
+  };
+  const previous = h('button', { type: 'button', class: 'stepper-arrow', 'aria-label': 'Previous pinned beach', hidden: pinnedSpots.length < 2 }, '‹');
+  const nextBeach = h('button', { type: 'button', class: 'stepper-arrow', 'aria-label': 'Next pinned beach', hidden: pinnedSpots.length < 2 }, '›');
+  previous.addEventListener('click', () => step(-1));
+  nextBeach.addEventListener('click', () => step(1));
+  const switcher = h('div', { class: 'beach-stepper', role: 'group', 'aria-label': 'Select a pinned beach' },
+    previous, h('span', { class: 'beach-stepper-name', title: beach.name }, beach.name), nextBeach);
 
   // The one-line summary: next high and low at the chosen station
   const next = nextTides(st);
   const at = (e) => (e ? formatTime(e.t, st.timezone) : '—');
-  const body = h('div', { class: 'tide-body' }, h('div', { class: 'tide-head' }, h('p', { class: 'region' }, st?.name ?? ''), switcher));
+  const body = h('div', { class: 'tide-body' }, h('div', { class: 'tide-head' }, h('p', { class: 'region' }, `${beach.city ?? beach.name}, ${beach.region}`), switcher));
   if (!ok(st)) {
     add(body, unavailable('Tide predictions', st));
   } else {

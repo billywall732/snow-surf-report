@@ -192,7 +192,7 @@ main { padding-top: 24px; padding-bottom: 48px; }
 /* Best bet + Recommended for you: two compact cards side by side (phones too).
    "See all picks" widens Recommended to the full row. */
 .top-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.top-grid > * { margin: 0; }
+.top-grid > * { min-width: 0; margin: 0; }
 .top-grid .recs.is-open { grid-column: 1 / -1; }
 .verdict { font-family: var(--serif); font-size: 16px; }
 
@@ -1433,6 +1433,8 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
   align-items: flex-start;
   gap: 4px;
   min-width: 0;
+  width: 100%;
+  overflow: hidden;
   padding: 16px;
   font: inherit;
   color: inherit;
@@ -1445,10 +1447,20 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 }
 .tile.pass-ikon { border-top: 4px solid var(--ikon); }
 .tile.pass-epic { border-top: 4px solid var(--epic); }
-.tile-name { font: 600 20px/1.15 var(--serif); }
+.tile-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font: 600 20px/1.15 var(--serif);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .tile-where { font-size: 13px; color: var(--muted); }
-.tile-rating { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
-.tile-stats { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.tile-rating { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; max-width: 100%; margin: 2px 0; }
+.tile-rating .rating-bar { flex: 0 0 auto; }
+.tile-rating .rating-score { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.tile-stats { display: flex; flex-wrap: wrap; gap: 2px 14px; min-width: 0; max-width: 100%; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.tile-stat { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .tile-insight { font-size: 13px; color: var(--ink-2); }
 .tile-empty {
   align-items: center;
@@ -1501,12 +1513,54 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
 
 /* Today's tide: one line until opened */
 .tide { margin: 16px 0 0; }
-.tide-summary { display: flex; align-items: center; gap: 12px; min-height: 28px; list-style: none; cursor: pointer; }
+.tide-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0; min-height: 28px; list-style: none; cursor: pointer; }
 .tide-summary::-webkit-details-marker { display: none; }
 .tide-title { font: 600 20px/1.2 var(--serif); }
-.tide-next { flex: 1; font-size: 14px; color: var(--ink-2); }
+.tide-next { flex: 1 1 130px; min-width: 0; font-size: 14px; color: var(--ink-2); }
 .tide-body { margin-top: 12px; }
 .tide-head { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.beach-stepper, .mountain-stepper { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.beach-stepper { flex: 0 1 auto; }
+.beach-stepper-name, .mountain-stepper-name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stepper-arrow {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font: 500 26px/1 var(--sans);
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.stepper-arrow[hidden] { display: none; }
+.snow-buildup { margin-top: 16px; }
+.snow-buildup-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+  cursor: pointer;
+}
+.snow-buildup-summary::-webkit-details-marker { display: none; }
+.snow-buildup-title { font: 600 20px/1.2 var(--serif); }
+.snow-buildup-mountain { min-width: 0; margin-left: auto; overflow: hidden; color: var(--ink-2); text-overflow: ellipsis; white-space: nowrap; }
+.snow-buildup-body { margin-top: 12px; }
+.snow-buildup-body h4 { margin: 20px 0 8px; }
+.snow-buildup-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.snow-buildup-stats .stat { min-width: 0; }
+.snow-buildup-stats .stat-value { font-size: 18px; }
+.mountain-stepper { justify-content: center; margin-bottom: 8px; }
+.mountain-stepper-name { text-align: center; }
 
 /* ---------- Notifications ---------- */
 
@@ -1541,6 +1595,8 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
   .recs-setup { font-size: 13px; }
   .tile-where, .tile-insight, .tile-more { display: none; } /* name, rating and two numbers only */
   .tile-rating .rating-bar { width: 56px; height: 7px; }
+  .tile-rating { gap: 4px 6px; }
+  .tile-rating .rating-score { font-size: 14px; line-height: 1.15; }
   .tile-stats { flex-direction: column; font-size: 12.5px; font-weight: 600; }
   .tile-empty { min-height: 96px; font-size: 13px; }
   .section-toggle { padding: 12px 16px; min-height: 56px; }
@@ -1548,6 +1604,13 @@ button.best-bet:hover, .tile:hover { border-color: var(--axis); }
   .all-body { padding: 0 10px 12px; }
   .tide-title { font-size: 17px; }
   .tide-next { font-size: 13px; }
+  .tide-head { align-items: flex-start; flex-direction: column; }
+  .beach-stepper { width: 100%; justify-content: space-between; }
+  .snow-buildup-title { font-size: 17px; }
+  .snow-buildup-mountain { font-size: 13px; }
+  .snow-buildup-stats { gap: 6px; }
+  .snow-buildup-stats .stat { padding: 8px; }
+  .snow-buildup-stats .stat-value { font-size: 16px; }
   .rule-summary { margin-left: 34px; }
   .rule-editor { margin-left: 0; }
 }
@@ -1736,24 +1799,41 @@ h4 { font-size: 14px; font-weight: 650; }
 .verdict-maybe { color: #a35f00; font-weight: 700; }
 .verdict-skip, .verdict-closed { color: var(--muted); font-weight: 700; }
 
-/* Top 6 today. Phones: swipe sideways; the next card peeks in about a third, so it's clear there's
-   more. Wider screens: all six in full, two rows of three, so no card is cut off mid-name. */
-.top-six { margin: 4px 0 28px; }
+/* Top 6 today stays collapsed until a user asks for the global conditions list. */
+.top-six { min-width: 0; margin: 4px 0 28px; }
+.top-six > summary { list-style: none; }
+.top-six > summary::-webkit-details-marker { display: none; }
+.top-six-summary { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.top-six-heading { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 2px; }
+.top-six-title { font: 600 27px/1.15 var(--serif); }
+.top-six-subtitle { color: var(--muted); font-size: 14px; }
+.top-six-count { flex: 0 0 auto; color: var(--muted); font-size: 13px; }
 .top-six-row {
   display: grid; grid-auto-flow: column; grid-auto-columns: 68%; gap: 12px;
-  overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: thin;
+  min-width: 0; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 12px 12% 6px 0; scroll-padding-inline: 8px; scrollbar-width: thin;
 }
 @media (min-width: 720px) {
-  .top-six-row { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow-x: visible; scroll-snap-type: none; }
+  .top-six-row { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-right: 0; overflow: visible; scroll-snap-type: none; }
 }
 .top-six-card {
-  scroll-snap-align: start; display: grid; align-content: start; gap: 4px;
+  min-width: 0; overflow: hidden; scroll-snap-align: start; display: grid; align-content: start; gap: 4px;
   padding: 14px 16px; text-align: left; font: inherit; color: inherit; cursor: pointer;
   background: var(--surface); border: 0; border-radius: var(--radius);
 }
 .top-six-card:hover .top-six-name { text-decoration: underline; text-underline-offset: 3px; }
-.top-six-name { font: 600 18px/1.2 var(--serif); }
+.top-six-name { display: block; overflow: hidden; font: 600 18px/1.2 var(--serif); text-overflow: ellipsis; white-space: nowrap; }
 .top-six-where, .top-six-why { font-size: 13px; color: var(--muted); }
+.top-six-where, .top-six-why { overflow-wrap: anywhere; }
+.top-six-card .tile-rating { margin-top: 2px; }
+.top-six-card .rating-score { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .top-six-title { font-size: 24px; }
+  .top-six-subtitle { font-size: 13px; }
+  .top-six-card { padding: 12px; }
+  .top-six-card .tile-rating { gap: 4px 6px; }
+  .top-six-card .rating-score { font-size: 14px; line-height: 1.15; }
+}
 
 /* Search → filters → list → details: one flow, joined by a single line down the left
    instead of three boxed sections */

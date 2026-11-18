@@ -6,10 +6,12 @@
 //
 // Saved in this browser, and to your account when you're signed in (alerts.js
 // handles the account part, the same way as your alert settings).
-import { h, state } from './ui.js';
+import { ratingBar } from './charts.js';
+import { h, scoreLabel, state, bestBetCard as globalBestBetCard } from './ui.js';
 import { CITIES } from './cities.js';
 import {
   distanceMi, EMPTY_RIDER, hasSkiRider, normalizeRider, recommend, RIDE_TYPES, SKI_LEVELS, SKI_WANTS, skiText,
+  TRAVEL_RANGES, withinTravelRange,
 } from './recommend.js';
 import { hasProfile, loadProfile, onProfileChange, profileChips, profileText } from './skill.js';
 import { onAccountChange } from './account.js';
@@ -27,8 +29,9 @@ export function loadRider() {
 }
 
 export function saveRider(rider) {
-  try { localStorage.setItem(RIDER_KEY, JSON.stringify(rider)); } catch { /* private mode */ }
-  for (const fn of listeners) fn(rider);
+  const saved = normalizeRider(rider);
+  try { localStorage.setItem(RIDER_KEY, JSON.stringify(saved)); } catch { /* private mode */ }
+  for (const fn of listeners) fn(saved);
 }
 
 // Tell me when the profile changes. Returns a function that stops listening.
@@ -50,9 +53,15 @@ const place = (item) => (item.city ? `${item.city}, ${item.region}` : item.regio
 
 const surfSetUp = (rider) => hasProfile() || Boolean(rider.home || rider.surf.minWaterF);
 
-function homeText(rider) {
+function travelText(rider, kind) {
+  const hours = rider.travelHours[kind];
+  return TRAVEL_RANGES.find(([value]) => value === hours)?.[1].split(' (')[0] ?? 'Day trip';
+}
+
+function homeText(rider, kind) {
   if (!rider.home) return '';
-  return rider.radiusMi ? `within ${rider.radiusMi} mi of ${rider.home.label}` : `from ${rider.home.label}`;
+  const range = rider.travelHours[kind];
+  return range == null ? `anywhere from ${rider.home.label}` : `within your ${travelText(rider, kind).toLowerCase()} range of ${rider.home.label}`;
 }
 
 // One recommended place: name, today's rating, where, and why it's a match
@@ -67,42 +76,80 @@ function recItem({ item, reasons }, openDetail) {
 
 function picksList(kind, openDetail, count = 3) {
   const rider = loadRider();
-  const { picks, farther } = recommend(kind, state.report, rider, loadProfile(), count);
+  const { picks } = recommend(kind, state.report, rider, loadProfile(), count);
   const many = kind === 'snow' ? 'mountains' : 'beaches';
   // (One element, not a list of them: replaceChildren() would print a list as text)
   return h('div', { class: 'rec-picks' },
     picks.length
       ? h('ol', { class: 'rec-list' }, picks.map((p) => recItem(p, openDetail)))
-      : h('p', { class: 'empty' }, rider.home && rider.radiusMi
-        ? `No ${many} ${homeText(rider)} fit your profile today.`
-        : `No ${many} fit your profile today.`),
-    // Great places just past your travel distance
-    farther.length ? [
-      h('p', { class: 'rec-farther-head' }, `Worth a longer trip (past your ${rider.radiusMi} mi)`),
-      h('ul', { class: 'rec-list rec-farther' }, farther.map((p) => recItem(p, openDetail))),
-    ] : null);
+      : h('p', { class: 'empty' }, rider.home
+        ? `No ${many} ${homeText(rider, kind)} fit your profile today.`
+        : `No ${many} fit your profile today.`));
+}
+
+export function inRangeBestBetCard(kind, onDetails) {
+  const slot = h('div', { class: 'best-bet-slot' });
+  const draw = () => {
+    const rider = loadRider();
+    const section = state.report.sections[kind];
+    if (rider.travelHours[kind] == null) {
+      slot.replaceChildren(globalBestBetCard(section, kind, onDetails));
+      return;
+    }
+
+    const { picks } = recommend(kind, state.report, rider, loadProfile(), 1);
+    const pick = picks[0];
+    if (!pick) {
+      const many = kind === 'snow' ? 'mountains' : 'beaches';
+      const inRange = section.items.some((item) => withinTravelRange(item, rider, kind));
+      const message = inRange
+        ? `No ${many} in your ${travelText(rider, kind).toLowerCase()} range fit your profile today.`
+        : `No ${many} are within your ${travelText(rider, kind).toLowerCase()} range today.`;
+      slot.replaceChildren(h('section', { class: 'best-bet' },
+        h('span', { class: 'kicker' }, `Best bet for ${kind}`),
+        h('p', { class: 'fine' }, message)));
+      return;
+    }
+    const { item } = pick;
+    const score = item.rating.score;
+    const note = score != null && score < 3 ? `Best within your ${travelText(rider, kind).toLowerCase()} range` : `Best bet for ${kind}`;
+    const card = h('button', { type: 'button', class: 'best-bet', 'aria-label': `${note}: ${item.name}, ${score ?? 'not rated'} of 5. ${item.rating.reason}. Open details.` },
+      h('span', { class: 'kicker' }, note),
+      h('span', { class: 'best-bet-name' }, item.name),
+      h('span', { class: 'tile-rating' }, ratingBar(score), scoreLabel(item)),
+      h('span', { class: 'best-bet-reason' }, `${place(item)} · ${item.rating.reason}`),
+      h('span', { class: 'tile-more', 'aria-hidden': 'true' }, 'Details →'));
+    card.addEventListener('click', () => onDetails?.(item.id));
+    slot.replaceChildren(card);
+  };
+  draw();
+  onRiderChange(draw);
+  if (kind === 'surf') onProfileChange(draw);
+  return slot;
 }
 
 // Compact by default: your #1 pick and a "See all picks" button that opens the
-// full list (with reasons and "Worth a longer trip") right in the card.
+// full list of in-range picks right in the card.
 const recsOpen = { snow: false, surf: false };
 
 function recsContent(kind, openDetail, redraw) {
   const rider = loadRider();
   const title = h('h3', { id: `${kind}-h-recs`, class: 'kicker' }, 'Recommended for you');
-  const setUp = kind === 'snow' ? hasSkiRider(rider) : surfSetUp(rider);
+  const setUp = kind === 'snow' ? hasSkiRider(rider) || Boolean(rider.home) : surfSetUp(rider);
   const edit = h('button', { type: 'button', class: 'text-button' }, setUp ? 'Edit my Rider Profile' : 'Set up my profile →');
   edit.addEventListener('click', openProfile);
   if (!setUp) {
     return [title, h('p', { class: 'recs-setup' }, kind === 'snow' ? 'Mountain picks made for how you ride.' : 'Beach picks made for how you surf.'), edit];
   }
-  const { picks, farther } = recommend(kind, state.report, rider, loadProfile(), 3);
+  const { picks } = recommend(kind, state.report, rider, loadProfile(), 3);
   const top = picks[0];
+  const rangeNote = rider.travelHours[kind] != null && top?.item.rating.score != null && top.item.rating.score < 3
+    ? `Best within your ${travelText(rider, kind).toLowerCase()} range · ` : '';
   const topButton = top ? h('button', { type: 'button', class: 'recs-top' },
     h('span', { class: 'best-bet-name' }, top.item.name),
-    h('span', { class: 'recs-top-why' }, `today ${top.item.rating.score ?? '–'}/5 · ${top.reasons.filter(Boolean)[0] ?? place(top.item)}`)) : null;
+    h('span', { class: 'recs-top-why' }, `${rangeNote}today ${top.item.rating.score ?? '–'}/5 · ${top.reasons.filter(Boolean)[0] ?? place(top.item)}`)) : null;
   topButton?.addEventListener('click', () => openDetail(top.item.id));
-  const total = picks.length + farther.length;
+  const total = picks.length;
   const toggle = total > 1 ? h('button', { type: 'button', class: 'text-button recs-toggle', 'aria-expanded': String(recsOpen[kind]) },
     recsOpen[kind] ? 'Hide picks' : `See all ${total} picks`) : null;
   toggle?.addEventListener('click', () => { recsOpen[kind] = !recsOpen[kind]; redraw(); });
@@ -112,7 +159,7 @@ function recsContent(kind, openDetail, redraw) {
   const who = kind === 'snow'
     ? skiText(rider)
     : [hasProfile() ? profileText() : '', rider.surf.minWaterF ? `water ${rider.surf.minWaterF}°F+` : ''].filter(Boolean).join(' · ');
-  return [title, h('p', { class: 'fine' }, [who, homeText(rider)].filter(Boolean).join(' · ')), picksList(kind, openDetail), h('div', { class: 'recs-actions' }, toggle, edit)];
+  return [title, h('p', { class: 'fine' }, [who, homeText(rider, kind)].filter(Boolean).join(' · ')), picksList(kind, openDetail), h('div', { class: 'recs-actions' }, toggle, edit)];
 }
 
 // A card that keeps itself up to date when your profile changes. Opened, it
@@ -154,8 +201,8 @@ function chipRow(title, key, entries, note) {
 }
 
 function select(id, label, options, value, onChange) {
-  const sel = h('select', { id }, options.map(([v, text]) => h('option', { value: v }, text)));
-  sel.value = String(value);
+  const sel = h('select', { id }, options.map(([v, text]) => h('option', { value: v == null ? '' : String(v) }, text)));
+  sel.value = value == null ? '' : String(value);
   sel.addEventListener('change', () => onChange(sel.value));
   return h('label', { class: 'control' }, h('span', {}, label), sel);
 }
@@ -175,7 +222,7 @@ function useMyLocation() {
     const lon = Math.round(pos.coords.longitude * 10) / 10;
     const [name] = [...CITIES].sort((a, b) => distanceMi({ lat, lon }, { lat: a[1], lon: a[2] }) - distanceMi({ lat, lon }, { lat: b[1], lon: b[2] }))[0];
     locationMsg = '';
-    saveRider({ ...loadRider(), home: { label: `near ${name}`, lat, lon } });
+    saveRider({ ...loadRider(), home: { label: `near ${name}`, lat, lon }, homeExplicit: true });
   }, (err) => {
     locationMsg = err.code === err.PERMISSION_DENIED
       ? 'Location is blocked for this site. Pick a city instead, or allow location in your browser’s settings.'
@@ -188,21 +235,23 @@ function homeCard(rider) {
   const cityOptions = [['', rider.home && !CITIES.some(([n]) => n === rider.home.label) ? `(${rider.home.label})` : 'Choose a city'], ...CITIES.map(([n]) => [n, n])];
   const locate = h('button', { type: 'button', class: 'action-button', id: 'rider-locate' }, '📍 Use my location');
   locate.addEventListener('click', useMyLocation);
-  const clear = h('button', { type: 'button', class: 'text-button', id: 'rider-home-clear' }, 'Clear');
-  clear.addEventListener('click', () => saveRider({ ...loadRider(), home: null }));
+  const clear = h('button', { type: 'button', class: 'text-button', id: 'rider-home-clear' }, 'Reset to Pasadena');
+  clear.addEventListener('click', () => saveRider({ ...loadRider(), home: EMPTY_RIDER.home, homeExplicit: false }));
   return h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-home' },
     h('h3', { id: 'h-home' }, 'Where you ride from'),
-    h('p', {}, rider.home ? ['Home: ', h('strong', {}, rider.home.label)] : 'Not set yet. Used to recommend places near you and for “near me” alerts.'),
-    h('div', { class: 'account-actions' }, locate, rider.home ? clear : null),
+    h('p', {}, rider.home ? ['Home for recommendations: ', h('strong', {}, rider.home.label), rider.homeExplicit ? '' : ' (default)'] : 'Not set yet.'),
+    h('div', { class: 'account-actions' }, locate, rider.homeExplicit ? clear : null),
     locationMsg ? h('p', { class: 'fine warn', role: 'status' }, locationMsg) : null,
     h('div', { class: 'list-controls' },
       select('rider-city', 'Or pick a city', cityOptions, rider.home && CITIES.some(([n]) => n === rider.home.label) ? rider.home.label : '', (v) => {
         const c = CITIES.find(([n]) => n === v);
-        if (c) saveRider({ ...loadRider(), home: { label: c[0], lat: c[1], lon: c[2] } });
+        if (c) saveRider({ ...loadRider(), home: { label: c[0], lat: c[1], lon: c[2] }, homeExplicit: true });
       }),
-      select('rider-radius', 'How far you’ll travel', [[50, '50 miles'], [100, '100 miles'], [200, '200 miles'], [300, '300 miles'], [500, '500 miles'], [1000, '1,000 miles'], ['', 'Any distance']],
+      select('rider-radius', 'Nearby alert radius', [[50, '50 miles'], [100, '100 miles'], [200, '200 miles'], [300, '300 miles'], [500, '500 miles'], [1000, '1,000 miles'], ['', 'Any distance']],
         rider.radiusMi ?? '', (v) => saveRider({ ...loadRider(), radiusMi: Number(v) || null }))),
-    h('p', { class: 'fine' }, 'Your location is rounded to about 7 miles and saved only on this device (and in your account if you sign in).'));
+    h('p', { class: 'fine' }, rider.homeExplicit
+      ? 'Your location is rounded to about 7 miles and saved only on this device (and in your account if you sign in).'
+      : 'Pasadena is the default home for recommendations. Choose a city or use your location to set a home for nearby alerts.'));
 }
 
 function skiCard(rider) {
@@ -215,6 +264,9 @@ function skiCard(rider) {
       chipRow('Your level', 'levels', SKI_LEVELS, 'pick all that fit'),
       chipRow('You’re after', 'wants', SKI_WANTS),
       chipRow('Your pass', 'passes', [['Ikon', 'Ikon Pass'], ['Epic', 'Epic Pass']], 'none = any mountain')),
+    h('div', { class: 'list-controls' },
+      select('rider-snow-travel', 'Willing to travel for snow', TRAVEL_RANGES,
+        rider.travelHours.snow, (v) => saveRider({ ...loadRider(), travelHours: { ...loadRider().travelHours, snow: v === '' ? null : Number(v) } }))),
     boardOnly && skiersOnly.length
       ? h('p', { class: 'fine' }, `${skiersOnly.join(' and ')} ${skiersOnly.length === 1 ? 'is' : 'are'} skiers only, so we leave ${skiersOnly.length === 1 ? 'it' : 'them'} out of your picks and alerts.`)
       : null,
@@ -227,6 +279,8 @@ function surfCard(rider) {
     h('p', { class: 'fine' }, 'Tap one or more levels and boards. Also used by the filters on the Surf tab and your surf alerts.'),
     (surfChips ??= profileChips()),
     h('div', { class: 'list-controls' },
+      select('rider-surf-travel', 'Willing to travel for surf', TRAVEL_RANGES,
+        rider.travelHours.surf, (v) => saveRider({ ...loadRider(), travelHours: { ...loadRider().travelHours, surf: v === '' ? null : Number(v) } })),
       select('rider-water', 'Coldest water you’ll surf', [
         ['', 'Any temperature'],
         [50, '50°F (thick wetsuit, boots)'],
@@ -238,12 +292,13 @@ function surfCard(rider) {
 }
 
 function picksCard() {
+  const rider = loadRider();
   const go = (kind) => (id) => { location.hash = `${kind}/${id}`; };
   return h('section', { class: 'card alerts-card', 'aria-labelledby': 'h-picks' },
     h('h3', { id: 'h-picks' }, 'Recommendations based on your profile'),
     h('p', { class: 'fine' }, 'Ranked by how well each place fits you: its size and terrain for your level, what you’re after, how close it is, and today’s conditions. Tap one for details.'),
     h('h4', {}, 'Mountains'),
-    hasSkiRider(loadRider()) ? picksList('snow', go('snow'), 5) : h('p', { class: 'fine' }, 'Fill in Skiing & snowboarding or where you ride from.'),
+    rider.home || hasSkiRider(rider) ? picksList('snow', go('snow'), 5) : h('p', { class: 'fine' }, 'Fill in Skiing & snowboarding or where you ride from.'),
     h('h4', {}, 'Beaches'),
     surfSetUp(loadRider()) ? picksList('surf', go('surf'), 5) : h('p', { class: 'fine' }, 'Fill in Surfing or where you ride from.'));
 }
